@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 폰트 로드 */
+@font-face {
+  font-family: 'GyeongbokgungSumunjangTitle';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleL.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+/* 기본 설정 */
+:root {
+  font-family: 'GyeongbokgungSumunjangTitle', 'Pretendard', system-ui, sans-serif;
+}
+
+body {
+  @apply min-h-screen;
+}
