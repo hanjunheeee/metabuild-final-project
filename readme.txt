@@ -1,4 +1,4 @@
-# node.js 설치치
+# node.js 설치
 https://nodejs.org/ko
 
 # 백엔드 파일구조 : 도메인 별로 분리.
@@ -49,10 +49,10 @@ src/
 │   └── pages/error/     # 브라우저 
 │   └── services/          # apiService
 --------------------------------------------------------------------------------------------------------------------------
-# 백엔드 서버 실행 방법(7878 port)
+# (jdk 17 환경변수 설정 후)백엔드 서버 실행 방법: 7878 port 
 cd backend
 .\mvnw.cmd spring-boot:run
 
-# 프론트엔드 서버 실행 방법(3000 port)
+# 프론트엔드 서버 실행 방법: 3000 port
 cd frontend
 npm run dev
