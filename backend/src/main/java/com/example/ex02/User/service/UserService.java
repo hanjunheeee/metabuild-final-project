@@ -34,9 +34,12 @@ public class UserService {
     // Entity -> DTO 변환
     private UserDTO convertToDTO(UserEntity user) {
         UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setName(user.getName());
+        dto.setUserId(user.getUserId());
         dto.setEmail(user.getEmail());
+        dto.setNickname(user.getNickname());
+        dto.setRole(user.getRole());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setIsActive(user.getIsActive());
         return dto;
     }
 }

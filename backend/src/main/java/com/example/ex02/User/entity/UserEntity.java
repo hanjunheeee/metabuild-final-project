@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -14,20 +16,30 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column
+    @Column(nullable = false, length = 255)
     private String password;
 
-    public UserEntity(String name, String email) {
-        this.name = name;
-        this.email = email;
+    @Column(length = 30)
+    private String nickname;
+
+    @Column(length = 20)
+    private String role = "USER";
+
+    @Column(name = "is_active", length = 1)
+    private String isActive = "Y";
+
+    @Column(name = "created_at")
+    private LocalDate createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDate.now();
     }
 }
 

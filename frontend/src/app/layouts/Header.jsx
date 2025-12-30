@@ -16,11 +16,6 @@ function Header() {
                 홈
               </Link>
             </li>
-            <li>
-              <Link to="/products" className="text-white/80 font-medium px-4 py-2 rounded hover:text-cyan-400 hover:bg-cyan-500/10 transition-all">
-                상품
-              </Link>
-            </li>
           </ul>
         </nav>
       </div>
