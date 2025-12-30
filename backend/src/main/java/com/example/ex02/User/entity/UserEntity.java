@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class User {
     @Column
     private String password;
 
-    public User(String name, String email) {
+    public UserEntity(String name, String email) {
         this.name = name;
         this.email = email;
     }

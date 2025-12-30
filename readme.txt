@@ -1,7 +1,7 @@
 # node.js 설치
 https://nodejs.org/ko
 
-# 백엔드 파일구조 : 도메인 별로 분리.
+# 백엔드 파일구조(Spring Boot) : 도메인 별로 분리.
 src/
  ├─ main/
  │   └─ java/com/example/ex02/
