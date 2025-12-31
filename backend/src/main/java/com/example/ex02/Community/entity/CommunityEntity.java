@@ -1,4 +1,4 @@
-package com.example.ex02.Review.entity;
+package com.example.ex02.Community.entity;
 
 import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.User.entity.UserEntity;
@@ -12,16 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "review")
+@Table(name = "community") 
 @Getter
 @Setter
-@NoArgsConstructor
-public class ReviewEntity {
+@NoArgsConstructor         
+public class CommunityEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_id")
-    private Long reviewId;
+    @Column(name = "community_id")
+    private Long communityId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -31,9 +31,6 @@ public class ReviewEntity {
     @JoinColumn(name = "book_id", nullable = false)
     private BookEntity book;
 
-    @Column
-    private Double rating;
-
     @Lob
     @Column(name = "content_json")
     private String contentJson;
@@ -41,8 +38,8 @@ public class ReviewEntity {
     @Column(name = "thumbnail_url", length = 300)
     private String thumbnailUrl;
 
-    @Column(name = "review_great")
-    private Integer reviewGreat = 0;
+    @Column(name = "community_great")
+    private Integer communityGreat = 0;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -50,8 +47,8 @@ public class ReviewEntity {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReviewImageEntity> images = new ArrayList<>();
+    @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommunityImageEntity> images = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

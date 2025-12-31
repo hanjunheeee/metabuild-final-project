@@ -1,9 +1,14 @@
 package com.example.ex02.Book.service;
 
+import com.example.ex02.Book.dto.BookDTO;
+import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -11,5 +16,32 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookService {
 
     private final BookRepository bookRepository;
-}
 
+    // 전체 도서 조회
+    public List<BookDTO> getAllBooks() {
+        return bookRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // 도서 ID로 조회
+    public BookDTO getBookById(Long id) {
+        BookEntity book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+        return convertToDTO(book);
+    }
+
+    // Entity -> DTO 변환
+    private BookDTO convertToDTO(BookEntity book) {
+        BookDTO dto = new BookDTO();
+        dto.setBookId(book.getBookId());
+        dto.setIsbn(book.getIsbn());
+        dto.setTitle(book.getTitle());
+        dto.setAuthor(book.getAuthor());
+        dto.setPublisher(book.getPublisher());
+        dto.setPublishedDate(book.getPublishedDate());
+        dto.setCreatedAt(book.getCreatedAt());
+        dto.setTag(book.getTag());
+        return dto;
+    }
+}

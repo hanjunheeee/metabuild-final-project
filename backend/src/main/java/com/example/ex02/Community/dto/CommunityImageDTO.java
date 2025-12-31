@@ -1,4 +1,4 @@
-package com.example.ex02.Review.dto;
+package com.example.ex02.Community.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,10 +9,10 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReviewImageDTO {
+public class CommunityImageDTO {
 
     private Long imageId;
-    private Long reviewId;
+    private Long communityId;
     private String imageUrl;
     private String originName;
     private LocalDate createdAt;

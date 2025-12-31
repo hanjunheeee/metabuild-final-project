@@ -4,15 +4,15 @@
 
 /* 폰트 로드 */
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleL.woff2') format('woff2');
-  font-weight: 300;
+  font-family: 'BookkMyungjo';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/BookkMyungjo-Lt.woff2') format('woff2');
+  font-weight: 400;
   font-display: swap;
 }
 
 /* 기본 설정 */
 :root {
-  font-family: 'GyeongbokgungSumunjangTitle', 'Pretendard', system-ui, sans-serif;
+  font-family: 'BookkMyungjo', 'Pretendard', system-ui, sans-serif;
 }
 
 body {

@@ -17,5 +17,6 @@ public class UserDTO {
     private String role;
     private String isActive;
     private LocalDate createdAt;
+    private String userPhoto;
 }
 

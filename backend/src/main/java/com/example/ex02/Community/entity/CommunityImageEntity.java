@@ -1,4 +1,4 @@
-package com.example.ex02.Review.entity;
+package com.example.ex02.Community.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,11 +8,11 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "review_image")
+@Table(name = "community_image")
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReviewImageEntity {
+public class CommunityImageEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +20,8 @@ public class ReviewImageEntity {
     private Long imageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "review_id", nullable = false)
-    private ReviewEntity review;
+    @JoinColumn(name = "community_id", nullable = false)
+    private CommunityEntity community;
 
     @Column(name = "image_url", length = 300)
     private String imageUrl;

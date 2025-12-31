@@ -40,6 +40,7 @@ public class UserService {
         dto.setRole(user.getRole());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setIsActive(user.getIsActive());
+        dto.setUserPhoto(user.getUserPhoto());
         return dto;
     }
 }

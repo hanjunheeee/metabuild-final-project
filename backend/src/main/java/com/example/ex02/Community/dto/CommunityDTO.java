@@ -1,4 +1,4 @@
-package com.example.ex02.Review.dto;
+package com.example.ex02.Community.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,15 +9,14 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReviewDTO {
+public class CommunityDTO {
 
-    private Long reviewId;
+    private Long communityId;
     private Long userId;
     private Long bookId;
-    private Double rating;
     private String contentJson;
     private String thumbnailUrl;
-    private Integer reviewGreat;
+    private Integer communityGreat;
     private LocalDate createdAt;
     private LocalDate updatedAt;
 }

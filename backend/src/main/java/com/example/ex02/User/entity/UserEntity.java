@@ -37,6 +37,9 @@ public class UserEntity {
     @Column(name = "created_at")
     private LocalDate createdAt;
 
+    @Column(name = "user_photo", length = 100)
+    private String userPhoto;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDate.now();

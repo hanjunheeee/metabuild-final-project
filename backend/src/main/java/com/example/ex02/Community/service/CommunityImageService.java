@@ -1,6 +1,6 @@
-package com.example.ex02.Review.service;
+package com.example.ex02.Community.service;
 
-import com.example.ex02.Review.repository.ReviewImageRepository;
+import com.example.ex02.Community.repository.CommunityImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ReviewImageService {
+public class CommunityImageService {
 
-    private final ReviewImageRepository reviewImageRepository;
+    private final CommunityImageRepository communityImageRepository;
 }
 
