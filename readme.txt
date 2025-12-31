@@ -5,13 +5,13 @@ https://nodejs.org/ko
 src/
  ├─ main/
  │   └─ java/com/example/ex02/
- │   		└─ Products/
+ │   		└─ Book/
  │   			└─ controller/
  │   			└─ dto/
  │   			└─ service/
  │   			└─ entity/
  │   			└─ repository/
- │   		└─ User/
+ │   		└─ Library/
  │   			└─ controller/
  │   			└─ dto/
  │   			└─ service/
@@ -35,13 +35,15 @@ src/
 │         ├── privateRoutes.jsx          # 로그인해야 이동 가능한 페이지
 │         ├── privateRoutes.jsx          # 비로그인시에도 이동 가능한 페이지
 ├── features/            # 도메인별 페이지, 훅
-│   ├── User/
+│   ├── Book/
 │   │   ├── components/ # 버튼,입력창
 │   │   ├── api/        # 백엔드 api 호출 js 파일들
-│   │   ├── hooks/      # 상태(state) + 로직을 재사용 가능하게 묶어놓은 함수(js파일일)
+│   │   ├── hooks/      # 상태(state) + 로직을 재사용 가능하게 묶어놓은 함수(js파일)
 │   │   ├── pages/      # 실제 브라우저에 보이는 화면
-│   ├── Products/
-│   └── Cart/
+│   ├── User/
+│   └── Community/
+│   └── Map/
+│   └── Library/
 │   └── .../
 ├── shared/           # 공통 컴포넌트 (도메인 무관)
 │   ├── api/           
