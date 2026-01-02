@@ -55,6 +55,7 @@ src/
 cd backend
 .\mvnw.cmd spring-boot:run
 
-# 프론트엔드 서버 실행 방법: 3000 port
+# 프론트엔드 서버 실행 방법: 3001 port
 cd frontend
+npm install
 npm run dev

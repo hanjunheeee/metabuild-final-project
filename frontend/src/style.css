@@ -1,20 +1,47 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Tailwind 커스텀 테마 */
+@theme {
+  --color-main-bg: #0054D1;
+  --color-sub-bg: #003D7D;
+}
 
 /* 폰트 로드 */
 @font-face {
-  font-family: 'BookkMyungjo';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/BookkMyungjo-Lt.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Escoredream';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Escoredream';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff') format('woff');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Escoredream';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-6Bold.woff') format('woff');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Escoredream';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-8Heavy.woff') format('woff');
+  font-weight: 800;
   font-display: swap;
 }
 
 /* 기본 설정 */
 :root {
-  font-family: 'BookkMyungjo', 'Pretendard', system-ui, sans-serif;
+  font-family: 'Escoredream', 'Pretendard', system-ui, sans-serif;
 }
 
 body {
-  @apply min-h-screen;
+  min-height: 100vh;
 }
+
+

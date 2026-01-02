@@ -19,5 +19,7 @@ public class BookDTO {
     private LocalDate publishedDate;
     private LocalDate createdAt;
     private String tag;
+    private String summary;
+    private Integer borrowedAmount;
 }
 

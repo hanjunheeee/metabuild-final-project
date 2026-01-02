@@ -6,7 +6,7 @@ function App() {
   // TODO: 로그인(인증) 상태 확인 로직 추가
   const isAuthenticated = false
 
-  // 라우트 설정 - MainLayout으로 감싸기
+  // 라우트 설정
   const routes = [
     {
       path: '/',

@@ -40,6 +40,12 @@ public class BookEntity {
     @Column(length = 100)
     private String tag;
 
+    @Column(length = 300)
+    private String summary;
+
+    @Column(name = "borrowed_amount")
+    private Integer borrowedAmount;
+
     @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BookDetailEntity bookDetail;
 

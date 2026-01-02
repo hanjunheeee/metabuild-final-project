@@ -42,6 +42,8 @@ public class BookService {
         dto.setPublishedDate(book.getPublishedDate());
         dto.setCreatedAt(book.getCreatedAt());
         dto.setTag(book.getTag());
+        dto.setSummary(book.getSummary());
+        dto.setBorrowedAmount(book.getBorrowedAmount());
         return dto;
     }
 }
