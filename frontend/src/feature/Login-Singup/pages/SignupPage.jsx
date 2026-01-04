@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PasswordInput, Button } from '@/shared/components'
 import { signup } from '@/shared/api/authApi'
@@ -29,8 +29,11 @@ function SignupPage() {
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [emailVerifyMessage, setEmailVerifyMessage] = useState('')
+  const [termsAgreed, setTermsAgreed] = useState(false)
+  const [privacyAgreed, setPrivacyAgreed] = useState(false)
   const errorRef = useRef(null)
   const navigate = useNavigate()
+  const agreeCheckboxRef = useRef(null)
 
   // 이메일 중복확인 훅
   const emailCheck = useDuplicateCheck(
@@ -68,6 +71,42 @@ function SignupPage() {
   const scrollToError = () => {
     errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
+
+  // localStorage에서 동의 상태 확인
+  useEffect(() => {
+    const checkAgreementStatus = () => {
+      const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
+      const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
+      setTermsAgreed(termsAgreedStorage)
+      setPrivacyAgreed(privacyAgreedStorage)
+      
+      // 둘 다 동의했으면 체크박스 체크
+      if (termsAgreedStorage && privacyAgreedStorage && agreeCheckboxRef.current) {
+        agreeCheckboxRef.current.checked = true
+      }
+    }
+
+    checkAgreementStatus()
+    
+    // storage 이벤트 리스너 추가 (다른 탭에서 변경된 경우 감지)
+    const handleStorageChange = () => {
+      checkAgreementStatus()
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // 페이지 포커스 시에도 확인
+    const handleFocus = () => {
+      checkAgreementStatus()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [])
 
   // 이메일 변경 시 상태 초기화
   const handleEmailChange = () => {
@@ -196,6 +235,23 @@ function SignupPage() {
       return
     }
 
+    // 이용약관 및 개인정보처리방침 동의 여부 검증
+    const isAgreed = agreeCheckboxRef.current?.checked
+    if (!isAgreed) {
+      setError('이용약관 및 개인정보처리방침에 동의해주세요.')
+      setTimeout(scrollToError, 100)
+      return
+    }
+
+    // localStorage에서 동의 상태 확인
+    const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
+    const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
+    if (!termsAgreedStorage || !privacyAgreedStorage) {
+      setError('이용약관 및 개인정보처리방침을 확인하고 동의해주세요.')
+      setTimeout(scrollToError, 100)
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -220,6 +276,9 @@ function SignupPage() {
       }
 
       await signup(email, password, nickname, userPhoto)
+      // 회원가입 성공 시 localStorage 정리
+      localStorage.removeItem('termsAgreed')
+      localStorage.removeItem('privacyAgreed')
       // 회원가입 성공 시 로그인 페이지로 이동
       alert('회원가입이 완료되었습니다. 로그인해주세요.')
       navigate('/login')
@@ -372,10 +431,47 @@ function SignupPage() {
           </div>
 
           {/* 이용약관 동의 */}
-          <AgreeCheckbox id="agree" required>
-            <Link to="/terms" className="text-sub-bg hover:text-main-bg">이용약관</Link> 및{' '}
-            <Link to="/privacy" className="text-sub-bg hover:text-main-bg">개인정보처리방침</Link>에 동의합니다.
-          </AgreeCheckbox>
+          <div className="flex items-start gap-2">
+            <input
+              ref={agreeCheckboxRef}
+              type="checkbox"
+              id="agree"
+              className="w-4 h-4 mt-0.5 border-gray-300 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+              required
+              checked={termsAgreed && privacyAgreed}
+              onChange={(e) => {
+                if (!e.target.checked) {
+                  setTermsAgreed(false)
+                  setPrivacyAgreed(false)
+                }
+              }}
+            />
+            <label htmlFor="agree" className="text-sm text-gray-600">
+              <Link 
+                to="/terms" 
+                state={{ from: 'signup' }}
+                className="text-sub-bg hover:text-main-bg"
+                onClick={(e) => e.stopPropagation()}
+              >
+                이용약관
+              </Link>
+              {' '}및{' '}
+              <Link 
+                to="/privacy" 
+                state={{ from: 'signup' }}
+                className="text-sub-bg hover:text-main-bg"
+                onClick={(e) => e.stopPropagation()}
+              >
+                개인정보처리방침
+              </Link>
+              에 동의합니다.
+            </label>
+          </div>
+          {(!termsAgreed || !privacyAgreed) && (
+            <p className="text-xs text-red-500 mt-1">
+              이용약관과 개인정보처리방침을 모두 확인하고 동의해주세요.
+            </p>
+          )}
 
           {/* 회원가입 버튼 */}
           <Button type="submit" isLoading={isLoading} loadingText="가입 중...">

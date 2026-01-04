@@ -1,4 +1,33 @@
+import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+
 function PrivacyPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [isAgreed, setIsAgreed] = useState(false)
+  const fromSignup = location.state?.from === 'signup'
+
+  useEffect(() => {
+    // 회원가입 페이지에서 온 경우 localStorage에서 동의 상태 확인
+    if (fromSignup) {
+      const agreed = localStorage.getItem('privacyAgreed') === 'true'
+      setIsAgreed(agreed)
+    }
+  }, [fromSignup])
+
+  const handleAgree = () => {
+    const newAgreed = !isAgreed
+    setIsAgreed(newAgreed)
+    localStorage.setItem('privacyAgreed', newAgreed.toString())
+    
+    // 동의하면 잠시 후 회원가입 페이지로 돌아가기
+    if (newAgreed) {
+      setTimeout(() => {
+        navigate('/signup', { state: { from: 'privacy' } })
+      }, 500)
+    }
+  }
+
   return (
     <div className="flex-1 py-12 px-4">
       <div className="max-w-3xl mx-auto">
@@ -76,6 +105,27 @@ function PrivacyPage() {
         <div className="mt-12 pt-8 border-t border-gray-200 text-sm text-gray-500">
           <p>시행일: 2026년 1월 1일</p>
         </div>
+
+        {/* 회원가입 페이지에서 온 경우 체크박스 표시 */}
+        {fromSignup && (
+          <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="privacyAgree"
+                checked={isAgreed}
+                onChange={handleAgree}
+                className="w-5 h-5 mt-0.5 border-gray-300 bg-white text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+              />
+              <label htmlFor="privacyAgree" className="text-sm text-gray-700 cursor-pointer">
+                개인정보처리방침에 동의합니다.
+              </label>
+            </div>
+            {isAgreed && (
+              <p className="mt-2 text-xs text-green-600">개인정보처리방침에 동의하셨습니다. 회원가입 페이지로 돌아갑니다.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

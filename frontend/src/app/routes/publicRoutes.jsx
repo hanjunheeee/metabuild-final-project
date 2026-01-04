@@ -5,6 +5,7 @@ import SignupPage from '@/feature/Login-Singup/pages/SignupPage'
 import NotFoundPage from '@/shared/pages/NotFoundPage'
 import TermsPage from '@/shared/pages/TermsPage'
 import PrivacyPage from '@/shared/pages/PrivacyPage'
+import AboutPage from '@/shared/pages/AboutPage'
 
 const publicRoutes = [
   { path: '/', element: <MainPage /> },
@@ -12,6 +13,7 @@ const publicRoutes = [
   { path: '/signup', element: <SignupPage /> },
   { path: '/terms', element: <TermsPage /> },
   { path: '/privacy', element: <PrivacyPage /> },
+  { path: '/about', element: <AboutPage /> },
   { path: '*', element: <NotFoundPage /> },
 ]
 
