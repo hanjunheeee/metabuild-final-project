@@ -72,7 +72,7 @@ function SignupPage() {
     errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  // localStorage에서 동의 상태 확인
+  // 페이지 진입 시 동의 상태 확인
   useEffect(() => {
     const checkAgreementStatus = () => {
       const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
@@ -85,7 +85,8 @@ function SignupPage() {
         agreeCheckboxRef.current.checked = true
       }
     }
-
+    
+    // 초기 상태 확인
     checkAgreementStatus()
     
     // storage 이벤트 리스너 추가 (다른 탭에서 변경된 경우 감지)

@@ -17,8 +17,8 @@ import java.util.Map;
 public class ProfileUploadController {
 
     // 업로드 경로 (프로젝트 외부 또는 static 폴더)
-    @Value("${file.upload-dir:uploads/profile}")
-    private String uploadDir;
+    @Value("${file.upload-dir:uploads}")
+    private String uploadBaseDir;
 
     // 프로필 이미지 업로드
     @PostMapping("/upload/profile")
@@ -50,7 +50,7 @@ public class ProfileUploadController {
             }
 
             // 업로드 디렉토리 생성
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(uploadBaseDir, "profile");
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }

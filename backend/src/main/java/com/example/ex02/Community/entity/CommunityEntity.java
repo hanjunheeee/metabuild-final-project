@@ -28,8 +28,8 @@ public class CommunityEntity {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
-    private BookEntity book;
+    @JoinColumn(name = "book_id", nullable = true)
+    private BookEntity book;  // 책 선택은 선택사항
 
     @Lob
     @Column(name = "content_json")
@@ -46,6 +46,12 @@ public class CommunityEntity {
 
     @Column(name = "updated_at")
     private LocalDate updatedAt;
+
+    @Column(name = "is_notice")
+    private Integer isNotice = 0;  // 0: 일반글, 1: 공지글
+
+    @Column(name = "community_kind", length = 20)
+    private String communityKind = "FREE";  // QUESTION, FREE, REVIEW
 
     @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommunityImageEntity> images = new ArrayList<>();

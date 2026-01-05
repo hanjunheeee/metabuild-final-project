@@ -6,6 +6,7 @@ import NotFoundPage from '@/shared/pages/NotFoundPage'
 import TermsPage from '@/shared/pages/TermsPage'
 import PrivacyPage from '@/shared/pages/PrivacyPage'
 import AboutPage from '@/shared/pages/AboutPage'
+import CommunityListPage from '@/feature/Community/pages/CommunityListPage'
 
 const publicRoutes = [
   { path: '/', element: <MainPage /> },
@@ -14,6 +15,7 @@ const publicRoutes = [
   { path: '/terms', element: <TermsPage /> },
   { path: '/privacy', element: <PrivacyPage /> },
   { path: '/about', element: <AboutPage /> },
+  { path: '/community', element: <CommunityListPage /> },
   { path: '*', element: <NotFoundPage /> },
 ]
 

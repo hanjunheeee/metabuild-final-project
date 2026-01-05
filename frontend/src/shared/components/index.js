@@ -1,5 +1,11 @@
-export { default as InputField } from './InputField'
-export { default as PasswordInput } from './PasswordInput'
-export { default as Button } from './Button'
-export * from './icons'
+// 폼 관련 컴포넌트
+export * from './form'
 
+// 커뮤니티 관련 컴포넌트
+export * from './community'
+
+// 네비게이션 관련 컴포넌트
+export * from './navigation'
+
+// 아이콘
+export * from './icons'

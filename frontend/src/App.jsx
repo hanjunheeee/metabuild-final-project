@@ -3,18 +3,16 @@ import MainLayout from './app/layouts/MainLayout'
 import { publicRoutes, privateRoutes } from './app/routes'
 
 function App() {
-  // TODO: 로그인(인증) 상태 확인 로직 추가
-  const isAuthenticated = false
-
   // 라우트 설정
+  // privateRoutes는 PrivateRoute 컴포넌트로 감싸져 있어서
+  // 내부에서 인증 체크 후 리다이렉트 처리함
   const routes = [
     {
       path: '/',
       element: <MainLayout />,
       children: [
         ...publicRoutes,
-        // 인증된 사용자만 접근 가능한 라우트
-        ...(isAuthenticated ? privateRoutes : []),
+        ...privateRoutes,
       ],
     },
   ]
