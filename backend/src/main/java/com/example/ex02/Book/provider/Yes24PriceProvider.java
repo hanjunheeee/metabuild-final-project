@@ -1,4 +1,4 @@
-package com.example.ex02.Book.service.provider;
+package com.example.ex02.Book.provider;
 
 import com.example.ex02.Book.dto.BookPriceDTO;
 import org.jsoup.Jsoup;
@@ -20,8 +20,8 @@ public class Yes24PriceProvider implements BookPriceProvider {
                     .timeout(5000)
                     .get();
 
-            Element priceEl = doc.selectFirst(".gd_cost strong");
-            Element linkEl  = doc.selectFirst(".gd_name a");
+            Element priceEl = doc.selectFirst(".info_row.info_price .txt_num .yes_b");
+            Element linkEl  = doc.selectFirst(".gd_name");
 
             if (priceEl == null || linkEl == null) return null;
 
@@ -30,6 +30,9 @@ public class Yes24PriceProvider implements BookPriceProvider {
             );
 
             String link = linkEl.absUrl("href");
+            if (link.isBlank()) {
+                link = "https://www.yes24.com" + linkEl.attr("href");
+            }
 
             return new BookPriceDTO("YES24", price, link);
 
