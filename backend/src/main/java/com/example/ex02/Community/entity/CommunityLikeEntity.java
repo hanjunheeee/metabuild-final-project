@@ -9,48 +9,38 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "community_like", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "community_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
-public class CommentEntity {
+public class CommunityLikeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id")
-    private Long commentId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "community_id", nullable = false)
-    private CommunityEntity community;
+    @Column(name = "like_id")
+    private Long likeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Lob
-    @Column(name = "content", nullable = false)
-    private String content;
-
-    // 부모 댓글 (답글인 경우에만 값 있음, 일반 댓글은 null)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private CommentEntity parent;
+    @JoinColumn(name = "community_id", nullable = false)
+    private CommunityEntity community;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public CommunityLikeEntity(UserEntity user, CommunityEntity community) {
+        this.user = user;
+        this.community = community;
     }
 }
 

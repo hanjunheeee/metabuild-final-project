@@ -35,7 +35,7 @@ function SearchFilterBar({
             className={`px-4 py-2 text-sm font-medium transition-colors border
                       ${kindFilter === option.value
                         ? 'bg-sub-bg text-white border-sub-bg'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-sub-bg hover:text-sub-bg'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-sub-bg hover:text-sub-bg cursor-pointer'
                       }`}
           >
             {option.label}
@@ -77,7 +77,7 @@ function SearchFilterBar({
             className={`px-4 py-2.5 text-sm font-medium transition-colors
                       ${sortBy === 'latest'
                         ? 'bg-main-bg text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer'
                       }`}
           >
             최신순
@@ -87,7 +87,7 @@ function SearchFilterBar({
             className={`px-4 py-2.5 text-sm font-medium transition-colors
                       ${sortBy === 'popular'
                         ? 'bg-main-bg text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer'
                       }`}
           >
             인기순

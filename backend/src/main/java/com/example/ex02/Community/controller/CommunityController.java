@@ -66,5 +66,58 @@ public class CommunityController {
             ));
         }
     }
+
+    // 커뮤니티 글 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCommunity(@PathVariable Long id, @RequestBody CommunityCreateDTO updateDTO) {
+        try {
+            CommunityDTO updated = communityService.updateCommunity(id, updateDTO);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "게시글이 수정되었습니다.",
+                "data", updated
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    // 좋아요 토글
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable Long id, @RequestParam Long userId) {
+        try {
+            var result = communityService.toggleLike(id, userId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "liked", result.liked(),
+                "likeCount", result.likeCount()
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+    
+    // 좋아요 여부 확인
+    @GetMapping("/{id}/like")
+    public ResponseEntity<?> checkLike(@PathVariable Long id, @RequestParam Long userId) {
+        try {
+            boolean liked = communityService.isLikedByUser(id, userId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "liked", liked
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
 }
 

@@ -255,7 +255,7 @@ function CommunityListPage() {
           <button
             onClick={() => navigate('/community/write')}
             className="flex items-center gap-2 px-4 py-2 bg-main-bg text-white text-sm font-medium
-                     hover:bg-sub-bg transition-colors"
+                     hover:bg-sub-bg transition-colors cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

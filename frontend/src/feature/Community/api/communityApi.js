@@ -56,6 +56,47 @@ export const deleteCommunity = async (communityId, userId) => {
   return response.json()
 }
 
+// 커뮤니티 글 수정
+export const updateCommunity = async (communityId, { userId, bookId, title, content, communityKind, thumbnailUrl }) => {
+  const response = await fetch(`${BASE_URL}/api/communities/${communityId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify({
+      userId,
+      bookId,
+      title,
+      content,
+      communityKind,
+      thumbnailUrl,
+    }),
+  })
+  return response.json()
+}
+
+// 좋아요 토글
+export const likeCommunity = async (communityId, userId) => {
+  const response = await fetch(`${BASE_URL}/api/communities/${communityId}/like?userId=${userId}`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeader(),
+    },
+  })
+  return response.json()
+}
+
+// 좋아요 여부 확인
+export const checkLike = async (communityId, userId) => {
+  const response = await fetch(`${BASE_URL}/api/communities/${communityId}/like?userId=${userId}`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  })
+  return response.json()
+}
+
 // HTML 콘텐츠에서 Base64 이미지를 찾아서 서버에 업로드하고 URL로 교체
 export const processImagesInContent = async (htmlContent) => {
   // Base64 이미지 패턴 찾기

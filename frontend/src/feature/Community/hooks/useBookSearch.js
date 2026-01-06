@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { fetchBooks } from '@/feature/Book/api/bookApi'
 
 /**
  * 책 검색/선택 로직을 관리하는 커스텀 훅
@@ -9,24 +10,32 @@ function useBookSearch() {
   const [selectedBook, setSelectedBook] = useState(null)
   const [bookSearchTerm, setBookSearchTerm] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
+  const [books, setBooks] = useState([])
+  const [loading, setLoading] = useState(false)
   const searchRef = useRef(null)
 
-  // 임시 책 목록 (실제로는 API에서 가져옴)
-  // TODO: API 연동 시 useEffect로 fetchBooks 호출
-  const mockBooks = [
-    { bookId: 1, title: '클린 코드', author: '로버트 C. 마틴' },
-    { bookId: 2, title: '리팩터링', author: '마틴 파울러' },
-    { bookId: 3, title: '디자인 패턴', author: 'GoF' },
-    { bookId: 4, title: '실용주의 프로그래머', author: '데이비드 토머스' },
-    { bookId: 5, title: '코딩의 기술', author: '사이먼 알리슨' },
-    { bookId: 6, title: '자바스크립트 완벽 가이드', author: '데이비드 플래너건' },
-  ]
+  // 책 목록 로드
+  useEffect(() => {
+    const loadBooks = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchBooks()
+        setBooks(data || [])
+      } catch (err) {
+        console.error('책 목록 로딩 실패:', err)
+        setBooks([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadBooks()
+  }, [])
 
   // 검색어가 있을 때만 필터링
   const filteredBooks = bookSearchTerm.trim().length > 0
-    ? mockBooks.filter(book =>
-        book.title.toLowerCase().includes(bookSearchTerm.toLowerCase()) ||
-        book.author.toLowerCase().includes(bookSearchTerm.toLowerCase())
+    ? books.filter(book =>
+        book.title?.toLowerCase().includes(bookSearchTerm.toLowerCase()) ||
+        book.author?.toLowerCase().includes(bookSearchTerm.toLowerCase())
       )
     : []
 
@@ -74,6 +83,7 @@ function useBookSearch() {
     showDropdown,
     filteredBooks,
     searchRef,
+    loading,
     
     // 핸들러
     handleSearchChange,
@@ -85,4 +95,3 @@ function useBookSearch() {
 }
 
 export default useBookSearch
-
