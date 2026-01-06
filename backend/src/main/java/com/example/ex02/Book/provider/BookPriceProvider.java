@@ -1,4 +1,4 @@
-package com.example.ex02.Book.service.provider;
+package com.example.ex02.Book.provider;
 
 import com.example.ex02.Book.dto.BookPriceDTO;
 
