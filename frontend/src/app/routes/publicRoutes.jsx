@@ -12,9 +12,8 @@ import CommunityListPage from '@/feature/Community/pages/CommunityListPage'
 const publicRoutes = [
   { path: '/', element: <MainPage /> },
   { path: '/login', element: <LoginPage /> },
-  { path: '/searchbook', element: <SearchPage /> },
-  { path: '*', element: <NotFoundPage /> }
   { path: '/signup', element: <SignupPage /> },
+  { path: '/searchbook', element: <SearchPage /> },
   { path: '/terms', element: <TermsPage /> },
   { path: '/privacy', element: <PrivacyPage /> },
   { path: '/about', element: <AboutPage /> },
