@@ -9,6 +9,8 @@ import PrivacyPage from '@/shared/pages/PrivacyPage'
 import AboutPage from '@/shared/pages/AboutPage'
 import CommunityListPage from '@/feature/Community/pages/CommunityListPage'
 import CommunityDetailPage from '@/feature/Community/pages/CommunityDetailPage'
+import LibrarySearchPage from '@/feature/Library/pages/LibrarySearchPage'
+import LibraryMapPage from '@/feature/Library/pages/LibraryMapPage'
 
 const publicRoutes = [
   { path: '/', element: <MainPage /> },
@@ -20,6 +22,8 @@ const publicRoutes = [
   { path: '/about', element: <AboutPage /> },
   { path: '/community', element: <CommunityListPage /> },
   { path: '/community/:id', element: <CommunityDetailPage /> },
+  { path: '/library/search', element: <LibrarySearchPage /> },
+  { path: '/library/map', element: <LibraryMapPage /> },
   { path: '*', element: <NotFoundPage /> },
 ]
 
