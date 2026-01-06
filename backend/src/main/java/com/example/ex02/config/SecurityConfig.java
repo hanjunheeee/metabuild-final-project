@@ -28,6 +28,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // === 공개 API ===
+                .requestMatchers("/api/books/**").permitAll()
                 // 인증 관련 (로그인, 회원가입, 이메일 확인 등)
                 .requestMatchers("/api/users/login", "/api/users/signup", "/api/users/check-email").permitAll()
                 // 이메일 인증 API
