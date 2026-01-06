@@ -1,7 +1,8 @@
-import { useSearchParams, useNavigate } from 'react-router-dom'
+﻿import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import useBooks from '../hooks/useBooks'
-import { fetchBookShops as fetchBookShopsApi } from '../api/bookApi'
+import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSummaryApi } from '../api/bookApi'
+import Spinner from '../../../shared/components/icons/Spinner'
 
 function SearchPage() {
 
@@ -12,15 +13,18 @@ function SearchPage() {
   const [shops, setShops] = useState({})
   const [loadingBookId, setLoadingBookId] = useState(null)
 
+  const [summaries, setSummaries] = useState({})
+  const [loadingSummaryIds, setLoadingSummaryIds] = useState({})
+
   const fetchBookShops = async (book) => {
 
-    // 이미 열려 있으면 닫기
+    // Toggle close if already open
     if (openBookId === book.bookId) {
       setOpenBookId(null)
       return
     }
 
-    // 이미 불러온 데이터 있으면 재사용
+    // Use cached shops if already loaded
     if (shops[book.bookId]) {
       setOpenBookId(book.bookId)
       return
@@ -45,8 +49,37 @@ function SearchPage() {
     }
   }
 
+  const fetchBookSummary = async (bookId) => {
+    if (summaries[bookId]) {
+      return
+    }
+
+    setLoadingSummaryIds(prev => ({
+      ...prev,
+      [bookId]: true
+    }))
+
+    try {
+      const data = await fetchBookSummaryApi(bookId)
+      setSummaries(prev => ({
+        ...prev,
+        [bookId]: data.summary
+      }))
+    } catch (e) {
+      setSummaries(prev => ({
+        ...prev,
+        [bookId]: ''
+      }))
+    } finally {
+      setLoadingSummaryIds(prev => ({
+        ...prev,
+        [bookId]: false
+      }))
+    }
+  }
+
   /* ===============================
-     검색 관련 상태
+     검색 상태
   =============================== */
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -76,7 +109,7 @@ function SearchPage() {
     <div className="max-w-7xl mx-auto px-6">
 
       {/* ===============================
-         🔍 검색 바
+         검색창
       =============================== */}
       <div className="mt-10 mb-16 flex justify-center">
         <form
@@ -88,7 +121,7 @@ function SearchPage() {
         >
           <input
             type="text"
-            placeholder="도서명, 저자, ISBN으로 검색하세요"
+            placeholder="도서명 또는 ISBN으로 검색하세요"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="w-full h-16 pl-6 pr-16 text-lg rounded-full border border-gray-300"
@@ -97,16 +130,16 @@ function SearchPage() {
             type="submit"
             className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gray-900 text-white"
           >
-            🔍
+            검색
           </button>
         </form>
       </div>
 
       {/* ===============================
-         📚 검색 결과
+         검색결과
       =============================== */}
       <h2 className="text-2xl font-bold mb-10">
-        “{initialKeyword}” 검색 결과
+        {initialKeyword} 검색결과
       </h2>
 
       {books.length === 0 ? (
@@ -124,7 +157,7 @@ function SearchPage() {
               <div key={book.bookId}>
 
               {/* ===============================
-                 📦 도서 카드
+                 도서 카드
               =============================== */}
               <div className="grid grid-cols-12 gap-6 bg-gray-100 rounded-2xl p-6">
 
@@ -141,50 +174,69 @@ function SearchPage() {
                     {book.title}
                   </h3>
                   <p className="text-gray-600 text-sm mb-1">
-                    저자 · {book.author}
+                    저자 {book.author}
                   </p>
                   <p className="text-gray-600 text-sm mb-4">
-                    출판사 · {book.publisher}
+                    출판사 {book.publisher}
                   </p>
-                  <div className="bg-white border rounded-lg px-4 py-2 text-sm text-gray-700">
-                    AI 줄거리 / 한줄 요약 영역
+                  <div
+                    className="bg-white border rounded-lg px-4 py-2 text-sm text-gray-700 cursor-pointer flex items-center gap-2"
+                    onClick={() => fetchBookSummary(book.bookId)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        fetchBookSummary(book.bookId)
+                      }
+                    }}
+                  >
+                    {loadingSummaryIds[book.bookId] && (
+                      <Spinner className="w-4 h-4" />
+                    )}
+                    {loadingSummaryIds[book.bookId]
+                      ? 'AI 요약 생성 중...'
+                      : (summaries[book.bookId] || '클릭하면 AI 요약을 생성합니다')}
                   </div>
                 </div>
 
                 {/* 버튼 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-3 justify-center">
                   <button className="w-full py-2 rounded-lg bg-gray-900 text-white text-sm">
-                    대출가능 도서관
+                    대출 가능 도서관
                   </button>
 
                   <button
-                    className="w-full py-2 rounded-lg bg-gray-800 text-white text-sm"
+                    className="w-full py-2 rounded-lg bg-gray-800 text-white text-sm flex items-center justify-center gap-2 disabled:opacity-70"
                     onClick={() => fetchBookShops(book)}
+                    disabled={loadingBookId === book.bookId}
                   >
-                    구매사이트
+                    {loadingBookId === book.bookId && (
+                      <Spinner className="w-4 h-4" />
+                    )}
+                    도서 구매 조회
                   </button>
 
                   <button className="w-full py-2 rounded-lg bg-gray-700 text-white text-sm">
-                    관련 콘텐츠
+                    관련 커뮤니티 게시글
                   </button>
                 </div>
               </div>
 
               {/* ===============================
-                 🛒 가격 비교 영역
+                 가격비교
               =============================== */}
               {openBookId === book.bookId && (
                 <div className="mt-4 bg-white border rounded-xl p-5">
 
                   <h4 className="font-semibold mb-3">
-                    최저가 비교 (전문서점)
+                    최저가 비교 (온라인서점)
                   </h4>
 
                   {loadingBookId === book.bookId ? (
                     <p className="text-sm text-gray-500">불러오는 중...</p>
                   ) : bookShops.length === 0 ? (
                     <p className="text-sm text-gray-500">
-                      판매처 정보가 없습니다.
+                      판매 정보가 없습니다.
                     </p>
                   ) : (
                     <ul className="space-y-2">
@@ -197,7 +249,7 @@ function SearchPage() {
                             {shop.provider}
                             {minPrice !== null && shop.price === minPrice && (
                               <span className="ml-2 text-xs text-amber-600">
-                                ⭐ 최저가
+                                최저가
                               </span>
                             )}
                           </span>
