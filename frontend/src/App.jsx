@@ -4,6 +4,15 @@ import { publicRoutes } from './app/routes'
 import PrivateRoute from './app/routes/PrivateRoute'
 import CommunityWritePage from '@/feature/Community/pages/CommunityWritePage'
 
+// 마이페이지 컴포넌트
+import MyPageLayout from '@/feature/Mypage/components/MyPageLayout'
+import ProfilePage from '@/feature/Mypage/pages/ProfilePage'
+import MyPostsPage from '@/feature/Mypage/pages/MyPostsPage'
+import MyCommentsPage from '@/feature/Mypage/pages/MyCommentsPage'
+import MyLikesPage from '@/feature/Mypage/pages/MyLikesPage'
+import MyBookmarksPage from '@/feature/Mypage/pages/MyBookmarksPage'
+import MyFollowingPage from '@/feature/Mypage/pages/MyFollowingPage'
+
 function App() {
   const routes = [
     {
@@ -15,6 +24,19 @@ function App() {
         { 
           path: '/community/write', 
           element: <PrivateRoute><CommunityWritePage /></PrivateRoute> 
+        },
+        // 마이페이지 (로그인 필요, 중첩 라우팅)
+        {
+          path: '/mypage',
+          element: <PrivateRoute><MyPageLayout /></PrivateRoute>,
+          children: [
+            { index: true, element: <ProfilePage /> },
+            { path: 'posts', element: <MyPostsPage /> },
+            { path: 'comments', element: <MyCommentsPage /> },
+            { path: 'likes', element: <MyLikesPage /> },
+            { path: 'bookmarks', element: <MyBookmarksPage /> },
+            { path: 'following', element: <MyFollowingPage /> },
+          ],
         },
       ],
     },

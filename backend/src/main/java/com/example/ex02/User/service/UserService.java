@@ -62,7 +62,8 @@ public class UserService {
                 user.getUserId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.getRole()
+                user.getRole(),
+                user.getUserPhoto()
         );
     }
 
@@ -100,6 +101,44 @@ public class UserService {
 
         UserEntity savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
+    }
+
+    // 프로필 수정
+    @Transactional
+    public UserDTO updateProfile(Long userId, String nickname, String userPhoto) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 닉네임 변경 시 중복 확인
+        if (nickname != null && !nickname.equals(user.getNickname())) {
+            if (userRepository.existsByNickname(nickname)) {
+                throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+            }
+            user.setNickname(nickname);
+        }
+
+        // 프로필 사진 변경
+        if (userPhoto != null) {
+            user.setUserPhoto(userPhoto);
+        }
+
+        UserEntity savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    // 이메일로 사용자 존재 여부 확인
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    // 비밀번호 변경 (이메일 기준)
+    @Transactional
+    public void changePassword(String email, String newPassword) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        user.setPassword(newPassword); // 실제로는 암호화 필요
+        userRepository.save(user);
     }
 
     // Entity -> DTO 변환

@@ -1,15 +1,23 @@
-import { useState } from 'react'
+import { useState, forwardRef } from 'react'
 import { EyeIcon, EyeOffIcon } from '../icons'
 
-function PasswordInput({ 
+const PasswordInput = forwardRef(function PasswordInput({ 
   id = 'password', 
   name,
   label = '비밀번호', 
   placeholder = '••••••••',
   required = false,
-  rightLink = null
-}) {
+  rightLink = null,
+  defaultValue = '',
+  value,
+  onChange
+}, ref) {
   const [showPassword, setShowPassword] = useState(false)
+
+  // controlled vs uncontrolled 지원
+  const inputProps = value !== undefined 
+    ? { value, onChange } 
+    : { defaultValue }
 
   return (
     <div>
@@ -21,11 +29,13 @@ function PasswordInput({
       </div>
       <div className="relative">
         <input
+          ref={ref}
           id={id}
           name={name || id}
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
           required={required}
+          {...inputProps}
           className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg"
         />
         <button
@@ -38,7 +48,6 @@ function PasswordInput({
       </div>
     </div>
   )
-}
+})
 
 export default PasswordInput
-

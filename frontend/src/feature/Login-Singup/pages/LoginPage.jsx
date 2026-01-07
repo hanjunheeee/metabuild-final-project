@@ -6,6 +6,7 @@ import { login } from '@/shared/api/authApi'
 function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
@@ -18,7 +19,7 @@ function LoginPage() {
     const password = formData.get('password')
 
     try {
-      await login(email, password)
+      await login(email, password, rememberMe)
       navigate('/') // 로그인 성공 시 메인 페이지로 이동
     } catch (err) {
       setError(err.message)
@@ -63,7 +64,7 @@ function LoginPage() {
             label="비밀번호"
             required
             rightLink={
-              <Link to="#" className="text-xs text-sub-bg hover:text-main-bg">
+              <Link to="/forgot-password" className="text-xs text-sub-bg hover:text-main-bg">
                 비밀번호 찾기
               </Link>
             }
@@ -74,6 +75,8 @@ function LoginPage() {
             <input
               type="checkbox"
               id="remember"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="w-4 h-4 border-gray-300 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
             />
             <label htmlFor="remember" className="text-sm text-gray-600">

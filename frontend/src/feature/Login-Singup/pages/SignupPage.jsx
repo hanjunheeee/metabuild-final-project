@@ -1,4 +1,3 @@
-import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PasswordInput, Button } from '@/shared/components'
 import { signup } from '@/shared/api/authApi'
@@ -12,243 +11,66 @@ import {
   VerificationCodeInput,
   PhotoPreview,
   HiddenFileInput,
-  AgreeCheckbox,
   InputLabel,
   ValidationMessage,
   InfoMessage
 } from '../components'
-import { useDuplicateCheck, usePhotoUpload } from '../hooks'
+import { useSignupForm } from '../hooks'
 
 function SignupPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  // 이메일 인증 관련 state
-  const [showVerificationInput, setShowVerificationInput] = useState(false)
-  const [verificationCode, setVerificationCode] = useState('')
-  const [isEmailVerified, setIsEmailVerified] = useState(false)
-  const [isSendingCode, setIsSendingCode] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [emailVerifyMessage, setEmailVerifyMessage] = useState('')
-  const [termsAgreed, setTermsAgreed] = useState(false)
-  const [privacyAgreed, setPrivacyAgreed] = useState(false)
-  const errorRef = useRef(null)
   const navigate = useNavigate()
-  const agreeCheckboxRef = useRef(null)
+  
+  const {
+    // 기존 훅들
+    emailCheck,
+    nicknameCheck,
+    photo,
 
-  // 이메일 중복확인 훅
-  const emailCheck = useDuplicateCheck(
-    'http://localhost:7878/api/users/check-email',
-    'email',
-    (value) => {
-      if (!value) return '이메일을 입력해주세요.'
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(value)) return '올바른 이메일 형식이 아닙니다.'
-      return null
-    }
-  )
+    // Refs
+    passwordRef,
+    passwordConfirmRef,
+    agreeCheckboxRef,
+    errorRef,
 
-  // 닉네임 중복확인 훅
-  const nicknameCheck = useDuplicateCheck(
-    'http://localhost:7878/api/users/check-nickname',
-    'nickname',
-    (value) => {
-      if (!value) return '닉네임을 입력해주세요.'
-      // 2~5글자, 영문/숫자/완성형 한글만 허용 (자음/모음 단독 불가)
-      const nicknameRegex = /^[a-zA-Z0-9가-힣]{2,5}$/
-      if (!nicknameRegex.test(value)) {
-        if (value.length < 2) return '닉네임은 2자 이상이어야 합니다.'
-        if (value.length > 5) return '닉네임은 5자 이하여야 합니다.'
-        return '닉네임은 영문, 숫자, 한글만 사용 가능합니다. (자음/모음 단독 불가)'
-      }
-      return null
-    }
-  )
+    // 이메일 인증
+    showVerificationInput,
+    verificationCode,
+    setVerificationCode,
+    isEmailVerified,
+    isSendingCode,
+    isVerifying,
+    emailVerifyMessage,
 
-  // 사진 업로드 훅
-  const photo = usePhotoUpload({ maxSizeMB: 5, onError: setError })
+    // 약관 동의
+    termsAgreed,
+    setTermsAgreed,
+    privacyAgreed,
+    setPrivacyAgreed,
 
-  // 에러 메시지로 스크롤
-  const scrollToError = () => {
-    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
+    // 폼 상태
+    isLoading,
+    setIsLoading,
+    error,
+    setError,
 
-  // 페이지 진입 시 동의 상태 확인
-  useEffect(() => {
-    const checkAgreementStatus = () => {
-      const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
-      const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
-      setTermsAgreed(termsAgreedStorage)
-      setPrivacyAgreed(privacyAgreedStorage)
-      
-      // 둘 다 동의했으면 체크박스 체크
-      if (termsAgreedStorage && privacyAgreedStorage && agreeCheckboxRef.current) {
-        agreeCheckboxRef.current.checked = true
-      }
-    }
-    
-    // 초기 상태 확인
-    checkAgreementStatus()
-    
-    // storage 이벤트 리스너 추가 (다른 탭에서 변경된 경우 감지)
-    const handleStorageChange = () => {
-      checkAgreementStatus()
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    
-    // 페이지 포커스 시에도 확인
-    const handleFocus = () => {
-      checkAgreementStatus()
-    }
-    
-    window.addEventListener('focus', handleFocus)
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('focus', handleFocus)
-    }
-  }, [])
-
-  // 이메일 변경 시 상태 초기화
-  const handleEmailChange = () => {
-    // 중복확인 상태 초기화
-    emailCheck.reset()
-    // 인증 상태 초기화
-    setIsEmailVerified(false)
-    setShowVerificationInput(false)
-    setVerificationCode('')
-    setEmailVerifyMessage('')
-  }
-
-  // 이메일 인증번호 발송 핸들러
-  const handleSendVerificationCode = async () => {
-    const email = emailCheck.inputRef.current?.value
-    if (!email) {
-      setEmailVerifyMessage('이메일을 입력해주세요.')
-      return
-    }
-
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      setEmailVerifyMessage('올바른 이메일 형식이 아닙니다.')
-      return
-    }
-
-    setIsSendingCode(true)
-    setEmailVerifyMessage('')
-
-    try {
-      const response = await fetch('http://localhost:7878/api/email/send-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-      const data = await response.json()
-      
-      if (data.success) {
-        setShowVerificationInput(true)
-        setEmailVerifyMessage('인증번호가 발송되었습니다. 이메일을 확인해주세요.')
-      } else {
-        setEmailVerifyMessage(data.message || '인증번호 발송에 실패했습니다.')
-      }
-    } catch (err) {
-      setEmailVerifyMessage('인증번호 발송에 실패했습니다.')
-    } finally {
-      setIsSendingCode(false)
-    }
-  }
-
-  // 인증번호 확인 핸들러
-  const handleVerifyCode = async () => {
-    if (verificationCode.length !== 6) {
-      setEmailVerifyMessage('6자리 인증번호를 입력해주세요.')
-      return
-    }
-
-    const email = emailCheck.inputRef.current?.value
-    setIsVerifying(true)
-    setEmailVerifyMessage('')
-
-    try {
-      const response = await fetch('http://localhost:7878/api/email/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: verificationCode })
-      })
-      const data = await response.json()
-      
-      if (data.success) {
-        setIsEmailVerified(true)
-        setEmailVerifyMessage('이메일 인증이 완료되었습니다.')
-      } else {
-        setEmailVerifyMessage(data.message || '인증번호가 올바르지 않습니다.')
-      }
-    } catch (err) {
-      setEmailVerifyMessage('인증번호가 올바르지 않습니다.')
-    } finally {
-      setIsVerifying(false)
-    }
-  }
+    // 핸들러
+    handleEmailChange,
+    sendVerificationCode,
+    verifyCode,
+    saveFormData,
+    validateForm,
+    uploadPhoto,
+    cleanup,
+    scrollToError,
+  } = useSignupForm()
 
   const handleSignup = async (e) => {
     e.preventDefault()
     setError('')
 
-    const formData = new FormData(e.target)
-    const email = formData.get('email')
-    const password = formData.get('password')
-    const passwordConfirm = formData.get('passwordConfirm')
-    const nickname = formData.get('nickname')
-
-    // 이메일 중복확인 여부 검증
-    if (!emailCheck.isChecked) {
-        setError('이메일 중복확인을 해주세요.')
-        setTimeout(scrollToError, 100)
-        return
-    }
-  
-    // 이메일 인증 여부 검증
-    if (!isEmailVerified) {
-        setError('이메일 인증을 완료해주세요.')
-        setTimeout(scrollToError, 100)
-        return
-    }
-
-    // 비밀번호 확인
-    if (password !== passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.')
-      setTimeout(scrollToError, 100)
-      return
-    }
-
-    // 비밀번호 길이 검증
-    if (password.length < 8) {
-      setError('비밀번호는 8자 이상이어야 합니다.')
-      setTimeout(scrollToError, 100)
-      return
-    }
-
-    // 닉네임 중복확인 여부 검증
-    if (!nicknameCheck.isChecked) {
-      setError('닉네임 중복확인을 해주세요.')
-      setTimeout(scrollToError, 100)
-      return
-    }
-
-    // 이용약관 및 개인정보처리방침 동의 여부 검증
-    const isAgreed = agreeCheckboxRef.current?.checked
-    if (!isAgreed) {
-      setError('이용약관 및 개인정보처리방침에 동의해주세요.')
-      setTimeout(scrollToError, 100)
-      return
-    }
-
-    // localStorage에서 동의 상태 확인
-    const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
-    const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
-    if (!termsAgreedStorage || !privacyAgreedStorage) {
-      setError('이용약관 및 개인정보처리방침을 확인하고 동의해주세요.')
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
       setTimeout(scrollToError, 100)
       return
     }
@@ -256,31 +78,19 @@ function SignupPage() {
     setIsLoading(true)
 
     try {
-      let userPhoto = null
+      const formData = new FormData(e.target)
+      const email = formData.get('email')
+      const password = formData.get('password')
+      const nickname = formData.get('nickname')
 
-      // 프로필 사진이 있으면 먼저 업로드
-      if (photo.photoFile) {
-        const formData = new FormData()
-        formData.append('file', photo.photoFile)
-
-        const uploadResponse = await fetch('http://localhost:7878/api/files/upload/profile', {
-          method: 'POST',
-          body: formData
-        })
-        const uploadData = await uploadResponse.json()
-
-        if (uploadData.success) {
-          userPhoto = uploadData.filename
-        } else {
-          throw new Error(uploadData.message || '프로필 사진 업로드에 실패했습니다.')
-        }
-      }
+      // 프로필 사진 업로드
+      const userPhoto = await uploadPhoto()
 
       await signup(email, password, nickname, userPhoto)
-      // 회원가입 성공 시 localStorage 정리
-      localStorage.removeItem('termsAgreed')
-      localStorage.removeItem('privacyAgreed')
-      // 회원가입 성공 시 로그인 페이지로 이동
+      
+      // 성공 시 정리
+      cleanup()
+      
       alert('회원가입이 완료되었습니다. 로그인해주세요.')
       navigate('/login')
     } catch (err) {
@@ -332,7 +142,7 @@ function SignupPage() {
 
             {/* 인증 코드 발송 버튼 */}
             <SendCodeButton
-              onClick={handleSendVerificationCode}
+              onClick={sendVerificationCode}
               disabled={isSendingCode || !emailCheck.isChecked}
               isSending={isSendingCode}
               isVerified={isEmailVerified}
@@ -351,7 +161,7 @@ function SignupPage() {
                   {/* 인증번호 확인 버튼 */}
                   {!isEmailVerified && (
                     <PrimaryButton
-                      onClick={handleVerifyCode}
+                      onClick={verifyCode}
                       disabled={isVerifying || verificationCode.length !== 6}
                     >
                       {isVerifying ? '확인 중...' : '인증번호 확인'}
@@ -367,6 +177,7 @@ function SignupPage() {
 
           {/* 비밀번호 */}
           <PasswordInput
+            ref={passwordRef}
             id="password"
             name="password"
             label="비밀번호"
@@ -376,6 +187,7 @@ function SignupPage() {
 
           {/* 비밀번호 확인 */}
           <PasswordInput
+            ref={passwordConfirmRef}
             id="passwordConfirm"
             name="passwordConfirm"
             label="비밀번호 확인"
@@ -452,7 +264,10 @@ function SignupPage() {
                 to="/terms" 
                 state={{ from: 'signup' }}
                 className="text-sub-bg hover:text-main-bg"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  saveFormData()
+                }}
               >
                 이용약관
               </Link>
@@ -461,7 +276,10 @@ function SignupPage() {
                 to="/privacy" 
                 state={{ from: 'signup' }}
                 className="text-sub-bg hover:text-main-bg"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  saveFormData()
+                }}
               >
                 개인정보처리방침
               </Link>
@@ -495,4 +313,3 @@ function SignupPage() {
 }
 
 export default SignupPage
-

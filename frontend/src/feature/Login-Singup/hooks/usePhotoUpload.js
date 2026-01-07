@@ -55,7 +55,8 @@ export function usePhotoUpload({ maxSizeMB = 5, onError } = {}) {
     fileInputRef,
     handlePhotoChange,
     handlePhotoRemove,
-    reset
+    reset,
+    setPhotoPreview
   }
 }
 
