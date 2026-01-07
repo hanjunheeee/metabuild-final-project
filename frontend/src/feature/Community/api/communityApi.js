@@ -97,6 +97,16 @@ export const checkLike = async (communityId, userId) => {
   return response.json()
 }
 
+// 사용자가 좋아요한 게시글 ID 목록 조회
+export const fetchLikedCommunityIds = async (userId) => {
+  const response = await fetch(`${BASE_URL}/api/communities/liked/${userId}`, {
+    headers: {
+      ...getAuthHeader(),
+    },
+  })
+  return response.json()
+}
+
 // HTML 콘텐츠에서 Base64 이미지를 찾아서 서버에 업로드하고 URL로 교체
 export const processImagesInContent = async (htmlContent) => {
   // Base64 이미지 패턴 찾기

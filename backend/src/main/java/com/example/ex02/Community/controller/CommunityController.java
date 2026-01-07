@@ -119,5 +119,12 @@ public class CommunityController {
             ));
         }
     }
+    
+    // 사용자가 좋아요한 게시글 ID 목록 조회
+    @GetMapping("/liked/{userId}")
+    public ResponseEntity<List<Long>> getLikedCommunityIds(@PathVariable Long userId) {
+        List<Long> communityIds = communityService.getLikedCommunityIdsByUserId(userId);
+        return ResponseEntity.ok(communityIds);
+    }
 }
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import useBookSearch from '@/feature/Community/hooks/useBookSearch'
 import useRichTextEditor from '@/feature/Community/hooks/useRichTextEditor'
 
@@ -27,6 +27,15 @@ function CommunityForm({
 }) {
   const [title, setTitle] = useState('')
   const [communityKind, setCommunityKind] = useState('FREE')
+  const [error, setError] = useState('')
+  const errorRef = useRef(null)
+
+  // 에러 메시지로 스크롤
+  const scrollToError = useCallback(() => {
+    setTimeout(() => {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }, [])
 
   // 책 검색/선택 훅 사용
   const {
@@ -100,15 +109,25 @@ function CommunityForm({
   // 폼 제출
   const handleSubmit = (e) => {
     e.preventDefault()
+    setError('')
     
     if (!title.trim()) {
-      alert('제목을 입력해주세요.')
+      setError('제목을 입력해주세요.')
+      scrollToError()
       return
     }
     
     const content = getTextContent()
     if (!content.trim()) {
-      alert('내용을 입력해주세요.')
+      setError('내용을 입력해주세요.')
+      scrollToError()
+      return
+    }
+
+    // 리뷰인 경우 책 선택 필수
+    if (communityKind === 'REVIEW' && !selectedBook) {
+      setError('리뷰 게시글은 책을 선택해야 합니다.')
+      scrollToError()
       return
     }
 
@@ -136,6 +155,13 @@ function CommunityForm({
 
   return (
     <form onSubmit={handleSubmit} className="border border-main-bg p-6 shadow-sm">
+      {/* 에러 메시지 */}
+      {error && (
+        <div ref={errorRef} className="mb-5 p-3 bg-red-50 border border-red-200 text-red-600 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* 게시판 종류 선택 */}
       <div className="mb-5">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -166,7 +192,7 @@ function CommunityForm({
       {/* 책 선택 */}
       <div className="mb-5">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          책 선택 
+          책 선택 {communityKind === 'REVIEW' && <span className="text-red-500">*</span>}
         </label>
         
         {selectedBook ? (

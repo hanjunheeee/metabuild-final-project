@@ -25,7 +25,7 @@ function SearchFilterBar({
   onKindChange
 }) {
   return (
-    <div className="border border-main-bg p-4 shadow-sm mb-6">
+    <div className="border border-gray-200 p-4 shadow-sm mb-6">
       {/* 게시글 종류 필터 */}
       <div className="flex flex-wrap gap-2 mb-4">
         {KIND_OPTIONS.map((option) => (

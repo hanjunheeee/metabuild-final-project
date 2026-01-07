@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import useCommunities from '../hooks/useCommunities'
+import useCommunityHelpers from '../hooks/useCommunityHelpers'
 import { CommunityPostCard, SearchFilterBar, EmptyState } from '../components'
 import { Pagination } from '@/shared/components'
 import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
+import { toggleFollow, checkFollowing } from '@/shared/api/followApi'
 import { deleteCommunity } from '../api/communityApi'
 
 // 페이지당 게시글 수
@@ -12,7 +14,9 @@ const POSTS_PER_PAGE = 10
 
 function CommunityListPage() {
   const { communities, loading, error, refetch } = useCommunities()
+  const { formatDate, getPostTitle, stripHtml, getPreviewContent, getPostImages } = useCommunityHelpers()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('latest') // 'latest', 'popular'
   const [kindFilter, setKindFilter] = useState('ALL') // 'ALL', 'FREE', 'QUESTION', 'REVIEW'
@@ -20,6 +24,49 @@ function CommunityListPage() {
 
   // 현재 로그인한 사용자
   const currentUser = getUserFromSession()
+
+  // URL에서 userId 파라미터 읽기 (특정 유저의 게시글 목록 보기)
+  const filterUserId = searchParams.get('userId')
+  const filterUserName = searchParams.get('userName')
+  const isUserFilterMode = !!filterUserId
+
+  // 팔로우 상태
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+
+  // 팔로우 상태 확인 (유저 필터 모드일 때)
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!isUserFilterMode || !currentUser?.userId || !filterUserId) return
+      // 자기 자신이면 체크 안함
+      if (currentUser.userId === Number(filterUserId)) return
+      
+      try {
+        const result = await checkFollowing(currentUser.userId, Number(filterUserId))
+        setIsFollowing(result.isFollowing)
+      } catch (error) {
+        console.error('팔로우 상태 확인 실패:', error)
+      }
+    }
+    checkFollowStatus()
+  }, [isUserFilterMode, currentUser?.userId, filterUserId])
+
+  // 팔로우/언팔로우 토글
+  const handleToggleFollow = async () => {
+    if (!currentUser?.userId || !filterUserId) return
+    
+    setFollowLoading(true)
+    try {
+      const result = await toggleFollow(currentUser.userId, Number(filterUserId))
+      if (result.success) {
+        setIsFollowing(result.isFollowing)
+      }
+    } catch (error) {
+      console.error('팔로우 토글 실패:', error)
+    } finally {
+      setFollowLoading(false)
+    }
+  }
 
   // 공지글과 일반글 분리 (공지글은 최신 3개만)
   const { noticePosts, regularPosts } = useMemo(() => {
@@ -34,6 +81,11 @@ function CommunityListPage() {
   // 검색 및 정렬 적용 (일반글만)
   const filteredCommunities = useMemo(() => {
     let result = [...regularPosts]
+
+    // 특정 유저의 게시글만 필터링
+    if (filterUserId) {
+      result = result.filter(post => post.userId === Number(filterUserId))
+    }
 
     // 게시글 종류 필터
     if (kindFilter !== 'ALL') {
@@ -71,7 +123,7 @@ function CommunityListPage() {
     }
 
     return result
-  }, [regularPosts, searchTerm, sortBy, kindFilter])
+  }, [regularPosts, searchTerm, sortBy, kindFilter, filterUserId])
 
   // 전체 페이지 수 계산
   const totalPages = Math.ceil(filteredCommunities.length / POSTS_PER_PAGE)
@@ -105,84 +157,24 @@ function CommunityListPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // 날짜 포맷
-  const formatDate = (dateStr) => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diff = now - date
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    
-    if (days === 0) return '오늘'
-    if (days === 1) return '어제'
-    if (days < 7) return `${days}일 전`
-    
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  // 게시글 제목 추출
-  const getPostTitle = (post) => {
-    try {
-      const parsed = JSON.parse(post.contentJson || '{}')
-      return parsed.title || '제목 없음'
-    } catch {
-      return post.contentJson?.substring(0, 50) || '제목 없음'
-    }
-  }
-
-  // HTML 태그 제거 함수
-  const stripHtml = (html) => {
-    if (!html) return ''
-    // HTML 태그 제거
-    const text = html.replace(/<[^>]*>/g, '')
-    // HTML 엔티티 디코딩 (&nbsp;, &amp; 등)
-    const decoded = text
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-    // 연속 공백 제거
-    return decoded.replace(/\s+/g, ' ').trim()
-  }
-
-  // 게시글 미리보기 내용 추출
-  const getPreviewContent = (post) => {
-    try {
-      const parsed = JSON.parse(post.contentJson || '{}')
-      const content = stripHtml(parsed.content || '')
-      return content.length > 120 ? content.substring(0, 120) + '...' : content
-    } catch {
-      const content = stripHtml(post.contentJson || '')
-      return content.length > 120 ? content.substring(0, 120) + '...' : content
-    }
-  }
-
-  // 게시글 내 이미지 추출
-  const getPostImages = (post) => {
-    try {
-      const parsed = JSON.parse(post.contentJson || '{}')
-      const content = parsed.content || ''
-      // img 태그에서 src 추출
-      const imgPattern = /<img[^>]+src=["']([^"']+)["'][^>]*>/g
-      const images = []
-      let match
-      while ((match = imgPattern.exec(content)) !== null) {
-        images.push(match[1])
-      }
-      return images
-    } catch {
-      return []
-    }
-  }
-
   // 게시글 상세 페이지로 이동
   const handlePostClick = (postId) => {
     navigate(`/community/${postId}`)
+  }
+
+  // 작성자 클릭 시 해당 유저의 게시글 목록으로 이동
+  const handleAuthorClick = (userId, userName) => {
+    // 내 프로필이면 마이페이지로 이동
+    if (currentUser && currentUser.userId === userId) {
+      navigate('/mypage/posts')
+    } else {
+      navigate(`/community?userId=${userId}&userName=${encodeURIComponent(userName || '사용자')}`)
+    }
+  }
+
+  // 유저 필터 해제
+  const handleClearUserFilter = () => {
+    navigate('/community')
   }
 
   // 게시글 삭제
@@ -233,11 +225,41 @@ function CommunityListPage() {
       <div className="max-w-4xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-sub-bg mb-2">커뮤니티</h1>
-          <p className="text-gray-400 text-sm">독서 경험을 나누고, 다른 독자들의 이야기를 만나보세요.</p>
+          {isUserFilterMode ? (
+            <>
+              <h1 className="text-2xl font-extrabold text-sub-bg mb-2">
+                {decodeURIComponent(filterUserName || '사용자')}님의 게시글
+              </h1>
+              {/* 팔로우 버튼 (로그인 상태이고 자기 자신이 아닐 때만 표시) */}
+              {currentUser && currentUser.userId !== Number(filterUserId) && (
+                <button
+                  onClick={handleToggleFollow}
+                  disabled={followLoading}
+                  className={`mt-2 px-4 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                    isFollowing
+                      ? 'border border-gray-300 text-gray-600 hover:bg-gray-100'
+                      : 'bg-main-bg text-white hover:bg-sub-bg'
+                  } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {followLoading ? '처리 중...' : (isFollowing ? '언팔로우' : '팔로우')}
+                </button>
+              )}
+              <button
+                onClick={handleClearUserFilter}
+                className="block mx-auto mt-3 text-gray-400 text-sm hover:text-main-bg transition-colors cursor-pointer"
+              >
+                ← 전체 커뮤니티글 보기
+              </button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-extrabold text-sub-bg mb-2">커뮤니티</h1>
+              <p className="text-gray-400 text-sm">독서 경험을 나누고, 다른 독자들의 이야기를 만나보세요.</p>
+            </>
+          )}
         </div>
 
-        {/* 검색 및 필터 */}
+        {/* 검색 및 필터 (유저 필터 모드에서도 표시) */}
         <SearchFilterBar
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
@@ -252,20 +274,22 @@ function CommunityListPage() {
           <p className="text-gray-400 text-sm">
             총 <span className="font-bold text-sub-bg">{filteredCommunities.length}</span>개의 게시글
           </p>
-          <button
-            onClick={() => navigate('/community/write')}
-            className="flex items-center gap-2 px-4 py-2 bg-main-bg text-white text-sm font-medium
-                     hover:bg-sub-bg transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            글쓰기
-          </button>
+          {!isUserFilterMode && (
+            <button
+              onClick={() => navigate('/community/write')}
+              className="flex items-center gap-2 px-4 py-2 bg-main-bg text-white text-sm font-medium
+                       hover:bg-sub-bg transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              글쓰기
+            </button>
+          )}
         </div>
 
-        {/* 공지글 (항상 상단에 표시) */}
-        {noticePosts.length > 0 && (
+        {/* 공지글 (전체 목록일 때만 상단에 표시) */}
+        {!isUserFilterMode && noticePosts.length > 0 && (
           <div className="mb-4 space-y-2">
             {noticePosts.map((post) => (
               <article
@@ -304,29 +328,23 @@ function CommunityListPage() {
           />
         ) : (
           <>
-            {/* 인스타그램 스타일 그리드 */}
+            {/* 그리드 레이아웃 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentPosts.map((post) => {
-                const images = getPostImages(post)
-                const hasImages = images.length > 0
-                return (
-                  <div 
-                    key={post.communityId}
-                    className={hasImages ? 'md:col-span-2' : ''}
-                  >
-                    <CommunityPostCard
-                      post={post}
-                      onClick={handlePostClick}
-                      formatDate={formatDate}
-                      getPostTitle={getPostTitle}
-                      getPreviewContent={getPreviewContent}
-                      getPostImages={getPostImages}
-                      currentUserId={currentUser?.userId}
-                      onDelete={handleDeletePost}
-                    />
-                  </div>
-                )
-              })}
+              {currentPosts.map((post) => (
+                <div key={post.communityId}>
+                  <CommunityPostCard
+                    post={post}
+                    onClick={handlePostClick}
+                    formatDate={formatDate}
+                    getPostTitle={getPostTitle}
+                    getPreviewContent={getPreviewContent}
+                    getPostImages={getPostImages}
+                    currentUserId={currentUser?.userId}
+                    onDelete={handleDeletePost}
+                    onAuthorClick={handleAuthorClick}
+                  />
+                </div>
+              ))}
             </div>
 
             {/* 페이징 */}

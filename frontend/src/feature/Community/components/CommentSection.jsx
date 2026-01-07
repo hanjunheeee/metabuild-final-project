@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import useComments from '../hooks/useComments'
 import Pagination from '@/shared/components/navigation/Pagination'
 
-function CommentSection({ communityId, communityAuthorId, currentUserId }) {
+function CommentSection({ communityId, currentUserId }) {
   const {
     // 데이터
     loading,
@@ -37,7 +38,20 @@ function CommentSection({ communityId, communityAuthorId, currentUserId }) {
     formatDate,
   } = useComments(communityId, currentUserId)
 
-  const isAuthor = currentUserId && communityAuthorId && currentUserId === communityAuthorId
+  // 펼친 답글 목록 관리 (commentId Set)
+  const [expandedReplies, setExpandedReplies] = useState(new Set())
+
+  const toggleReplies = (commentId) => {
+    setExpandedReplies(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId)
+      } else {
+        newSet.add(commentId)
+      }
+      return newSet
+    })
+  }
 
   if (loading) {
     return (
@@ -93,9 +107,10 @@ function CommentSection({ communityId, communityAuthorId, currentUserId }) {
           <div className="space-y-4">
             {parentComments.map((comment) => {
               const replies = getReplies(comment.commentId)
-              const hasReply = replies.length > 0
-              const canReply = isAuthor && !hasReply
+              const replyCount = replies.length
+              const isExpanded = expandedReplies.has(comment.commentId)
               const isEditing = editingId === comment.commentId
+              const isReplying = replyingTo === comment.commentId
 
               return (
                 <div key={comment.commentId}>
@@ -185,50 +200,65 @@ function CommentSection({ communityId, communityAuthorId, currentUserId }) {
                       </p>
                     )}
 
-                    {/* 답글 버튼 (게시글 작성자이고 아직 답글이 없는 경우) */}
-                    {canReply && !isEditing && (
-                      <div className="mt-3 pl-13">
-                        {replyingTo === comment.commentId ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="답글을 입력하세요..."
-                              className="flex-1 px-3 py-1.5 border border-gray-300 focus:outline-none focus:border-main-bg text-sm"
-                              disabled={submitting}
-                              autoFocus
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleSubmitReply(comment.commentId)}
-                              disabled={!replyText.trim() || submitting}
-                              className="px-3 py-1.5 bg-main-bg text-white text-xs font-medium hover:bg-opacity-90 disabled:opacity-50 cursor-pointer"
-                            >
-                              등록
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleCancelReply}
-                              className="px-3 py-1.5 border border-gray-300 text-gray-600 text-xs hover:bg-gray-50 cursor-pointer"
-                            >
-                              취소
-                            </button>
-                          </div>
-                        ) : (
+                    {/* 답글 영역: 펼치기/접기 + 답글 달기 */}
+                    {!isEditing && (
+                      <div className="mt-3 pl-13 flex items-center gap-4">
+                        {/* 답글 펼치기/접기 버튼 */}
+                        {replyCount > 0 && (
+                          <button
+                            onClick={() => toggleReplies(comment.commentId)}
+                            className="flex items-center gap-1 text-xs text-main-bg hover:underline cursor-pointer"
+                          >
+                            <span>{isExpanded ? '▼' : '▶'}</span>
+                            <span>{replyCount}개의 답글</span>
+                          </button>
+                        )}
+
+                        {/* 답글 달기 버튼 (로그인한 사용자만) */}
+                        {currentUserId && !isReplying && (
                           <button
                             onClick={() => setReplyingTo(comment.commentId)}
-                            className="text-xs text-main-bg hover:underline cursor-pointer"
+                            className="text-xs text-gray-500 hover:text-main-bg cursor-pointer"
                           >
                             답글 달기
                           </button>
                         )}
                       </div>
                     )}
+
+                    {/* 답글 작성 폼 */}
+                    {isReplying && (
+                      <div className="mt-3 pl-13 flex gap-2">
+                        <input
+                          type="text"
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="답글을 입력하세요..."
+                          className="flex-1 px-3 py-1.5 border border-gray-300 focus:outline-none focus:border-main-bg text-sm"
+                          disabled={submitting}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitReply(comment.commentId)}
+                          disabled={!replyText.trim() || submitting}
+                          className="px-3 py-1.5 bg-main-bg text-white text-xs font-medium hover:bg-opacity-90 disabled:opacity-50 cursor-pointer"
+                        >
+                          등록
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelReply}
+                          className="px-3 py-1.5 border border-gray-300 text-gray-600 text-xs hover:bg-gray-50 cursor-pointer"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  {/* 답글 목록 */}
-                  {replies.map((reply) => {
+                  {/* 답글 목록 (펼쳐진 경우에만 표시) */}
+                  {isExpanded && replies.map((reply) => {
                     const isReplyEditing = editingId === reply.commentId
 
                     return (
@@ -258,9 +288,6 @@ function CommentSection({ communityId, communityAuthorId, currentUserId }) {
                               <div className="flex items-center gap-1">
                                 <span className="text-sm font-medium text-gray-800">
                                   {reply.userNickname || '익명'}
-                                </span>
-                                <span className="text-xs px-1.5 py-0.5 bg-main-bg text-white rounded">
-                                  작성자
                                 </span>
                                 {reply.updatedAt && (
                                   <span className="text-xs text-gray-400">(수정됨)</span>

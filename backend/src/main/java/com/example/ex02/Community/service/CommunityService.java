@@ -185,6 +185,14 @@ public class CommunityService {
         return communityLikeRepository.existsByUser_UserIdAndCommunity_CommunityId(userId, communityId);
     }
     
+    // 사용자가 좋아요한 게시글 ID 목록만 조회 (N+1 문제 방지)
+    public List<Long> getLikedCommunityIdsByUserId(Long userId) {
+        List<CommunityLikeEntity> likes = communityLikeRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
+        return likes.stream()
+                .map(like -> like.getCommunity().getCommunityId())
+                .collect(Collectors.toList());
+    }
+    
     // 좋아요 결과 DTO
     public record LikeResult(boolean liked, int likeCount) {}
 

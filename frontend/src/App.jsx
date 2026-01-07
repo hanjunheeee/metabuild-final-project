@@ -8,7 +8,6 @@ import CommunityWritePage from '@/feature/Community/pages/CommunityWritePage'
 import MyPageLayout from '@/feature/Mypage/components/MyPageLayout'
 import ProfilePage from '@/feature/Mypage/pages/ProfilePage'
 import MyPostsPage from '@/feature/Mypage/pages/MyPostsPage'
-import MyCommentsPage from '@/feature/Mypage/pages/MyCommentsPage'
 import MyLikesPage from '@/feature/Mypage/pages/MyLikesPage'
 import MyBookmarksPage from '@/feature/Mypage/pages/MyBookmarksPage'
 import MyFollowingPage from '@/feature/Mypage/pages/MyFollowingPage'
@@ -32,7 +31,6 @@ function App() {
           children: [
             { index: true, element: <ProfilePage /> },
             { path: 'posts', element: <MyPostsPage /> },
-            { path: 'comments', element: <MyCommentsPage /> },
             { path: 'likes', element: <MyLikesPage /> },
             { path: 'bookmarks', element: <MyBookmarksPage /> },
             { path: 'following', element: <MyFollowingPage /> },

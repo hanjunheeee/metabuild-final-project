@@ -1,26 +1,106 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { fetchFollowingList, fetchFollowersList, toggleFollow } from '@/shared/api/followApi'
+import { getUserFromSession } from '@/shared/api/authApi'
+import { Spinner } from '@/shared/components/icons'
+
+const API_BASE_URL = 'http://localhost:7878'
 
 function MyFollowingPage() {
   const [activeTab, setActiveTab] = useState('following')
+  const [followingList, setFollowingList] = useState([])
+  const [followersList, setFollowersList] = useState([])
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  
+  const currentUser = getUserFromSession()
 
-  // 더미 데이터 (실제 구현 시 API 연동)
-  const dummyFollowing = [
-    { id: 1, nickname: '책읽는사람', bio: '매일 한 권씩 읽는 게 목표입니다', postCount: 45, followerCount: 128 },
-    { id: 2, nickname: '문학소녀', bio: '문학 전공, 책 리뷰 올려요', postCount: 89, followerCount: 256 },
-    { id: 3, nickname: '독서광', bio: '장르 불문 다 읽습니다', postCount: 34, followerCount: 87 },
-  ]
+  // 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentUser?.userId) return
+      
+      setLoading(true)
+      try {
+        const [following, followers] = await Promise.all([
+          fetchFollowingList(currentUser.userId, currentUser.userId),
+          fetchFollowersList(currentUser.userId, currentUser.userId)
+        ])
+        setFollowingList(following)
+        setFollowersList(followers)
+      } catch (error) {
+        console.error('팔로우 데이터 로드 실패:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [currentUser?.userId])
 
-  const dummyFollowers = [
-    { id: 1, nickname: '초보독자', bio: '이제 막 책 읽기 시작했어요', postCount: 5, followerCount: 12 },
-    { id: 2, nickname: '서울시민', bio: '', postCount: 0, followerCount: 3 },
-  ]
+  // 팔로우/언팔로우 토글
+  const handleToggleFollow = async (targetUserId, isCurrentlyFollowing) => {
+    if (!currentUser?.userId) return
+
+    try {
+      const result = await toggleFollow(currentUser.userId, targetUserId)
+      if (result.success) {
+        // 상태 업데이트
+        if (activeTab === 'following') {
+          if (!result.isFollowing) {
+            // 언팔로우 - 팔로잉 목록에서 제거
+            setFollowingList(prev => prev.filter(u => u.userId !== targetUserId))
+          }
+        } else {
+          // 팔로워 탭에서 맞팔로우/언팔로우
+          setFollowersList(prev => prev.map(u => 
+            u.userId === targetUserId ? { ...u, isFollowing: result.isFollowing } : u
+          ))
+          // 맞팔로우 시 팔로잉 목록도 업데이트
+          if (result.isFollowing) {
+            const targetUser = followersList.find(u => u.userId === targetUserId)
+            if (targetUser && !followingList.some(u => u.userId === targetUserId)) {
+              setFollowingList(prev => [targetUser, ...prev])
+            }
+          } else {
+            setFollowingList(prev => prev.filter(u => u.userId !== targetUserId))
+          }
+        }
+      }
+    } catch (error) {
+      console.error('팔로우 토글 실패:', error)
+    }
+  }
+
+  // 프로필 이미지 URL 생성
+  const getProfileImageUrl = (userPhoto) => {
+    if (!userPhoto) return null
+    if (userPhoto.startsWith('http')) return userPhoto
+    return `${API_BASE_URL}/uploads/profile/${userPhoto}`
+  }
+
+  // 사용자 게시글 페이지로 이동
+  const handleUserClick = (user) => {
+    if (user.userId === currentUser?.userId) {
+      navigate('/mypage/posts')
+    } else {
+      navigate(`/community?userId=${user.userId}&userName=${encodeURIComponent(user.nickname)}`)
+    }
+  }
 
   const tabs = [
-    { id: 'following', label: '팔로잉', count: dummyFollowing.length },
-    { id: 'followers', label: '팔로워', count: dummyFollowers.length },
+    { id: 'following', label: '팔로잉', count: followingList.length },
+    { id: 'followers', label: '팔로워', count: followersList.length },
   ]
 
-  const currentList = activeTab === 'following' ? dummyFollowing : dummyFollowers
+  const currentList = activeTab === 'following' ? followingList : followersList
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Spinner className="w-8 h-8 text-main-bg" />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -36,7 +116,7 @@ function MyFollowingPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-2 ${
+            className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer ${
               activeTab === tab.id
                 ? 'bg-main-bg text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -53,7 +133,7 @@ function MyFollowingPage() {
       </div>
 
       {/* 목록 */}
-      <div className="border border-gray-200">
+      <div className="border border-gray-200 shadow-sm">
         {currentList.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">
             {activeTab === 'following' ? '팔로잉하는 사람이 없습니다.' : '팔로워가 없습니다.'}
@@ -61,31 +141,45 @@ function MyFollowingPage() {
         ) : (
           currentList.map((user, index) => (
             <div
-              key={user.id}
+              key={user.userId}
               className={`flex items-center justify-between p-4 hover:bg-gray-50 transition-colors ${
                 index !== currentList.length - 1 ? 'border-b border-gray-100' : ''
               }`}
             >
-              <div className="flex items-center gap-3">
-                {/* 프로필 */}
-                <div className="w-10 h-10 rounded-full bg-main-bg flex items-center justify-center text-white font-bold text-sm">
-                  {user.nickname.charAt(0)}
-                </div>
+              <div 
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => handleUserClick(user)}
+              >
+                {/* 프로필 이미지 */}
+                {getProfileImageUrl(user.userPhoto) ? (
+                  <img
+                    src={getProfileImageUrl(user.userPhoto)}
+                    alt={user.nickname}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-main-bg flex items-center justify-center text-white font-bold text-sm">
+                    {user.nickname?.charAt(0) || '?'}
+                  </div>
+                )}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-800">{user.nickname}</h3>
+                  <h3 className="text-sm font-medium text-gray-800 hover:text-main-bg transition-colors">
+                    {user.nickname}
+                  </h3>
                   <p className="text-xs text-gray-400">
-                    {user.bio || '소개 없음'} · 게시글 {user.postCount} · 팔로워 {user.followerCount}
+                    게시글 {user.postCount || 0} · 팔로워 {user.followerCount || 0}
                   </p>
                 </div>
               </div>
               <button 
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  activeTab === 'following'
+                onClick={() => handleToggleFollow(user.userId, user.isFollowing)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'following' || user.isFollowing
                     ? 'border border-gray-300 text-gray-600 hover:bg-gray-100'
                     : 'bg-main-bg text-white hover:bg-sub-bg'
                 }`}
               >
-                {activeTab === 'following' ? '언팔로우' : '맞팔로우'}
+                {activeTab === 'following' ? '언팔로우' : (user.isFollowing ? '언팔로우' : '맞팔로우')}
               </button>
             </div>
           ))

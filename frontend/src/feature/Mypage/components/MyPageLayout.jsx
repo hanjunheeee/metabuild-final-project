@@ -1,13 +1,13 @@
-import { Outlet, NavLink } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { getUserFromSession } from '@/shared/api/authApi'
 
 function MyPageLayout() {
   const user = getUserFromSession()
+  const navigate = useNavigate()
 
   const menuItems = [
     { path: '/mypage', label: '프로필', end: true },
     { path: '/mypage/posts', label: '내 게시글' },
-    { path: '/mypage/comments', label: '내 댓글' },
     { path: '/mypage/likes', label: '좋아요한 글' },
     { path: '/mypage/bookmarks', label: '즐겨찾기 도서' },
     { path: '/mypage/following', label: '팔로잉/팔로워' },
@@ -17,7 +17,7 @@ function MyPageLayout() {
     <div className="flex-1 py-8 px-4">
       <div className="max-w-5xl mx-auto">
         {/* 상단 헤더 */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-left">
           <h1 className="text-2xl font-extrabold text-sub-bg mb-1">마이페이지</h1>
           <p className="text-gray-400 text-sm">
             {user?.nickname || '사용자'}님, 환영합니다.
@@ -54,6 +54,19 @@ function MyPageLayout() {
           <main className="flex-1 min-w-0">
             <div className="bg-white border border-gray-200 shadow-sm p-6">
               <Outlet />
+            </div>
+
+            {/* 뒤로가기 버튼 */}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-main-bg transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                뒤로가기
+              </button>
             </div>
           </main>
         </div>

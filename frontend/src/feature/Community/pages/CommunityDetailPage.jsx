@@ -176,10 +176,10 @@ function CommunityDetailPage() {
             삭제되었거나 존재하지 않는 게시글입니다.
           </p>
           <button
-            onClick={() => navigate('/community')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-main-bg text-white text-sm hover:bg-sub-bg transition-colors"
           >
-            목록으로 돌아가기
+            돌아가기
           </button>
         </div>
       </div>
@@ -193,13 +193,13 @@ function CommunityDetailPage() {
       <div className="max-w-3xl mx-auto">
         {/* 뒤로가기 */}
         <button
-          onClick={() => navigate('/community')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span className="text-sm">목록으로</span>
+          <span className="text-sm cursor-pointer">뒤로가기</span>
         </button>
 
         {/* 게시글 카드 */}
@@ -340,18 +340,17 @@ function CommunityDetailPage() {
         {/* 댓글 섹션 */}
         <CommentSection 
           communityId={post.communityId}
-          communityAuthorId={post.userId}
           currentUserId={currentUser?.userId}
         />
 
-        {/* 목록으로 버튼 */}
+        {/* 뒤로가기 버튼 */}
         <div className="mt-6 flex justify-end">
           <button
-            onClick={() => navigate('/community')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 px-6 py-2.5 bg-white text-main-bg text-sm font-medium border border-main-bg
                       transition-colors cursor-pointer hover:bg-main-bg hover:text-white"
           >
-            목록으로 돌아가기 →
+            뒤로가기 →
           </button>
         </div>
       </div>

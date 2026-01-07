@@ -117,27 +117,16 @@ public class CommentService {
         return convertToDTO(saved);
     }
 
-    // 답글 작성 (게시글 작성자만 가능, 댓글당 1개만)
+    // 답글 작성 (누구나 가능, 여러 개 가능, 깊이는 1단계만)
     @Transactional
     public CommentDTO createReply(Long communityId, Long userId, Long parentId, String content) {
         CommunityEntity community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
         
-        // 게시글 작성자인지 확인
-        if (!community.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("게시글 작성자만 답글을 달 수 있습니다.");
-        }
-        
         CommentEntity parentComment = commentRepository.findById(parentId)
                 .orElseThrow(() -> new RuntimeException("부모 댓글을 찾을 수 없습니다."));
         
-        // 이미 답글이 있는지 확인
-        boolean hasReply = commentRepository.existsByParent_CommentId(parentId);
-        if (hasReply) {
-            throw new RuntimeException("이미 답글이 존재합니다.");
-        }
-        
-        // 답글에 대한 답글 방지
+        // 답글에 대한 답글 방지 (깊이 1단계만 허용)
         if (parentComment.getParent() != null) {
             throw new RuntimeException("답글에는 답글을 달 수 없습니다.");
         }
