@@ -19,8 +19,13 @@ function LoginPage() {
     const password = formData.get('password')
 
     try {
-      await login(email, password, rememberMe)
-      navigate('/') // 로그인 성공 시 메인 페이지로 이동
+      const data = await login(email, password, rememberMe)
+      // 관리자는 관리자 페이지로, 일반 사용자는 메인 페이지로 이동
+      if (data.role === 'ADMIN') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
     } catch (err) {
       setError(err.message)
     } finally {

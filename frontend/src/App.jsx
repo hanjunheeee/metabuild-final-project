@@ -12,6 +12,14 @@ import MyLikesPage from '@/feature/Mypage/pages/MyLikesPage'
 import MyBookmarksPage from '@/feature/Mypage/pages/MyBookmarksPage'
 import MyFollowingPage from '@/feature/Mypage/pages/MyFollowingPage'
 
+// 관리자 페이지 컴포넌트
+import AdminLayout from '@/feature/Admin/components/AdminLayout'
+import AdminDashboardPage from '@/feature/Admin/pages/AdminDashboardPage'
+import BookManagePage from '@/feature/Admin/pages/BookManagePage'
+import PostManagePage from '@/feature/Admin/pages/PostManagePage'
+import NoticeWritePage from '@/feature/Admin/pages/NoticeWritePage'
+import UserManagePage from '@/feature/Admin/pages/UserManagePage'
+
 function App() {
   const routes = [
     {
@@ -34,6 +42,18 @@ function App() {
             { path: 'likes', element: <MyLikesPage /> },
             { path: 'bookmarks', element: <MyBookmarksPage /> },
             { path: 'following', element: <MyFollowingPage /> },
+          ],
+        },
+        // 관리자 페이지 (관리자 권한 필요, 중첩 라우팅)
+        {
+          path: '/admin',
+          element: <PrivateRoute requiredRole="ADMIN"><AdminLayout /></PrivateRoute>,
+          children: [
+            { index: true, element: <AdminDashboardPage /> },
+            { path: 'books', element: <BookManagePage /> },
+            { path: 'posts', element: <PostManagePage /> },
+            { path: 'notice', element: <NoticeWritePage /> },
+            { path: 'users', element: <UserManagePage /> },
           ],
         },
       ],

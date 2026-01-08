@@ -56,11 +56,19 @@ function Header() {
                     로그아웃
                   </button>
                 </li>
-                <li>
-                  <Link to="/mypage" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    마이페이지
-                  </Link>
-                </li>
+                {user.role === 'ADMIN' ? (
+                  <li>
+                    <Link to="/admin" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      관리자페이지
+                    </Link>
+                  </li>
+                ) : (
+                  <li>
+                    <Link to="/mypage" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      마이페이지
+                    </Link>
+                  </li>
+                )}
               </>
             ) : (
               // 비로그인 상태
