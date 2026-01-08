@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { fetchBooks } from '../api/bookApi'
 
-function useBooks() {
+function useBooks(query = '') {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchBooks()
+    setLoading(true)
+    fetchBooks(query)
       .then(data => {
         setBooks(data)
         setLoading(false)
@@ -17,7 +18,7 @@ function useBooks() {
         setError(err)
         setLoading(false)
       })
-  }, [])
+  }, [query])
 
   return { books, loading, error }
 }

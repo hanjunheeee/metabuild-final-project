@@ -24,6 +24,17 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
+    public List<BookDTO> searchBooks(String query) {
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.isEmpty()) {
+            return getAllBooks();
+        }
+
+        return bookRepository.findByTitleContainingIgnoreCaseOrIsbnContaining(trimmed, trimmed).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     // 도서 ID로 조회
     public BookDTO getBookById(Long id) {
         BookEntity book = bookRepository.findById(id)

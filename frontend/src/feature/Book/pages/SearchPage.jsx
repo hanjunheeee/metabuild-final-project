@@ -78,6 +78,19 @@ function SearchPage() {
     }
   }
 
+  const goToLibrarySearch = (book) => {
+    const params = new URLSearchParams()
+    if (book.title) {
+      params.set('title', book.title)
+      params.set('query', book.title)
+    }
+    if (book.isbn) {
+      params.set('isbn', book.isbn)
+    }
+    const queryString = params.toString()
+    navigate(`/library/map${queryString ? `?${queryString}` : ''}`)
+  }
+
   /* ===============================
      검색 상태
   =============================== */
@@ -201,7 +214,10 @@ function SearchPage() {
 
                 {/* 버튼 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-3 justify-center">
-                  <button className="w-full py-2 rounded-lg bg-gray-900 text-white text-sm">
+                  <button
+                    className="w-full py-2 rounded-lg bg-gray-900 text-white text-sm"
+                    onClick={() => goToLibrarySearch(book)}
+                  >
                     대출 가능 도서관
                   </button>
 
