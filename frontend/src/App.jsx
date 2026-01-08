@@ -11,6 +11,7 @@ import MyPostsPage from '@/feature/Mypage/pages/MyPostsPage'
 import MyLikesPage from '@/feature/Mypage/pages/MyLikesPage'
 import MyBookmarksPage from '@/feature/Mypage/pages/MyBookmarksPage'
 import MyFollowingPage from '@/feature/Mypage/pages/MyFollowingPage'
+import ChangePasswordPage from '@/feature/Mypage/pages/ChangePasswordPage'
 
 // 관리자 페이지 컴포넌트
 import AdminLayout from '@/feature/Admin/components/AdminLayout'
@@ -38,6 +39,8 @@ function App() {
           element: <PrivateRoute><MyPageLayout /></PrivateRoute>,
           children: [
             { index: true, element: <ProfilePage /> },
+            { path: 'profile', element: <ProfilePage /> },
+            { path: 'change-password', element: <ChangePasswordPage /> },
             { path: 'posts', element: <MyPostsPage /> },
             { path: 'likes', element: <MyLikesPage /> },
             { path: 'bookmarks', element: <MyBookmarksPage /> },

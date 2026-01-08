@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import useBookSearch from '@/feature/Community/hooks/useBookSearch'
 import useRichTextEditor from '@/feature/Community/hooks/useRichTextEditor'
+import { Spinner } from '@/shared/components/icons'
 
 // 게시판 종류 옵션
 const COMMUNITY_KINDS = [
@@ -44,6 +45,7 @@ function CommunityForm({
     showDropdown,
     filteredBooks,
     searchRef,
+    loading: bookLoading,
     handleSearchChange,
     handleFocus,
     handleBookSelect,
@@ -243,7 +245,12 @@ function CommunityForm({
             {showDropdown && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 shadow-lg">
                 <div className="max-h-48 overflow-y-auto">
-                  {filteredBooks.length === 0 ? (
+                  {bookLoading ? (
+                    <div className="p-4 flex items-center justify-center gap-2">
+                      <Spinner className="w-5 h-5 text-main-bg" />
+                      <span className="text-gray-400 text-sm">책 목록을 불러오는 중...</span>
+                    </div>
+                  ) : filteredBooks.length === 0 ? (
                     <div className="p-3 text-gray-400 text-sm text-center">
                       "{bookSearchTerm}"에 대한 검색 결과가 없습니다
                     </div>

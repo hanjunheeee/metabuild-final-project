@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "community") 
@@ -52,9 +50,6 @@ public class CommunityEntity {
 
     @Column(name = "community_kind", length = 20)
     private String communityKind = "FREE";  // QUESTION, FREE, REVIEW
-
-    @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommunityImageEntity> images = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

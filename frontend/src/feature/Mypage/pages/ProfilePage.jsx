@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getUserFromSession, updateProfile, uploadProfilePhoto, saveUserToSession } from '@/shared/api/authApi'
 
 const API_BASE_URL = 'http://localhost:7878'
 
 function ProfilePage() {
+  const navigate = useNavigate()
   const [user, setUser] = useState(getUserFromSession())
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -136,7 +138,7 @@ function ProfilePage() {
         {/* 프로필 이미지 */}
         <div className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-100">
           <div className="relative">
-            <div className="w-20 h-20 rounded-full bg-main-bg flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+            <div className="w-20 h-20 rounded-full bg-main-bg flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer">
               {currentProfileImage ? (
                 <img 
                   src={currentProfileImage} 
@@ -229,6 +231,24 @@ function ProfilePage() {
             >
               {isLoading ? '저장 중...' : '저장하기'}
             </button>
+          </div>
+        )}
+
+        {/* 비밀번호 변경 섹션 */}
+        {!isEditing && (
+          <div className="pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700">비밀번호</h3>
+                <p className="text-xs text-gray-400 mt-1">계정 보안을 위해 정기적으로 변경해주세요.</p>
+              </div>
+              <button
+                onClick={() => navigate('/mypage/change-password')}
+                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                비밀번호 변경
+              </button>
+            </div>
           </div>
         )}
       </div>

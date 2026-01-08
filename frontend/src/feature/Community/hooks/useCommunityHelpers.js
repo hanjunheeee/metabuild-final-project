@@ -3,23 +3,14 @@
  * CommunityListPage, MyPostsPage 등에서 공통으로 사용
  */
 function useCommunityHelpers() {
-  // 날짜 포맷 (오늘, 어제, n일 전, 날짜)
+  // 날짜 포맷 (YY.MM.DD 형식)
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
-    const now = new Date()
-    const diff = now - date
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    
-    if (days === 0) return '오늘'
-    if (days === 1) return '어제'
-    if (days < 7) return `${days}일 전`
-    
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
+    const yy = String(date.getFullYear()).slice(-2)
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    const dd = String(date.getDate()).padStart(2, '0')
+    return `${yy}.${mm}.${dd}`
   }
 
   // 게시글 제목 추출 (contentJson에서)
@@ -98,6 +89,20 @@ function useCommunityHelpers() {
     return styles[kind] || 'bg-gray-100 text-gray-700'
   }
 
+  // 게시글 배지 설정 반환 (SimplePostCard용)
+  const getBadgeConfig = (post, isNoticeFilter = false) => {
+    if (isNoticeFilter || post.isNotice === 1) {
+      return { text: '공지', color: 'amber' }
+    } else if (post.communityKind === 'REVIEW') {
+      return { text: '리뷰', color: 'green' }
+    } else if (post.communityKind === 'FREE') {
+      return { text: '자유', color: 'gray' }
+    } else if (post.communityKind === 'QUESTION') {
+      return { text: '질문', color: 'purple' }
+    }
+    return { text: '일반', color: 'gray' }
+  }
+
   return {
     formatDate,
     getPostTitle,
@@ -106,6 +111,7 @@ function useCommunityHelpers() {
     getPostImages,
     getKindLabel,
     getKindStyle,
+    getBadgeConfig,
   }
 }
 

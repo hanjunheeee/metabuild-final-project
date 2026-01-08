@@ -131,11 +131,26 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    // 비밀번호 변경 (이메일 기준)
+    // 비밀번호 변경 (이메일 기준 - 비밀번호 찾기용)
     @Transactional
     public void changePassword(String email, String newPassword) {
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        user.setPassword(newPassword); // 실제로는 암호화 필요
+        userRepository.save(user);
+    }
+
+    // 비밀번호 변경 (현재 비밀번호 검증 후 - 마이페이지용)
+    @Transactional
+    public void changePasswordWithVerification(Long userId, String currentPassword, String newPassword) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        // 현재 비밀번호 검증
+        if (!user.getPassword().equals(currentPassword)) {
+            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+        }
         
         user.setPassword(newPassword); // 실제로는 암호화 필요
         userRepository.save(user);

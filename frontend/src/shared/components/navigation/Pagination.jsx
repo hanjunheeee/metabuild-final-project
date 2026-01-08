@@ -36,7 +36,7 @@ function Pagination({ currentPage, totalPages, onPageChange, maxVisiblePages = 5
         onClick={() => onPageChange(1)}
         disabled={currentPage === 1}
         className="px-3 py-2 text-sm border border-gray-200 
-                 disabled:text-gray-300 disabled:cursor-not-allowed
+                 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer
                  hover:border-main-bg hover:text-main-bg transition-colors"
       >
         <span className="text-[10px]">◀◀</span>
@@ -47,7 +47,7 @@ function Pagination({ currentPage, totalPages, onPageChange, maxVisiblePages = 5
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="px-3 py-2 text-sm border border-gray-200 
-                 disabled:text-gray-300 disabled:cursor-not-allowed
+                 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer
                  hover:border-main-bg hover:text-main-bg transition-colors"
       >
         <span className="text-[10px]">◀</span>
@@ -61,7 +61,7 @@ function Pagination({ currentPage, totalPages, onPageChange, maxVisiblePages = 5
           className={`px-3 py-2 text-sm border transition-colors
                     ${currentPage === page
                       ? 'bg-main-bg text-white border-main-bg'
-                      : 'border-gray-200 hover:border-main-bg hover:text-main-bg'
+                      : 'border-gray-200 hover:border-main-bg hover:text-main-bg cursor-pointer'
                     }`}
         >
           {page}
@@ -73,7 +73,7 @@ function Pagination({ currentPage, totalPages, onPageChange, maxVisiblePages = 5
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="px-3 py-2 text-sm border border-gray-200 
-                 disabled:text-gray-300 disabled:cursor-not-allowed
+                 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer
                  hover:border-main-bg hover:text-main-bg transition-colors"
       >
         <span className="text-[10px]">▶</span>
@@ -84,7 +84,7 @@ function Pagination({ currentPage, totalPages, onPageChange, maxVisiblePages = 5
         onClick={() => onPageChange(totalPages)}
         disabled={currentPage === totalPages}
         className="px-3 py-2 text-sm border border-gray-200 
-                 disabled:text-gray-300 disabled:cursor-not-allowed
+                 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer
                  hover:border-main-bg hover:text-main-bg transition-colors"
       >
         <span className="text-[10px]">▶▶</span>

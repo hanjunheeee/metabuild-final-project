@@ -100,7 +100,7 @@ function CommunityWritePage() {
 
         if (result.success) {
           alert('게시글이 수정되었습니다.')
-          navigate(`/community/${editId}`)
+          navigate(`/community/${editId}`, { replace: true })
         } else {
           alert(result.message || '수정에 실패했습니다.')
         }
@@ -130,12 +130,12 @@ function CommunityWritePage() {
     }
   }
 
-  // 취소
+  // 취소 (replace: true로 수정페이지가 히스토리에서 제거됨)
   const handleCancel = () => {
     if (isEditMode) {
-      navigate(`/community/${editId}`)
+      navigate(`/community/${editId}`, { replace: true })
     } else {
-      navigate('/community')
+      navigate('/community', { replace: true })
     }
   }
 

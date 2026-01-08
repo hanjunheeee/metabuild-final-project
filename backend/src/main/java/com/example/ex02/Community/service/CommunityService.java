@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -190,6 +191,20 @@ public class CommunityService {
         List<CommunityLikeEntity> likes = communityLikeRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
         return likes.stream()
                 .map(like -> like.getCommunity().getCommunityId())
+                .collect(Collectors.toList());
+    }
+    
+    // 주간 HOT 게시글 조회 (최근 7일 내 작성, 좋아요 순)
+    public List<CommunityDTO> getWeeklyHotPosts(int limit) {
+        LocalDate startDate = LocalDate.now().minusDays(7);
+        List<CommunityEntity> entities = communityRepository.findWeeklyHotPosts(startDate);
+        
+        return entities.stream()
+                .limit(limit)
+                .map(entity -> {
+                    int commentCount = commentRepository.countByCommunity_CommunityId(entity.getCommunityId());
+                    return CommunityDTO.fromEntity(entity, commentCount);
+                })
                 .collect(Collectors.toList());
     }
     

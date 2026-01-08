@@ -107,6 +107,12 @@ export const fetchLikedCommunityIds = async (userId) => {
   return response.json()
 }
 
+// 주간 HOT 게시글 조회
+export const fetchHotPosts = async (limit = 5) => {
+  const response = await fetch(`${BASE_URL}/api/communities/hot?limit=${limit}`)
+  return response.json()
+}
+
 // HTML 콘텐츠에서 Base64 이미지를 찾아서 서버에 업로드하고 URL로 교체
 export const processImagesInContent = async (htmlContent) => {
   // Base64 이미지 패턴 찾기

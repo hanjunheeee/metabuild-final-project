@@ -15,5 +15,9 @@ public class BookmarkDTO {
     private Long userId;
     private Long bookId;
     private LocalDate favoriteDate;
+    
+    // 책 정보 (조회 시 포함)
+    private String bookTitle;
+    private String bookAuthor;
+    private String bookImageUrl;
 }
-

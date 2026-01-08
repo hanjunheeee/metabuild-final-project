@@ -172,5 +172,27 @@ public class UserController {
             ));
         }
     }
+
+    // 비밀번호 변경 (마이페이지 - 현재 비밀번호 검증 후)
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, Object> request) {
+        try {
+            Long userId = Long.valueOf(request.get("userId").toString());
+            String currentPassword = (String) request.get("currentPassword");
+            String newPassword = (String) request.get("newPassword");
+            
+            userService.changePasswordWithVerification(userId, currentPassword, newPassword);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "비밀번호가 성공적으로 변경되었습니다."
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
 }
 

@@ -30,6 +30,7 @@ public class CommunityDTO {
     private String bookTitle;
     private String bookAuthor;
     private String bookCoverUrl;
+    private LocalDate bookPublishedDate;
     private int commentCount;
 
     @Builder
@@ -37,7 +38,8 @@ public class CommunityDTO {
                         String thumbnailUrl, Integer communityGreat, LocalDate createdAt, 
                         LocalDate updatedAt, Integer isNotice, String communityKind,
                         String authorNickname, String authorPhoto,
-                        String bookTitle, String bookAuthor, String bookCoverUrl, int commentCount) {
+                        String bookTitle, String bookAuthor, String bookCoverUrl, 
+                        LocalDate bookPublishedDate, int commentCount) {
         this.communityId = communityId;
         this.userId = userId;
         this.bookId = bookId;
@@ -53,6 +55,7 @@ public class CommunityDTO {
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.bookCoverUrl = bookCoverUrl;
+        this.bookPublishedDate = bookPublishedDate;
         this.commentCount = commentCount;
     }
 
@@ -72,6 +75,8 @@ public class CommunityDTO {
                 .authorPhoto(entity.getUser().getUserPhoto())
                 .bookTitle(entity.getBook() != null ? entity.getBook().getTitle() : null)
                 .bookAuthor(entity.getBook() != null ? entity.getBook().getAuthor() : null)
+                .bookCoverUrl(entity.getBook() != null ? entity.getBook().getImageUrl() : null)
+                .bookPublishedDate(entity.getBook() != null ? entity.getBook().getPublishedDate() : null)
                 .commentCount(commentCount)
                 .build();
     }

@@ -126,5 +126,13 @@ public class CommunityController {
         List<Long> communityIds = communityService.getLikedCommunityIdsByUserId(userId);
         return ResponseEntity.ok(communityIds);
     }
+    
+    // 주간 HOT 게시글 조회 (최근 7일 내 작성, 좋아요 순)
+    @GetMapping("/hot")
+    public ResponseEntity<List<CommunityDTO>> getWeeklyHotPosts(
+            @RequestParam(defaultValue = "5") int limit) {
+        List<CommunityDTO> hotPosts = communityService.getWeeklyHotPosts(limit);
+        return ResponseEntity.ok(hotPosts);
+    }
 }
 

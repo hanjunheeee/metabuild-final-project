@@ -1,9 +1,10 @@
 // 게시글 종류 옵션
 const KIND_OPTIONS = [
   { value: 'ALL', label: '전체' },
+  { value: 'NOTICE', label: '공지' },
+  { value: 'REVIEW', label: '리뷰' },
   { value: 'FREE', label: '자유' },
   { value: 'QUESTION', label: '질문' },
-  { value: 'REVIEW', label: '리뷰' },
 ]
 
 /**

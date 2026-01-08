@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike } from '../api/communityApi'
 import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
+import { checkBookmark, toggleBookmark } from '@/shared/api/bookmarkApi'
 import CommentSection from '../components/CommentSection'
 
 function CommunityDetailPage() {
@@ -14,6 +15,8 @@ function CommunityDetailPage() {
   const [likeCount, setLikeCount] = useState(0)
   const [liked, setLiked] = useState(false)
   const [isLiking, setIsLiking] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [isBookmarking, setIsBookmarking] = useState(false)
   
   const currentUser = getUserFromSession()
 
@@ -30,6 +33,14 @@ function CommunityDetailPage() {
           const likeResult = await checkLike(id, currentUser.userId)
           if (likeResult.success) {
             setLiked(likeResult.liked)
+          }
+          
+          // 책이 있으면 북마크 여부도 확인
+          if (data.bookId) {
+            const bookmarkResult = await checkBookmark(currentUser.userId, data.bookId)
+            if (bookmarkResult.success) {
+              setBookmarked(bookmarkResult.bookmarked)
+            }
           }
         }
       } catch (err) {
@@ -120,9 +131,18 @@ function CommunityDetailPage() {
     }
   }
 
-  // 수정 페이지로 이동
+  // 수정 페이지로 이동 (replace로 히스토리에서 상세페이지 대체)
   const handleEdit = () => {
-    navigate(`/community/write?edit=${post.communityId}`)
+    navigate(`/community/write?edit=${post.communityId}`, { replace: true })
+  }
+
+  // 작성자 클릭 시 해당 유저의 게시글 목록으로 이동
+  const handleAuthorClick = () => {
+    if (currentUser && currentUser.userId === post.userId) {
+      navigate('/mypage/posts')
+    } else {
+      navigate(`/community?userId=${post.userId}&userName=${encodeURIComponent(post.authorNickname || '사용자')}`)
+    }
   }
 
   // 좋아요 핸들러
@@ -149,6 +169,29 @@ function CommunityDetailPage() {
       alert('좋아요에 실패했습니다.')
     } finally {
       setIsLiking(false)
+    }
+  }
+
+  // 북마크 핸들러
+  const handleBookmark = async () => {
+    if (!currentUser) {
+      alert('로그인이 필요합니다.')
+      navigate('/login')
+      return
+    }
+
+    if (isBookmarking || !post.bookId) return
+
+    try {
+      setIsBookmarking(true)
+      const result = await toggleBookmark(currentUser.userId, post.bookId)
+      if (result.success) {
+        setBookmarked(result.bookmarked)
+      }
+    } catch (err) {
+      console.error('북마크 실패:', err)
+    } finally {
+      setIsBookmarking(false)
     }
   }
 
@@ -227,11 +270,15 @@ function CommunityDetailPage() {
             {/* 작성자 정보 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {/* 프로필 이미지 */}
-                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                  {post.authorProfileImage ? (
+                {/* 프로필 이미지 (클릭 가능) */}
+                <button
+                  onClick={handleAuthorClick}
+                  className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0
+                           hover:ring-2 hover:ring-main-bg transition-all cursor-pointer"
+                >
+                  {post.authorPhoto ? (
                     <img 
-                      src={post.authorProfileImage} 
+                      src={`http://localhost:7878/uploads/profile/${post.authorPhoto}`}
                       alt={post.authorNickname}
                       className="w-full h-full object-cover"
                     />
@@ -240,11 +287,14 @@ function CommunityDetailPage() {
                       {(post.authorNickname || '?')[0].toUpperCase()}
                     </div>
                   )}
-                </div>
+                </button>
                 <div>
-                  <p className="text-sm font-medium text-gray-800">
+                  <button
+                    onClick={handleAuthorClick}
+                    className="text-sm font-medium text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
+                  >
                     {post.authorNickname || '익명'}
-                  </p>
+                  </button>
                   <p className="text-xs text-gray-400">
                     {formatDate(post.createdAt)}
                   </p>
@@ -274,16 +324,64 @@ function CommunityDetailPage() {
           </div>
 
           {/* 책 정보 (있는 경우) */}
-          {post.bookTitle && (
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span className="text-sm text-gray-600">
-                  <span className="font-medium">{post.bookTitle}</span>
-                </span>
+          {post.bookId && (
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
+              <div className="flex gap-4">
+                {/* 책 표지 이미지 */}
+                <div className="flex-shrink-0 w-24 h-32 bg-white rounded shadow-sm overflow-hidden border border-gray-200">
+                  {post.bookCoverUrl ? (
+                    <img 
+                      src={post.bookCoverUrl} 
+                      alt={post.bookTitle} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                      <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {/* 책 정보 */}
+                <div className="flex-1 flex flex-col justify-center">
+                  <p className="text-base font-semibold text-gray-800 leading-tight">
+                    {post.bookTitle || '제목 없음'}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {post.bookAuthor || '저자 미상'}
+                  </p>
+                  {post.bookPublishedDate && (
+                    <p className="text-sm text-gray-400 mt-1">
+                      {new Date(post.bookPublishedDate).getFullYear()}년 출간
+                    </p>
+                  )}
+                </div>
+                {/* 북마크 버튼 */}
+                {currentUser && (
+                  <button
+                    onClick={handleBookmark}
+                    disabled={isBookmarking}
+                    className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full 
+                              transition-all duration-200 cursor-pointer disabled:opacity-50
+                              ${bookmarked 
+                                ? 'bg-yellow-400 text-white hover:bg-yellow-500' 
+                                : 'bg-white border border-gray-300 text-gray-400 hover:border-yellow-400 hover:text-yellow-500'
+                              }`}
+                    title={bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                  >
+                    {bookmarked ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           )}
