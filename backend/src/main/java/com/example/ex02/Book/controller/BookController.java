@@ -3,6 +3,8 @@ package com.example.ex02.Book.controller;
 import com.example.ex02.Book.dto.BookDTO;
 import com.example.ex02.Book.dto.BookSummaryResponse;
 import com.example.ex02.Book.service.BookPriceService;
+import com.example.ex02.Book.service.AladinBestsellerService;
+import com.example.ex02.Book.service.StoreBestsellerScrapeService;
 import com.example.ex02.Book.service.BookSummaryService;
 import com.example.ex02.Book.service.BookService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +22,13 @@ public class BookController {
     private final BookService bookService;
     private final BookPriceService bookPriceService;
     private final BookSummaryService bookSummaryService;
+    private final AladinBestsellerService aladinBestsellerService;
+    private final StoreBestsellerScrapeService storeBestsellerScrapeService;
 
-    // Get all books
+    // Get all books (optionally filtered by query)
     @GetMapping
-    public ResponseEntity<List<BookDTO>> getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
+    public ResponseEntity<List<BookDTO>> getAllBooks(@RequestParam(required = false) String query) {
+        return ResponseEntity.ok(bookService.searchBooks(query));
     }
 
     // Get a book by id
@@ -47,4 +51,24 @@ public class BookController {
     ) {
         return ResponseEntity.ok(bookPriceService.getPrices(id, title));
     }
+
+    // Aladin bestseller TOP10
+    @GetMapping("/bestsellers/aladin")
+    public ResponseEntity<?> getAladinBestsellers() {
+        return ResponseEntity.ok(aladinBestsellerService.fetchTop10());
+    }
+
+    // Kyobo bestseller TOP10 (scraped)
+    @GetMapping("/bestsellers/kyobo")
+    public ResponseEntity<?> getKyoboBestsellers() {
+        return ResponseEntity.ok(storeBestsellerScrapeService.fetchKyoboTop10());
+    }
+
+    // YES24 bestseller TOP10 (scraped)
+    @GetMapping("/bestsellers/yes24")
+    public ResponseEntity<?> getYes24Bestsellers() {
+        return ResponseEntity.ok(storeBestsellerScrapeService.fetchYes24Top10());
+    }
+
+
 }

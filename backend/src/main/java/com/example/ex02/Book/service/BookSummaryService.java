@@ -1,4 +1,4 @@
-﻿package com.example.ex02.Book.service;
+package com.example.ex02.Book.service;
 
 import com.example.ex02.Book.dto.BookDTO;
 import com.example.ex02.Book.dto.BookSummaryResponse;
@@ -62,7 +62,7 @@ public class BookSummaryService {
         StringBuilder sb = new StringBuilder();
         sb.append("아래는 한 권의 책에 대한 소개 자료다.\n");
         sb.append("이 책을 아직 읽지 않은 이용자가\n");
-        sb.append(""이 책을 꼭 읽어보고 싶다"고 느끼도록\n");
+        sb.append("'이 책을 꼭 읽어보고 싶다'고 느끼도록\n");
         sb.append("흥미롭고 감정이 살아 있는 줄거리 요약을 작성해라.\n\n");
         sb.append("조건:\n");
         sb.append("- 반드시 4~6문장\n");

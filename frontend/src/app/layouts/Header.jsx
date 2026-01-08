@@ -49,6 +49,11 @@ function Header() {
               // 로그인 상태
               <>
                 <li>
+                  <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                    \uB3C4\uC11C \uB300\uCD9C \uC9C0\uB3C4
+                  </Link>
+                </li>
+                <li>
                   <button
                     onClick={handleLogout}
                     className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all cursor-pointer bg-transparent border-none"
@@ -65,6 +70,11 @@ function Header() {
             ) : (
               // 비로그인 상태
               <>
+                 <li>
+                  <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                    도서 대출 지도
+                  </Link>
+                </li>
                 <li>
                   <Link to="/login" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
                     로그인
