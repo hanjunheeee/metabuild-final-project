@@ -51,10 +51,14 @@ public class BookService {
         dto.setAuthor(book.getAuthor());
         dto.setPublisher(book.getPublisher());
         dto.setPublishedDate(book.getPublishedDate());
-        dto.setCreatedAt(book.getCreatedAt());
-        dto.setTag(book.getTag());
         dto.setSummary(book.getSummary());
-        dto.setBorrowedAmount(book.getBorrowedAmount());
+        dto.setImageUrl(book.getImageUrl());
+        
+        // BookDetail에서 가져오는 필드
+        if (book.getBookDetail() != null) {
+            dto.setTag(book.getBookDetail().getTag());
+            dto.setBorrowedAmount(book.getBookDetail().getBorrowedAmount());
+        }
         return dto;
     }
 }

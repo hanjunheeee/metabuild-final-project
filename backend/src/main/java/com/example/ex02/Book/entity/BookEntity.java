@@ -34,24 +34,13 @@ public class BookEntity {
     @Column(name = "published_date")
     private LocalDate publishedDate;
 
-    @Column(name = "created_at")
-    private LocalDate createdAt;
-
-    @Column(length = 100)
-    private String tag;
-
     @Column(length = 300)
     private String summary;
 
-    @Column(name = "borrowed_amount")
-    private Integer borrowedAmount;
+    @Column(name = "image_url", length = 100)
+    private String imageUrl;
 
     @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BookDetailEntity bookDetail;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDate.now();
-    }
 }
 

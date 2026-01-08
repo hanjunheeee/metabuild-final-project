@@ -50,7 +50,7 @@ function Header() {
               <>
                 <li>
                   <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    \uB3C4\uC11C \uB300\uCD9C \uC9C0\uB3C4
+                    도서 대출 지도
                   </Link>
                 </li>
                 <li>

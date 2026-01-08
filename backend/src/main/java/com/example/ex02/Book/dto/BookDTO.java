@@ -17,9 +17,10 @@ public class BookDTO {
     private String author;
     private String publisher;
     private LocalDate publishedDate;
-    private LocalDate createdAt;
-    private String tag;
     private String summary;
+    private String imageUrl;
+    // BookDetail에서 가져오는 필드
+    private String tag;
     private Integer borrowedAmount;
 }
 

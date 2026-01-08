@@ -16,8 +16,11 @@ public class BookDetailEntity {
     @Column(name = "book_id")
     private Long bookId;
 
-    @Column(length = 300)
-    private String summary;
+    @Column(length = 20)
+    private String tag;
+
+    @Column(name = "borrowed_amount")
+    private Integer borrowedAmount;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
