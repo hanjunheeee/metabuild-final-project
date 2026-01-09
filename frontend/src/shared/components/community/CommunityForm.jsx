@@ -240,6 +240,9 @@ function CommunityForm({
                 />
               </svg>
             </div>
+            <p className="mt-1 text-xs text-gray-400">
+              💡 첫 검색 시에는 검색이 지연될 수 있습니다
+            </p>
 
             {/* 검색 결과 드롭다운 */}
             {showDropdown && (

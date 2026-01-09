@@ -14,6 +14,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class BookEntity {
 
+    public enum AgeGroup {
+        아동, 청소년, 성인
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
@@ -39,6 +43,10 @@ public class BookEntity {
 
     @Column(name = "image_url", length = 100)
     private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private AgeGroup ages;
 
     @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BookDetailEntity bookDetail;

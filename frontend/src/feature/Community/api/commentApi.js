@@ -22,28 +22,28 @@ export const fetchCommentsByUserId = async (userId) => {
   return response.json()
 }
 
-// 댓글 작성 (parentId가 있으면 답글)
-export const createComment = async ({ communityId, userId, content, parentId = null }) => {
+// 댓글 작성 (parentId가 있으면 답글, bookId는 책 태그)
+export const createComment = async ({ communityId, userId, content, parentId = null, bookId = null }) => {
   const response = await fetch(`${BASE_URL}/api/comments`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
     },
-    body: JSON.stringify({ communityId, userId, content, parentId }),
+    body: JSON.stringify({ communityId, userId, content, parentId, bookId }),
   })
   return response.json()
 }
 
-// 댓글 수정
-export const updateComment = async (commentId, userId, content) => {
+// 댓글 수정 (책 태그 수정 가능)
+export const updateComment = async (commentId, userId, content, bookId = null) => {
   const response = await fetch(`${BASE_URL}/api/comments/${commentId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
     },
-    body: JSON.stringify({ userId, content }),
+    body: JSON.stringify({ userId, content, bookId }),
   })
   return response.json()
 }

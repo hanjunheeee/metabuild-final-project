@@ -56,55 +56,70 @@ function useComments(communityId, currentUserId, pageSize = 10) {
     setCurrentPage(page)
   }, [])
 
-  // 댓글 작성
-  const handleSubmitComment = useCallback(async (e) => {
+  // 댓글 작성 (bookId 옵션)
+  const handleSubmitComment = useCallback(async (e, bookId = null) => {
     e?.preventDefault()
     if (!commentText.trim() || !currentUserId) return
 
     try {
       setSubmitting(true)
-      const result = await createComment({
+      const payload = {
         communityId,
         userId: currentUserId,
         content: commentText.trim(),
-      })
+      }
+      // bookId가 있으면 추가 (백엔드 준비 시 사용)
+      if (bookId) {
+        payload.bookId = bookId
+      }
+      const result = await createComment(payload)
       if (result.success) {
         setCommentText('')
         setCurrentPage(1)
         await loadComments(1)
+        return true // 성공 시 true 반환
       } else {
         alert(result.message || '댓글 작성에 실패했습니다.')
+        return false
       }
     } catch (err) {
       console.error('댓글 작성 실패:', err)
       alert('댓글 작성에 실패했습니다.')
+      return false
     } finally {
       setSubmitting(false)
     }
   }, [commentText, currentUserId, communityId, loadComments])
 
-  // 답글 작성
-  const handleSubmitReply = useCallback(async (parentId) => {
-    if (!replyText.trim() || !currentUserId) return
+  // 답글 작성 (bookId 옵션)
+  const handleSubmitReply = useCallback(async (parentId, bookId = null) => {
+    if (!replyText.trim() || !currentUserId) return false
 
     try {
       setSubmitting(true)
-      const result = await createComment({
+      const payload = {
         communityId,
         userId: currentUserId,
         content: replyText.trim(),
         parentId,
-      })
+      }
+      if (bookId) {
+        payload.bookId = bookId
+      }
+      const result = await createComment(payload)
       if (result.success) {
         setReplyText('')
         setReplyingTo(null)
         await loadComments(currentPage)
+        return true
       } else {
         alert(result.message || '답글 작성에 실패했습니다.')
+        return false
       }
     } catch (err) {
       console.error('답글 작성 실패:', err)
       alert('답글 작성에 실패했습니다.')
+      return false
     } finally {
       setSubmitting(false)
     }
@@ -124,23 +139,26 @@ function useComments(communityId, currentUserId, pageSize = 10) {
     setEditText('')
   }, [])
 
-  // 수정 제출
-  const handleSubmitEdit = useCallback(async (commentId) => {
-    if (!editText.trim() || !currentUserId) return
+  // 수정 제출 (bookId 옵션)
+  const handleSubmitEdit = useCallback(async (commentId, bookId = null) => {
+    if (!editText.trim() || !currentUserId) return false
 
     try {
       setSubmitting(true)
-      const result = await updateComment(commentId, currentUserId, editText.trim())
+      const result = await updateComment(commentId, currentUserId, editText.trim(), bookId)
       if (result.success) {
         setEditingId(null)
         setEditText('')
         await loadComments(currentPage)
+        return true
       } else {
         alert(result.message || '댓글 수정에 실패했습니다.')
+        return false
       }
     } catch (err) {
       console.error('댓글 수정 실패:', err)
       alert('댓글 수정에 실패했습니다.')
+      return false
     } finally {
       setSubmitting(false)
     }

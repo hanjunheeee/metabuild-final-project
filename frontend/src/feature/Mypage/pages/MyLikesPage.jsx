@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useCommunities from '@/feature/Community/hooks/useCommunities'
-import { fetchLikedCommunityIds, likeCommunity } from '@/feature/Community/api/communityApi'
+import { fetchCommunities, fetchLikedCommunityIds, likeCommunity } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 import { SearchFilterBar } from '@/feature/Community/components'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { Spinner } from '@/shared/components/icons'
 
 function MyLikesPage() {
-  const { communities, loading: communitiesLoading } = useCommunities()
+  const [communities, setCommunities] = useState([])
+  const [communitiesLoading, setCommunitiesLoading] = useState(true)
   const [likedIds, setLikedIds] = useState([])
   const [idsLoading, setIdsLoading] = useState(true)
   const { formatDate, getPostTitle, getKindLabel, getKindStyle } = useCommunityHelpers()
@@ -19,6 +19,19 @@ function MyLikesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('latest')
   const [kindFilter, setKindFilter] = useState('ALL')
+
+  // 커뮤니티 목록 조회
+  useEffect(() => {
+    fetchCommunities()
+      .then(data => {
+        setCommunities(data)
+        setCommunitiesLoading(false)
+      })
+      .catch(err => {
+        console.error('커뮤니티 목록 로딩 실패:', err)
+        setCommunitiesLoading(false)
+      })
+  }, [])
 
   // 좋아요한 게시글 ID 목록 조회
   useEffect(() => {

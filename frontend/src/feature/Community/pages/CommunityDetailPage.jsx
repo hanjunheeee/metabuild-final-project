@@ -4,7 +4,7 @@ import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike } from '.
 import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { checkBookmark, toggleBookmark } from '@/shared/api/bookmarkApi'
-import CommentSection from '../components/CommentSection'
+import { CommentSection, BookInfoCard } from '../components'
 
 function CommunityDetailPage() {
   const { id } = useParams()
@@ -325,65 +325,20 @@ function CommunityDetailPage() {
 
           {/* 책 정보 (있는 경우) */}
           {post.bookId && (
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
-              <div className="flex gap-4">
-                {/* 책 표지 이미지 */}
-                <div className="flex-shrink-0 w-24 h-32 bg-white rounded shadow-sm overflow-hidden border border-gray-200">
-                  {post.bookCoverUrl ? (
-                    <img 
-                      src={post.bookCoverUrl} 
-                      alt={post.bookTitle} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                      <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                {/* 책 정보 */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <p className="text-base font-semibold text-gray-800 leading-tight">
-                    {post.bookTitle || '제목 없음'}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {post.bookAuthor || '저자 미상'}
-                  </p>
-                  {post.bookPublishedDate && (
-                    <p className="text-sm text-gray-400 mt-1">
-                      {new Date(post.bookPublishedDate).getFullYear()}년 출간
-                    </p>
-                  )}
-                </div>
-                {/* 북마크 버튼 */}
-                {currentUser && (
-                  <button
-                    onClick={handleBookmark}
-                    disabled={isBookmarking}
-                    className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full 
-                              transition-all duration-200 cursor-pointer disabled:opacity-50
-                              ${bookmarked 
-                                ? 'bg-yellow-400 text-white hover:bg-yellow-500' 
-                                : 'bg-white border border-gray-300 text-gray-400 hover:border-yellow-400 hover:text-yellow-500'
-                              }`}
-                    title={bookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                  >
-                    {bookmarked ? (
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
+            <BookInfoCard
+              book={{
+                bookId: post.bookId,
+                title: post.bookTitle,
+                author: post.bookAuthor,
+                coverUrl: post.bookCoverUrl,
+                publishedDate: post.bookPublishedDate,
+              }}
+              size="lg"
+              showBookmark={!!currentUser}
+              isBookmarked={bookmarked}
+              onBookmark={handleBookmark}
+              bookmarkLoading={isBookmarking}
+            />
           )}
 
           {/* 본문 내용 */}

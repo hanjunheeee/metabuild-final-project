@@ -1,5 +1,6 @@
 package com.example.ex02.Community.entity;
 
+import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.User.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,6 +28,11 @@ public class CommentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    // 댓글에 태그된 책 (선택사항)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id")
+    private BookEntity book;
 
     @Lob
     @Column(name = "content", nullable = false)

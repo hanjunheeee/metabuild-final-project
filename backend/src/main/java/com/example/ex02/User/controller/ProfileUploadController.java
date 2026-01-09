@@ -83,5 +83,70 @@ public class ProfileUploadController {
             ));
         }
     }
+
+    // 커뮤니티 게시글 이미지 업로드
+    @PostMapping("/upload/community")
+    public ResponseEntity<?> uploadCommunityImage(@RequestParam("file") MultipartFile file) {
+        try {
+            // 파일이 비어있는지 확인
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "파일이 비어있습니다."
+                ));
+            }
+
+            // 이미지 파일인지 확인
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "이미지 파일만 업로드 가능합니다."
+                ));
+            }
+
+            // 파일 크기 확인 (10MB)
+            if (file.getSize() > 10 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "파일 크기는 10MB 이하여야 합니다."
+                ));
+            }
+
+            // 업로드 디렉토리 생성
+            Path uploadPath = Paths.get(uploadBaseDir, "community");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // 고유한 파일명 생성
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".") 
+                ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+                : ".jpg";
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String newFilename = "community_" + timestamp + extension;
+
+            // 파일 저장
+            Path filePath = uploadPath.resolve(newFilename);
+            Files.copy(file.getInputStream(), filePath);
+
+            // 접근 가능한 URL 반환
+            String imageUrl = "http://localhost:7878/uploads/community/" + newFilename;
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "filename", newFilename,
+                "url", imageUrl,
+                "message", "이미지 업로드 성공"
+            ));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "이미지 업로드 실패: " + e.getMessage()
+            ));
+        }
+    }
 }
 

@@ -59,14 +59,17 @@ public class CommentController {
             Long parentId = request.get("parentId") != null 
                     ? ((Number) request.get("parentId")).longValue() 
                     : null;
+            Long bookId = request.get("bookId") != null 
+                    ? ((Number) request.get("bookId")).longValue() 
+                    : null;
             
             CommentDTO created;
             if (parentId != null) {
-                // 답글 작성
-                created = commentService.createReply(communityId, userId, parentId, content);
+                // 답글 작성 (책 태그 선택 가능)
+                created = commentService.createReply(communityId, userId, parentId, content, bookId);
             } else {
-                // 일반 댓글 작성
-                created = commentService.createComment(communityId, userId, content);
+                // 일반 댓글 작성 (책 태그 선택)
+                created = commentService.createComment(communityId, userId, content, bookId);
             }
             
             return ResponseEntity.ok(Map.of(
@@ -82,7 +85,7 @@ public class CommentController {
         }
     }
 
-    // 댓글 수정
+    // 댓글 수정 (책 태그 수정 가능)
     @PutMapping("/{commentId}")
     public ResponseEntity<?> updateComment(
             @PathVariable Long commentId,
@@ -91,8 +94,11 @@ public class CommentController {
         try {
             Long userId = ((Number) request.get("userId")).longValue();
             String content = (String) request.get("content");
+            Long bookId = request.get("bookId") != null 
+                    ? ((Number) request.get("bookId")).longValue() 
+                    : null;
             
-            CommentDTO updated = commentService.updateComment(commentId, userId, content);
+            CommentDTO updated = commentService.updateComment(commentId, userId, content, bookId);
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "댓글이 수정되었습니다.",

@@ -89,7 +89,7 @@ function useCommunityHelpers() {
     return styles[kind] || 'bg-gray-100 text-gray-700'
   }
 
-  // 게시글 배지 설정 반환 (SimplePostCard용)
+  // 게시글 배지 설정 반환 (CommunityPostList용)
   const getBadgeConfig = (post, isNoticeFilter = false) => {
     if (isNoticeFilter || post.isNotice === 1) {
       return { text: '공지', color: 'amber' }

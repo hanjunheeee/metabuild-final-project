@@ -10,7 +10,7 @@
  * @param {boolean} isHot - true이면 HOT 표시
  * @param {string} variant - 'card' (배경색 카드) | 'table' (테이블 행)
  */
-function SimplePostCard({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card' }) {
+function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card' }) {
   // 배지 색상 스타일
   const badgeStyles = {
     amber: 'bg-amber-500 text-white',
@@ -63,6 +63,11 @@ function SimplePostCard({ post, onClick, formatDate, getPostTitle, badge, isHot 
           {/* 제목 */}
           <h2 className="text-sm text-gray-800 truncate flex-1 hover:text-main-bg">
             {getPostTitle(post)}
+            {post.bookTitle && (
+              <span className="text-xs text-gray-400 ml-1.5">
+                📖 {post.bookTitle.length > 15 ? post.bookTitle.slice(0, 15) + '...' : post.bookTitle}
+              </span>
+            )}
             {post.commentCount > 0 && (
               <span className="text-xs text-main-bg ml-1">({post.commentCount})</span>
             )}
@@ -106,10 +111,17 @@ function SimplePostCard({ post, onClick, formatDate, getPostTitle, badge, isHot 
           <span className="flex-shrink-0 text-red-500 text-xs font-bold">🔥</span>
         )}
         
-        {/* 제목 */}
-        <h2 className="text-sm font-bold text-gray-800 truncate flex-1">
-          {getPostTitle(post)}
-        </h2>
+        {/* 제목 + 책 제목 */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h2 className="text-sm font-bold text-gray-800 truncate">
+            {getPostTitle(post)}
+          </h2>
+          {post.bookTitle && (
+            <span className="text-xs text-gray-400 truncate max-w-[120px] flex-shrink-0">
+              📖 {post.bookTitle}
+            </span>
+          )}
+        </div>
         
         {/* 좋아요/댓글 수 */}
         <div className="flex items-center gap-3 text-xs text-gray-400 flex-shrink-0">
@@ -138,4 +150,5 @@ function SimplePostCard({ post, onClick, formatDate, getPostTitle, badge, isHot 
   )
 }
 
-export default SimplePostCard
+export default CommunityPostList
+

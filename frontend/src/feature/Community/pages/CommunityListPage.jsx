@@ -1,5 +1,5 @@
 import useCommunityListPage from '../hooks/useCommunityListPage'
-import { CommunityPostCard, SimplePostCard, SearchFilterBar, EmptyState } from '../components'
+import { CommunityPostCard, CommunityPostList, SearchFilterBar, EmptyState } from '../components'
 import { Pagination } from '@/shared/components'
 import { Spinner } from '@/shared/components/icons'
 
@@ -144,7 +144,7 @@ function CommunityListPage() {
         {!isUserFilterMode && kindFilter === 'ALL' && noticePosts.length > 0 && (
           <div className="mb-4 space-y-2">
             {noticePosts.map((post) => (
-              <SimplePostCard
+              <CommunityPostList
                 key={post.communityId}
                 post={post}
                 onClick={handlePostClick}
@@ -159,8 +159,8 @@ function CommunityListPage() {
         {/* 🔥 이번 주 HOT 게시글 (검색 시 숨김) */}
         {!isUserFilterMode && kindFilter === 'ALL' && !searchTerm.trim() && hotPosts.length > 0 && (
           <div className="mb-6">
-            <div className="flex flex-col items-center mb-3">
-              <h2 className="text-2xl font-extrabold text-gray-800">🔥이번 주 HOT</h2>
+            <div className="flex flex-col items-center mb-3 border-t border-gray-300">
+              <h2 className="text-2xl font-extrabold text-sub-bg pt-3">🔥이번 주 HOT</h2>
               <span className="text-xs text-gray-400">최근 7일간 인기 게시글</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,8 +189,8 @@ function CommunityListPage() {
 
         {/* 전체 게시글 헤더 (HOT 게시글이 표시될 때만) */}
         {!isUserFilterMode && kindFilter === 'ALL' && !searchTerm.trim() && hotPosts.length > 0 && filteredCommunities.length > 0 && (
-          <div className="flex items-center justify-center gap-2 mb-3 pt-4">
-            <h2 className="text-xl font-bold text-gray-800">📝전체 게시글</h2>
+          <div className="flex items-center justify-center border-t border-gray-300 gap-2 mb-3 pt-4">
+            <h2 className="text-2xl font-extrabold text-sub-bg">전체 게시글</h2>
           </div>
         )}
 
@@ -210,7 +210,7 @@ function CommunityListPage() {
             {/* 공지: 카드 스타일 */}
             <div className="space-y-2">
               {currentPosts.map((post) => (
-                <SimplePostCard
+                <CommunityPostList
                   key={post.communityId}
                   post={post}
                   onClick={handlePostClick}
@@ -268,7 +268,7 @@ function CommunityListPage() {
               </div>
               <div>
                 {currentPosts.map((post) => (
-                  <SimplePostCard
+                  <CommunityPostList
                     key={post.communityId}
                     post={post}
                     onClick={handlePostClick}

@@ -53,6 +53,7 @@ public class BookService {
         dto.setPublishedDate(book.getPublishedDate());
         dto.setSummary(book.getSummary());
         dto.setImageUrl(book.getImageUrl());
+        dto.setAges(book.getAges() != null ? book.getAges().name() : null);
         
         // BookDetail에서 가져오는 필드
         if (book.getBookDetail() != null) {

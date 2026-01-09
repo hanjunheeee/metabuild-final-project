@@ -1,3 +1,5 @@
+import BookInfoCard from './BookInfoCard'
+
 /**
  * 커뮤니티 게시글 카드 컴포넌트 (인스타그램 스타일)
  * 
@@ -110,67 +112,24 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
       ) : null}
       
       {/* 책 정보 표시: preferBookInfo=true면 무조건, false면 이미지 없을 때만 */}
-      {post.bookId && (preferBookInfo || images.length === 0) ? (
-        // 2. 책이 선택되어 있으면 책 정보 카드 표시
-        <div className="flex-shrink-0 h-36 p-3 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
-          <div className="flex gap-3 h-full">
-            {/* 책 표지 이미지 */}
-            <div className="flex-shrink-0 w-20 h-full bg-white rounded shadow-sm overflow-hidden border border-gray-200">
-              {post.bookCoverUrl ? (
-                <img 
-                  src={post.bookCoverUrl} 
-                  alt={post.bookTitle} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-              )}
-            </div>
-            {/* 책 정보 */}
-            <div className="flex-1 flex flex-col justify-center overflow-hidden">
-              <p className="text-sm font-semibold text-gray-800 line-clamp-2 leading-tight">
-                {post.bookTitle || '제목 없음'}
-              </p>
-              <p className="text-xs text-gray-500 mt-1 truncate">
-                {post.bookAuthor || '저자 미상'}
-              </p>
-              {post.bookPublishedDate && (
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {new Date(post.bookPublishedDate).getFullYear()}년 출간
-                </p>
-              )}
-            </div>
-            {/* 북마크 버튼 */}
-            {onBookmark && currentUserId && (
-              <button
-                onClick={handleBookmark}
-                className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full 
-                          transition-all duration-200 cursor-pointer
-                          ${isBookmarked 
-                            ? 'bg-yellow-400 text-white hover:bg-yellow-500' 
-                            : 'bg-white border border-gray-300 text-gray-400 hover:border-yellow-400 hover:text-yellow-500'
-                          }`}
-                title={isBookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-              >
-                {isBookmarked ? (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                )}
-              </button>
-            )}
-          </div>
+      {post.bookId && (preferBookInfo || images.length === 0) && (
+        <div className="flex-shrink-0 h-36">
+          <BookInfoCard
+            book={{
+              bookId: post.bookId,
+              title: post.bookTitle,
+              author: post.bookAuthor,
+              coverUrl: post.bookCoverUrl,
+              publishedDate: post.bookPublishedDate,
+            }}
+            size="md"
+            showBookmark={!!onBookmark && !!currentUserId}
+            isBookmarked={isBookmarked}
+            onBookmark={() => onBookmark && onBookmark(post.bookId)}
+            className="h-full"
+          />
         </div>
-      ) : null}
+      )}
 
       {/* 본문 영역 */}
       <div className="flex-1 flex flex-col p-3 overflow-hidden">

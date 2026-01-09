@@ -1,15 +1,29 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useCommunities from '@/feature/Community/hooks/useCommunities'
+import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 import { SearchFilterBar } from '@/feature/Community/components'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { Spinner } from '@/shared/components/icons'
 
 function MyPostsPage() {
-  const { communities, loading } = useCommunities()
+  const [communities, setCommunities] = useState([])
+  const [loading, setLoading] = useState(true)
   const { formatDate, getPostTitle, getKindLabel, getKindStyle } = useCommunityHelpers()
   const navigate = useNavigate()
+
+  // 커뮤니티 목록 조회
+  useEffect(() => {
+    fetchCommunities()
+      .then(data => {
+        setCommunities(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('커뮤니티 목록 로딩 실패:', err)
+        setLoading(false)
+      })
+  }, [])
   
   // 필터/검색/정렬 상태
   const [searchTerm, setSearchTerm] = useState('')

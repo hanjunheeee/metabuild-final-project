@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import useCommunities from './useCommunities'
 import useCommunityHelpers from './useCommunityHelpers'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { toggleFollow, checkFollowing } from '@/shared/api/followApi'
-import { deleteCommunity, fetchHotPosts } from '../api/communityApi'
+import { fetchCommunities, deleteCommunity, fetchHotPosts } from '../api/communityApi'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 
 // 페이지당 게시글 수
@@ -15,7 +14,34 @@ const POSTS_PER_PAGE = 10
  * 상태 관리, 필터링, HOT 게시글, 팔로우 등 모든 로직 포함
  */
 function useCommunityListPage() {
-  const { communities, loading, error, refetch } = useCommunities()
+  // === 커뮤니티 목록 fetch (기존 useCommunities 인라인) ===
+  const [communities, setCommunities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const loadCommunities = useCallback(() => {
+    setLoading(true)
+    fetchCommunities()
+      .then(data => {
+        setCommunities(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error:', err)
+        setError(err)
+        setLoading(false)
+      })
+  }, [])
+
+  useEffect(() => {
+    loadCommunities()
+  }, [loadCommunities])
+
+  const refetch = useCallback(() => {
+    loadCommunities()
+  }, [loadCommunities])
+
+  // === 기존 로직 ===
   const helpers = useCommunityHelpers()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()

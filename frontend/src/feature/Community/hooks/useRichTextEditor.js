@@ -242,24 +242,40 @@ function useRichTextEditor() {
     }
   }, [focusEditor])
 
-  // 파일에서 이미지 삽입 (Base64 변환)
-  const insertImageFromFile = useCallback((file) => {
+  // 파일에서 이미지 삽입 (서버 업로드 후 URL 삽입)
+  const insertImageFromFile = useCallback(async (file) => {
     if (!file || !file.type.startsWith('image/')) {
       alert('이미지 파일만 업로드할 수 있습니다.')
       return
     }
 
-    // 파일 크기 제한 (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 크기는 5MB 이하만 가능합니다.')
+    // 파일 크기 제한 (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지 크기는 10MB 이하만 가능합니다.')
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      insertImage(e.target.result)  // Base64 데이터 삽입
+    try {
+      // 서버에 이미지 업로드
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('http://localhost:7878/api/files/upload/community', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (result.success && result.url) {
+        insertImage(result.url)  // 업로드된 이미지 URL 삽입
+      } else {
+        alert(result.message || '이미지 업로드에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error)
+      alert('이미지 업로드에 실패했습니다.')
     }
-    reader.readAsDataURL(file)
   }, [insertImage])
 
   // 파일 input change 핸들러

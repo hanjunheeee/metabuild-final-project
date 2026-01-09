@@ -20,5 +20,11 @@ public class CommentDTO {
     private Long parentId;  // 부모 댓글 ID (답글인 경우에만 값 있음)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // 댓글에 태그된 책 정보
+    private Long bookId;
+    private String bookTitle;
+    private String bookAuthor;
+    private String bookImageUrl;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { fetchBookmarksByUser, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { Spinner } from '@/shared/components/icons'
@@ -7,6 +7,7 @@ function MyBookmarksPage() {
   const [bookmarks, setBookmarks] = useState([])
   const [loading, setLoading] = useState(true)
   const [removingId, setRemovingId] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
   
   const currentUser = getUserFromSession()
 
@@ -55,6 +56,17 @@ function MyBookmarksPage() {
     return `${yy}.${mm}.${dd}`
   }
 
+  // 검색 필터링
+  const filteredBookmarks = useMemo(() => {
+    if (!searchTerm.trim()) return bookmarks
+    
+    const term = searchTerm.toLowerCase()
+    return bookmarks.filter(bookmark => 
+      (bookmark.bookTitle || '').toLowerCase().includes(term) ||
+      (bookmark.bookAuthor || '').toLowerCase().includes(term)
+    )
+  }, [bookmarks, searchTerm])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -74,23 +86,58 @@ function MyBookmarksPage() {
         <p className="text-gray-400 text-sm mt-1">내가 즐겨찾기한 도서를 확인할 수 있습니다.</p>
       </div>
 
+      {/* 검색창 */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="책 제목 또는 저자로 검색..."
+            className="w-full px-4 py-2 pl-10 border border-gray-300 focus:outline-none focus:border-main-bg text-sm"
+          />
+          <svg 
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* 통계 */}
       <div className="mb-6 text-sm text-gray-500">
-        총 <strong className="text-gray-800">{bookmarks.length}</strong>권의 도서
+        {searchTerm ? (
+          <>검색 결과 <strong className="text-gray-800">{filteredBookmarks.length}</strong>권 (전체 {bookmarks.length}권)</>
+        ) : (
+          <>총 <strong className="text-gray-800">{bookmarks.length}</strong>권의 도서</>
+        )}
       </div>
 
       {/* 도서 목록 */}
       <div className="border border-gray-200">
-        {bookmarks.length === 0 ? (
+        {filteredBookmarks.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">
-            즐겨찾기한 도서가 없습니다.
+            {searchTerm ? '검색 결과가 없습니다.' : '즐겨찾기한 도서가 없습니다.'}
           </div>
         ) : (
-          bookmarks.map((bookmark, index) => (
+          filteredBookmarks.map((bookmark, index) => (
             <div
               key={bookmark.bookmarkId}
               className={`flex gap-4 p-4 hover:bg-gray-50 transition-colors group ${
-                index !== bookmarks.length - 1 ? 'border-b border-gray-100' : ''
+                index !== filteredBookmarks.length - 1 ? 'border-b border-gray-100' : ''
               }`}
             >
               {/* 책 표지 */}

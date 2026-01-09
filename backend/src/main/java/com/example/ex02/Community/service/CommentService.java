@@ -1,5 +1,7 @@
 package com.example.ex02.Community.service;
 
+import com.example.ex02.Book.entity.BookEntity;
+import com.example.ex02.Book.repository.BookRepository;
 import com.example.ex02.Community.dto.CommentDTO;
 import com.example.ex02.Community.entity.CommentEntity;
 import com.example.ex02.Community.entity.CommunityEntity;
@@ -27,6 +29,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
+    private final BookRepository bookRepository;
 
     // 특정 커뮤니티 글의 댓글 목록 조회
     public List<CommentDTO> getCommentsByCommunityId(Long communityId) {
@@ -98,9 +101,9 @@ public class CommentService {
         return convertToDTO(comment);
     }
 
-    // 댓글 작성 (일반 댓글)
+    // 댓글 작성 (일반 댓글, 책 태그 선택)
     @Transactional
-    public CommentDTO createComment(Long communityId, Long userId, String content) {
+    public CommentDTO createComment(Long communityId, Long userId, String content, Long bookId) {
         CommunityEntity community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
         
@@ -113,13 +116,20 @@ public class CommentService {
         comment.setContent(content);
         comment.setParent(null);  // 일반 댓글은 parent 없음
         
+        // 책 태그가 있으면 설정
+        if (bookId != null) {
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new RuntimeException("책을 찾을 수 없습니다."));
+            comment.setBook(book);
+        }
+        
         CommentEntity saved = commentRepository.save(comment);
         return convertToDTO(saved);
     }
 
-    // 답글 작성 (누구나 가능, 여러 개 가능, 깊이는 1단계만)
+    // 답글 작성 (누구나 가능, 여러 개 가능, 깊이는 1단계만, 책 태그 선택)
     @Transactional
-    public CommentDTO createReply(Long communityId, Long userId, Long parentId, String content) {
+    public CommentDTO createReply(Long communityId, Long userId, Long parentId, String content, Long bookId) {
         CommunityEntity community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
         
@@ -140,13 +150,20 @@ public class CommentService {
         reply.setContent(content);
         reply.setParent(parentComment);
         
+        // 책 태그가 있으면 설정
+        if (bookId != null) {
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new RuntimeException("책을 찾을 수 없습니다."));
+            reply.setBook(book);
+        }
+        
         CommentEntity saved = commentRepository.save(reply);
         return convertToDTO(saved);
     }
 
-    // 댓글 수정 (작성자 본인만 가능)
+    // 댓글 수정 (작성자 본인만 가능, 책 태그 수정 가능)
     @Transactional
-    public CommentDTO updateComment(Long commentId, Long userId, String content) {
+    public CommentDTO updateComment(Long commentId, Long userId, String content, Long bookId) {
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
         
@@ -156,6 +173,16 @@ public class CommentService {
         }
         
         comment.setContent(content);
+        
+        // 책 태그 수정 (null이면 제거, 값이 있으면 변경)
+        if (bookId != null) {
+            BookEntity book = bookRepository.findById(bookId)
+                    .orElseThrow(() -> new RuntimeException("책을 찾을 수 없습니다."));
+            comment.setBook(book);
+        } else {
+            comment.setBook(null);
+        }
+        
         CommentEntity updated = commentRepository.save(comment);
         return convertToDTO(updated);
     }
@@ -192,6 +219,16 @@ public class CommentService {
         dto.setParentId(comment.getParent() != null ? comment.getParent().getCommentId() : null);
         dto.setCreatedAt(comment.getCreatedAt());
         dto.setUpdatedAt(comment.getUpdatedAt());
+        
+        // 책 정보 매핑
+        if (comment.getBook() != null) {
+            BookEntity book = comment.getBook();
+            dto.setBookId(book.getBookId());
+            dto.setBookTitle(book.getTitle());
+            dto.setBookAuthor(book.getAuthor());
+            dto.setBookImageUrl(book.getImageUrl());
+        }
+        
         return dto;
     }
 }

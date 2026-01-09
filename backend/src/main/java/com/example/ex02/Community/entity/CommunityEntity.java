@@ -30,6 +30,7 @@ public class CommunityEntity {
     private BookEntity book;  // 책 선택은 선택사항
 
     @Lob
+    @Basic(fetch = FetchType.EAGER)
     @Column(name = "content_json")
     private String contentJson;
 
