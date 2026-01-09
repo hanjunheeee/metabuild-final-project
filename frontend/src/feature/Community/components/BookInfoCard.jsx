@@ -1,14 +1,17 @@
+import { useNavigate } from 'react-router-dom'
+
 /**
  * 책 정보 카드 컴포넌트
  * 게시글 목록, 상세 페이지, 댓글 등에서 책 정보를 표시할 때 사용
  * 
- * @param {Object} book - 책 정보 { bookId, title, author, coverUrl, publishedDate }
+ * @param {Object} book - 책 정보 { bookId, title, author, coverUrl, publishedDate, isbn }
  * @param {string} size - 'sm' | 'md' | 'lg' (기본: 'md')
  * @param {boolean} showBookmark - 북마크 버튼 표시 여부
  * @param {boolean} isBookmarked - 북마크 여부
  * @param {Function} onBookmark - 북마크 클릭 핸들러
  * @param {boolean} bookmarkLoading - 북마크 로딩 상태
- * @param {Function} onClick - 카드 클릭 핸들러 (책 상세 페이지 이동 등)
+ * @param {Function} onClick - 카드 클릭 핸들러 (기본: 책 검색 페이지로 이동)
+ * @param {boolean} disableNavigation - 클릭 시 페이지 이동 비활성화
  * @param {string} className - 추가 CSS 클래스
  */
 function BookInfoCard({ 
@@ -19,8 +22,11 @@ function BookInfoCard({
   onBookmark,
   bookmarkLoading = false,
   onClick,
+  disableNavigation = false,
   className = ''
 }) {
+  const navigate = useNavigate()
+  
   if (!book) return null
 
   // 사이즈별 스타일 설정
@@ -64,13 +70,32 @@ function BookInfoCard({
     if (onBookmark) onBookmark(book)
   }
 
-  const handleCardClick = () => {
-    if (onClick) onClick(book)
+  const handleCardClick = (e) => {
+    // 부모 요소로 이벤트 전파 방지 (게시글 카드 클릭과 분리)
+    e.stopPropagation()
+    
+    // 커스텀 onClick이 있으면 실행
+    if (onClick) {
+      onClick(book)
+      return
+    }
+    
+    // 페이지 이동이 비활성화되어 있으면 아무것도 하지 않음
+    if (disableNavigation) return
+    
+    // 기본 동작: 책 제목으로 검색 결과 페이지로 이동
+    const keyword = book.title || book.isbn || ''
+    if (keyword) {
+      navigate(`/searchbook?keyword=${encodeURIComponent(keyword)}`)
+    }
   }
+  
+  // 클릭 가능 여부 (onClick이 있거나, 네비게이션이 활성화된 경우)
+  const isClickable = onClick || !disableNavigation
 
   return (
     <div 
-      className={`bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100 ${styles.container} ${className} ${onClick ? 'cursor-pointer hover:from-gray-100 hover:to-gray-150 transition-colors' : ''}`}
+      className={`bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100 ${styles.container} ${className} ${isClickable ? 'cursor-pointer hover:from-gray-100 hover:to-gray-150 transition-colors' : ''}`}
       onClick={handleCardClick}
     >
       <div className="flex gap-3 h-full">
