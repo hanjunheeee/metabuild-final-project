@@ -1,12 +1,14 @@
 package com.example.ex02.Book.controller;
 
 import com.example.ex02.Book.dto.BookDTO;
+import com.example.ex02.Book.dto.BestsellerItemDTO;
 import com.example.ex02.Book.dto.BookSummaryResponse;
 import com.example.ex02.Book.service.BookPriceService;
 import com.example.ex02.Book.service.AladinBestsellerService;
 import com.example.ex02.Book.service.StoreBestsellerScrapeService;
 import com.example.ex02.Book.service.BookSummaryService;
 import com.example.ex02.Book.service.BookService;
+import com.example.ex02.Book.service.Data4LibraryLoanRankingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ public class BookController {
     private final BookSummaryService bookSummaryService;
     private final AladinBestsellerService aladinBestsellerService;
     private final StoreBestsellerScrapeService storeBestsellerScrapeService;
+    private final Data4LibraryLoanRankingService data4LibraryLoanRankingService;
 
     // Get all books (optionally filtered by query)
     @GetMapping
@@ -68,6 +71,12 @@ public class BookController {
     @GetMapping("/bestsellers/yes24")
     public ResponseEntity<?> getYes24Bestsellers() {
         return ResponseEntity.ok(storeBestsellerScrapeService.fetchYes24Top10());
+    }
+
+    // Seoul public library monthly loan ranking TOP10
+    @GetMapping("/loans/seoul")
+    public ResponseEntity<List<BestsellerItemDTO>> getSeoulLoanTop10() {
+        return ResponseEntity.ok(data4LibraryLoanRankingService.fetchSeoulMonthlyTop10());
     }
 
 

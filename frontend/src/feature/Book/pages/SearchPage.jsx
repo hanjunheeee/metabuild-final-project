@@ -78,11 +78,20 @@ function SearchPage() {
     }
   }
 
+  const getCoverUrl = (url) => {
+    if (!url) {
+      return ''
+    }
+    if (url.includes('image.aladin.co.kr') && url.includes('/coversum/')) {
+      return url.replace('/coversum/', '/cover200/')
+    }
+    return url
+  }
+
   const goToLibrarySearch = (book) => {
     const params = new URLSearchParams()
     if (book.title) {
       params.set('title', book.title)
-      params.set('query', book.title)
     }
     if (book.isbn) {
       params.set('isbn', book.isbn)
@@ -99,6 +108,7 @@ function SearchPage() {
 
   const initialKeyword = params.get('keyword') || ''
   const [keyword, setKeyword] = useState(initialKeyword)
+  const [visibleCount, setVisibleCount] = useState(10)
 
   const { books, loading } = useBooks(initialKeyword)
 
@@ -112,6 +122,7 @@ function SearchPage() {
 
   useEffect(() => {
     setKeyword(initialKeyword)
+    setVisibleCount(10)
   }, [initialKeyword])
 
   if (loading) {
@@ -160,7 +171,7 @@ function SearchPage() {
       ) : (
         <div className="space-y-12 mb-32">
 
-          {books.map(book => {
+          {books.slice(0, visibleCount).map(book => {
             const bookShops = shops[book.bookId] || []
             const minPrice = bookShops.length
               ? Math.min(...bookShops.map(shop => shop.price))
@@ -176,9 +187,18 @@ function SearchPage() {
 
                 {/* 표지 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col items-center">
-                  <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-4 flex items-center justify-center text-gray-500">
-                    표지
-                  </div>
+                  {book.imageUrl ? (
+                    <img
+                      src={getCoverUrl(book.imageUrl)}
+                      alt={book.title || 'cover'}
+                      className="w-full aspect-[3/4] object-cover rounded-lg mb-4 bg-gray-200"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-4 flex items-center justify-center text-gray-500">
+                      표지
+                    </div>
+                  )}
                 </div>
 
                 {/* 도서 정보 */}
@@ -293,6 +313,20 @@ function SearchPage() {
             </div>
             )
           })}
+          {books.length > visibleCount && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
+              <p className="text-sm text-slate-600 mb-3">
+                검색 결과가 많아 {visibleCount}개만 보여드렸습니다.
+              </p>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm"
+                onClick={() => setVisibleCount(prev => prev + 20)}
+              >
+                더보기
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

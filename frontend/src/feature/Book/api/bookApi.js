@@ -64,3 +64,13 @@ export const fetchYes24Bestsellers = () => {
     return res.json()
   })
 }
+
+// Fetch Seoul monthly loan ranking TOP10
+export const fetchSeoulLoanTop10 = () => {
+  return fetch(`${BASE_URL}/api/books/loans/seoul`).then(res => {
+    if (!res.ok) {
+      throw new Error('Failed to fetch Seoul loan ranking')
+    }
+    return res.json()
+  })
+}
