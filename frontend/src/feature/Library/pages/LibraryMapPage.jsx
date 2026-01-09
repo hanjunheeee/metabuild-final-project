@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { fetchGuList, fetchLibraryData, checkLoan, searchBooks } from '../api/libraryApi'
+import { Spinner } from '@/shared/components/icons'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -11,11 +12,16 @@ function LibraryMapPage() {
   const isbn = searchParams.get('isbn') || ''
   const title = decodeURIComponent(searchParams.get('title') || searchParams.get('query') || '')
   const fallbackCover = 'https://via.placeholder.com/70x100?text=No+Image'
+  const ALL_GU = '서울시전체'
 
   const [guList, setGuList] = useState([])
   const [selectedGu, setSelectedGu] = useState('')
   const [libraryData, setLibraryData] = useState([])
   const [loading, setLoading] = useState(false)
+  const [countsLoading, setCountsLoading] = useState(false)
+  const [availableCounts, setAvailableCounts] = useState({})
+  const [libraryCounts, setLibraryCounts] = useState({})
+  const [mapMode, setMapMode] = useState('loan')
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -24,13 +30,18 @@ function LibraryMapPage() {
   const [selectedBookImage, setSelectedBookImage] = useState('')
   const [selectedBookTitle, setSelectedBookTitle] = useState('')
   const [resolvedIsbn, setResolvedIsbn] = useState('')
+  const [loanMessage, setLoanMessage] = useState('')
 
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
   const markerGroup = useRef(null)
+  const guLayerMap = useRef({})
+  const countsCacheRef = useRef({})
+  const lastSearchRef = useRef({ isbn: '', gu: '' })
+  const lastAllSearchRef = useRef({ gu: '' })
   const latestDataRef = useRef({ isbn: '', libraryData: [], selectedGu: '' })
   const lastIsbnRef = useRef('')
-
+  const COUNTS_CACHE_TTL_MS = 10 * 60 * 1000
 
   const colorPalette = [
     '#8EC1DA',
@@ -47,15 +58,14 @@ function LibraryMapPage() {
     '#E6C3A5'
   ]
 
-
   const LIB_KEYS = {
-    gu: '\uAD6C\uBA85',
-    code: '\uB3C4\uC11C\uAD00\uCF54\uB4DC',
-    lat: '\uC704\uB3C4',
-    lng: '\uACBD\uB3C4',
-    address: '\uB3C4\uB85C\uBA85\uC8FC\uC18C',
-    addressFallback: '\uC8FC\uC18C',
-    name: '\uB3C4\uC11C\uAD00\uBA85'
+    gu: '구명',
+    code: '도서관코드',
+    lat: '위도',
+    lng: '경도',
+    address: '도로명주소',
+    addressFallback: '주소',
+    name: '도서관명'
   }
 
   const normalizeImageUrl = (url) => {
@@ -81,7 +91,7 @@ function LibraryMapPage() {
     if (direct) return direct.trim()
 
     const fallback = Object.values(properties).find(
-      value => typeof value === 'string' && value.includes('\uAD6C')
+      value => typeof value === 'string' && value.includes('구')
     )
     return typeof fallback === 'string' ? fallback.trim() : ''
   }
@@ -95,8 +105,490 @@ function LibraryMapPage() {
     return colorPalette[Math.abs(hash) % colorPalette.length]
   }
 
+  const updateGuLabels = (counts = {}, showCounts = false) => {
+    Object.entries(guLayerMap.current).forEach(([name, layer]) => {
+      const count = counts[name] ?? 0
+      const label = showCounts ? `${name} (${count})` : name
+      layer.setTooltipContent(label)
+    })
+  }
 
-  // 초기 데이터 로드
+  const clearMarkers = () => {
+    if (markerGroup.current) {
+      markerGroup.current.clearLayers()
+    }
+  }
+
+  const resetLoanState = () => {
+    clearMarkers()
+    setAvailableCounts({})
+    setLoanMessage('')
+    lastSearchRef.current = { isbn: '', gu: '' }
+  }
+
+  const loadAllLibraryCounts = () => {
+    if (libraryData.length === 0) return
+    const counts = {}
+
+    libraryData.forEach((lib) => {
+      const guName = (lib[LIB_KEYS.gu] || '').trim()
+      if (!guName) return
+      counts[guName] = (counts[guName] || 0) + 1
+    })
+
+    setLibraryCounts(counts)
+    updateGuLabels(counts, true)
+  }
+
+  const parseSearchResults = (data) => {
+    const docs = data?.response?.docs || []
+    return docs
+      .map((item) => {
+        const doc = item?.doc || item || {}
+        const isbn13 = doc.isbn13 || ''
+        const isbn10 = doc.isbn || ''
+        const isbnValue = isbn13 || isbn10
+        return {
+          title: doc.bookname || doc.title || '',
+          author: doc.authors || doc.author || '',
+          publisher: doc.publisher || '',
+          isbn: isbnValue,
+          img: normalizeImageUrl(doc.bookImageURL || doc.cover),
+          link: doc.bookDtlUrl || doc.link || ''
+        }
+      })
+      .filter((item) => item.isbn || item.title)
+  }
+
+  const handleSearch = async () => {
+    const trimmed = searchQuery.trim()
+    if (!trimmed) {
+      setSearchError('ISBN 또는 도서명을 입력해 주세요.')
+      setSearchResults([])
+      return
+    }
+
+    setSearchLoading(true)
+    setSearchError('')
+    try {
+      const data = await searchBooks(trimmed)
+      const results = parseSearchResults(data)
+      setSearchResults(results)
+      if (results.length === 0) {
+        setSearchError('검색 결과가 없습니다.')
+      }
+    } catch (e) {
+      setSearchError('검색에 실패했습니다.')
+      setSearchResults([])
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const handleSelectBook = (book) => {
+    if (!book?.isbn) {
+      alert('ISBN 정보가 없는 도서입니다.')
+      return
+    }
+
+    setSelectedBookImage(normalizeImageUrl(book.img))
+    setSelectedBookTitle(book.title)
+    setResolvedIsbn(book.isbn)
+    setSearchQuery(book.isbn)
+    setSearchResults([])
+    setSearchError('')
+    setShowSearch(false)
+    setSelectedGu(ALL_GU)
+    setMapMode('loan')
+    resetLoanState()
+
+    const nextTitle = encodeURIComponent(book.title || '')
+    navigate(`/library/map?isbn=${encodeURIComponent(book.isbn)}&title=${nextTitle}`)
+  }
+
+  const handleClearSelectedBook = () => {
+    setSelectedBookImage('')
+    setSelectedBookTitle('')
+    setResolvedIsbn('')
+    setSearchQuery('')
+    setSearchResults([])
+    setSearchError('')
+    setShowSearch(false)
+    setLoanMessage('')
+    resetLoanState()
+    navigate('/library/map')
+  }
+
+  const loadAllGuCounts = async () => {
+    const { isbn: currentIsbn, libraryData: currentLibraries } = latestDataRef.current
+
+    if (!currentIsbn) {
+      setLoanMessage('ISBN 정보가 없어 도서관을 조회할 수 없습니다.')
+      return
+    }
+
+    const cached = countsCacheRef.current[currentIsbn]
+    if (cached && Date.now() - cached.timestamp < COUNTS_CACHE_TTL_MS) {
+      setAvailableCounts(cached.counts)
+      updateGuLabels(cached.counts, true)
+      const cachedTotal = Object.values(cached.counts).reduce((sum, value) => sum + value, 0)
+      if (cachedTotal === 0) {
+        setLoanMessage('서울시 전체에서 대출 가능한 도서관이 없습니다.')
+      }
+      lastSearchRef.current = { isbn: currentIsbn, gu: ALL_GU }
+      return
+    }
+
+    setCountsLoading(true)
+    setLoanMessage('')
+
+    try {
+    const counts = {}
+      await Promise.all(
+        currentLibraries.map(async (lib) => {
+          const guName = (lib[LIB_KEYS.gu] || '').trim()
+          const libCode = lib[LIB_KEYS.code]
+          if (!guName || !libCode) return
+
+          let available = false
+          try {
+            const response = await checkLoan(libCode, currentIsbn)
+            const result = response?.response?.result || {}
+            available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
+          } catch (e) {
+            available = false
+          }
+
+          if (available) {
+            counts[guName] = (counts[guName] || 0) + 1
+          } else if (!Object.prototype.hasOwnProperty.call(counts, guName)) {
+            counts[guName] = 0
+          }
+        })
+      )
+
+      countsCacheRef.current[currentIsbn] = { counts, timestamp: Date.now() }
+      setAvailableCounts(counts)
+      updateGuLabels(counts, true)
+      lastSearchRef.current = { isbn: currentIsbn, gu: ALL_GU }
+
+      const total = Object.values(counts).reduce((sum, value) => sum + value, 0)
+      if (total === 0) {
+        setLoanMessage('서울시 전체에서 대출 가능한 도서관이 없습니다.')
+      }
+    } finally {
+      setCountsLoading(false)
+    }
+  }
+
+  const handleCheckLoan = async (guOverride) => {
+    const { isbn: currentIsbn, libraryData: currentLibraries, selectedGu: currentGu } = latestDataRef.current
+    const targetGu = (guOverride || currentGu || '').trim()
+
+    if (!targetGu) {
+      setLoanMessage('구를 먼저 선택해 주세요.')
+      return
+    }
+    if (!currentIsbn) {
+      setLoanMessage('')
+      handleShowAllLibraries(targetGu)
+      return
+    }
+
+    const map = mapInstance.current
+    const group = markerGroup.current
+    if (!map || !group) {
+      setLoanMessage('지도가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')
+      return
+    }
+
+    const lastSearch = lastSearchRef.current
+    if (lastSearch.isbn === currentIsbn && lastSearch.gu === targetGu) {
+      if (targetGu === ALL_GU) {
+        if (Object.keys(availableCounts).length > 0) return
+      } else if (group.getLayers().length > 0) {
+        return
+      }
+    }
+
+    if (targetGu === ALL_GU) {
+      clearMarkers()
+      await loadAllGuCounts()
+      return
+    }
+
+    setLoading(true)
+    setLoanMessage('')
+    clearMarkers()
+
+    try {
+      const candidates = currentLibraries.filter((lib) => {
+        const guName = (lib[LIB_KEYS.gu] || '').trim()
+        return guName === targetGu
+      })
+      const markerBounds = []
+
+      if (candidates.length === 0) {
+        setLoanMessage('선택한 구에 해당하는 도서관 데이터가 없습니다.')
+        return
+      }
+
+      const checks = await Promise.all(
+        candidates.map(async (lib) => {
+          const lat = parseFloat(lib[LIB_KEYS.lat])
+          const lng = parseFloat(lib[LIB_KEYS.lng])
+          const libCode = lib[LIB_KEYS.code]
+
+          if (!libCode || Number.isNaN(lat) || Number.isNaN(lng)) {
+            return null
+          }
+
+          let available = false
+          try {
+            const response = await checkLoan(libCode, currentIsbn)
+            const result = response?.response?.result || {}
+            available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
+          } catch (e) {
+            available = false
+          }
+
+          return {
+            lib,
+            lat,
+            lng,
+            available
+          }
+        })
+      )
+
+      checks.filter(Boolean).filter(item => item.available).forEach(({ lib, lat, lng }) => {
+        const name = lib[LIB_KEYS.name] || '도서관'
+        const address = lib[LIB_KEYS.address] || lib[LIB_KEYS.addressFallback] || ''
+        const addressText = address || '주소 정보 없음'
+        const addressEscaped = addressText.replace(/"/g, '&quot;')
+
+        const marker = L.circleMarker([lat, lng], {
+          radius: 7,
+          fillColor: '#34d399',
+          color: '#111827',
+          weight: 1,
+          fillOpacity: 0.9
+        })
+
+        const tooltipContent = `
+          <div class="tooltip-content">
+            <div class="tooltip-title">${name}</div>
+            <div class="tooltip-address">${addressText}</div>
+            <div class="tooltip-status available">대출 가능</div>
+          </div>
+        `
+
+        const popupContent = `
+          <div class="tooltip-content">
+            <div class="tooltip-title">${name}</div>
+            <div class="tooltip-address-row">
+              <div class="tooltip-address">${addressText}</div>
+              <button type="button" class="copy-address-btn" data-address="${addressEscaped}">복사</button>
+            </div>
+            <div class="tooltip-status available">대출 가능</div>
+          </div>
+        `
+
+        marker.bindTooltip(tooltipContent, {
+          direction: 'top',
+          className: 'custom-tooltip',
+          opacity: 1
+        })
+
+        marker.bindPopup(popupContent, {
+          className: 'custom-popup',
+          autoClose: false,
+          closeOnClick: false,
+          offset: [0, -6]
+        })
+
+        marker.on('popupopen', (event) => {
+          const popupNode = event?.popup?.getElement?.()
+          if (!popupNode) return
+          const copyButton = popupNode.querySelector('.copy-address-btn')
+          if (!copyButton) return
+          const textToCopy = copyButton.getAttribute('data-address') || ''
+
+          const handleCopy = (copyEvent) => {
+            copyEvent.preventDefault()
+            if (!textToCopy) return
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              const original = copyButton.textContent
+              copyButton.textContent = '복사됨'
+              copyButton.disabled = true
+              setTimeout(() => {
+                copyButton.textContent = original
+                copyButton.disabled = false
+              }, 1200)
+            })
+          }
+
+          copyButton.addEventListener('click', handleCopy)
+          event.popup.once('remove', () => {
+            copyButton.removeEventListener('click', handleCopy)
+          })
+        })
+
+        marker.addTo(group)
+        markerBounds.push([lat, lng])
+      })
+
+      const guBounds = guLayerMap.current[targetGu]?.getBounds?.()
+      if (guBounds) {
+        map.fitBounds(guBounds, { padding: [40, 40] })
+      } else if (markerBounds.length > 0) {
+        map.fitBounds(markerBounds, { padding: [40, 40] })
+      } else {
+        setLoanMessage('해당 구에서 대출 가능한 도서관이 없습니다.')
+      }
+      lastSearchRef.current = { isbn: currentIsbn, gu: targetGu }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleShowAllLibraries = (guOverride) => {
+    const targetGu = (guOverride || selectedGu || '').trim()
+    const map = mapInstance.current
+    const group = markerGroup.current
+
+    if (!targetGu) {
+      setLoanMessage('구를 먼저 선택해 주세요.')
+      return
+    }
+    if (!map || !group) {
+      setLoanMessage('지도가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')
+      return
+    }
+
+    if (targetGu === ALL_GU) {
+      clearMarkers()
+      setLoanMessage('')
+      lastAllSearchRef.current = { gu: ALL_GU }
+      loadAllLibraryCounts()
+      return
+    }
+
+    if (lastAllSearchRef.current.gu === targetGu && group.getLayers().length > 0) {
+      return
+    }
+
+    clearMarkers()
+    setLoanMessage('')
+
+    const candidates = libraryData.filter((lib) => {
+      const guName = (lib[LIB_KEYS.gu] || '').trim()
+      return guName === targetGu
+    })
+
+    if (candidates.length === 0) {
+      setLoanMessage('선택한 구에 해당하는 도서관 데이터가 없습니다.')
+      return
+    }
+
+    const markerBounds = []
+    candidates.forEach((lib) => {
+      const lat = parseFloat(lib[LIB_KEYS.lat])
+      const lng = parseFloat(lib[LIB_KEYS.lng])
+      if (Number.isNaN(lat) || Number.isNaN(lng)) return
+
+      const name = lib[LIB_KEYS.name] || '도서관'
+      const address = lib[LIB_KEYS.address] || lib[LIB_KEYS.addressFallback] || ''
+      const addressText = address || '주소 정보 없음'
+      const addressEscaped = addressText.replace(/"/g, '&quot;')
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: 6,
+        fillColor: '#93c5fd',
+        color: '#1f2937',
+        weight: 1,
+        fillOpacity: 0.9
+      })
+
+      const tooltipContent = `
+        <div class="tooltip-content">
+          <div class="tooltip-title">${name}</div>
+          <div class="tooltip-address">${addressText}</div>
+        </div>
+      `
+
+      const popupContent = `
+        <div class="tooltip-content">
+          <div class="tooltip-title">${name}</div>
+          <div class="tooltip-address-row">
+            <div class="tooltip-address">${addressText}</div>
+            <button type="button" class="copy-address-btn" data-address="${addressEscaped}">복사</button>
+          </div>
+        </div>
+      `
+
+      marker.bindTooltip(tooltipContent, {
+        direction: 'top',
+        className: 'custom-tooltip',
+        opacity: 1
+      })
+
+      marker.bindPopup(popupContent, {
+        className: 'custom-popup',
+        autoClose: false,
+        closeOnClick: false,
+        offset: [0, -6]
+      })
+
+      marker.on('popupopen', (event) => {
+        const popupNode = event?.popup?.getElement?.()
+        if (!popupNode) return
+        const copyButton = popupNode.querySelector('.copy-address-btn')
+        if (!copyButton) return
+        const textToCopy = copyButton.getAttribute('data-address') || ''
+
+        const handleCopy = (copyEvent) => {
+          copyEvent.preventDefault()
+          if (!textToCopy) return
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            const original = copyButton.textContent
+            copyButton.textContent = '복사됨'
+            copyButton.disabled = true
+            setTimeout(() => {
+              copyButton.textContent = original
+              copyButton.disabled = false
+            }, 1200)
+          })
+        }
+
+        copyButton.addEventListener('click', handleCopy)
+        event.popup.once('remove', () => {
+          copyButton.removeEventListener('click', handleCopy)
+        })
+      })
+
+      marker.addTo(group)
+      markerBounds.push([lat, lng])
+    })
+
+    const guBounds = guLayerMap.current[targetGu]?.getBounds?.()
+    if (guBounds) {
+      map.fitBounds(guBounds, { padding: [40, 40] })
+    } else if (markerBounds.length > 0) {
+      map.fitBounds(markerBounds, { padding: [40, 40] })
+    }
+
+    lastAllSearchRef.current = { gu: targetGu }
+  }
+
+  const filterAndZoom = (guName) => {
+    if (mapMode === 'all') {
+      handleShowAllLibraries(guName)
+      return
+    }
+    handleCheckLoan(guName)
+  }
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -104,92 +596,61 @@ function LibraryMapPage() {
           fetchGuList(),
           fetchLibraryData()
         ])
-        setGuList(guData)
+        const withAll = [ALL_GU, ...guData.filter(gu => gu !== ALL_GU)]
+        setGuList(withAll)
         setLibraryData(libData)
-        if (guData.length > 0) {
-          setSelectedGu(guData[0])
-        }
+        setSelectedGu(ALL_GU)
       } catch (e) {
-        console.error('데이터 로드 실패:', e)
+        console.error('도서관 목록 로드 실패:', e)
       }
     }
     loadData()
   }, [])
-
 
   useEffect(() => {
     latestDataRef.current = { isbn: resolvedIsbn || isbn, libraryData, selectedGu }
   }, [resolvedIsbn, isbn, libraryData, selectedGu])
 
   useEffect(() => {
+    if (mapMode !== 'all' || !selectedGu) return
+    handleShowAllLibraries(selectedGu)
+  }, [mapMode, selectedGu, libraryData])
+
+  useEffect(() => {
     setSelectedBookTitle(title || '')
   }, [title])
 
   useEffect(() => {
-    if (!title || selectedBookImage) return
-    let cancelled = false
-
-    const loadImageByTitle = async () => {
-      try {
-        const data = await searchBooks(title)
-        const docs = data.response?.docs || []
-        const exact = docs.find(item => item.doc?.bookname === title) || docs[0]
-        const doc = exact?.doc
-        if (!cancelled && doc?.bookImageURL) {
-          setSelectedBookImage(normalizeImageUrl(doc.bookImageURL))
-        }
-        if (!cancelled && !selectedBookTitle && doc?.bookname) {
-          setSelectedBookTitle(doc.bookname)
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
-    loadImageByTitle()
-    return () => {
-      cancelled = true
-    }
-  }, [title, selectedBookImage, selectedBookTitle])
+    setResolvedIsbn(isbn || '')
+  }, [isbn])
 
   useEffect(() => {
-    if (isbn) {
-      setResolvedIsbn(isbn)
+    if (!resolvedIsbn) return
+    setMapMode('loan')
+    resetLoanState()
+  }, [resolvedIsbn])
+
+  useEffect(() => {
+    if (mapMode !== 'all') return
+    loadAllLibraryCounts()
+  }, [mapMode, libraryData])
+
+  useEffect(() => {
+    if (!resolvedIsbn || libraryData.length === 0) return
+    if (selectedGu !== ALL_GU) return
+    if (mapMode !== 'loan') return
+    loadAllGuCounts()
+  }, [selectedGu, resolvedIsbn, libraryData, mapMode])
+
+  useEffect(() => {
+    if (mapMode === 'all') {
+      const hasCounts = Object.keys(libraryCounts).length > 0
+      updateGuLabels(libraryCounts, hasCounts)
       return
     }
-    if (!title) {
-      setResolvedIsbn('')
-      return
-    }
-
-    let cancelled = false
-
-    const loadByTitle = async () => {
-      try {
-        const data = await searchBooks(title)
-        const docs = data.response?.docs || []
-        const exact = docs.find(item => item.doc?.bookname === title) || docs[0]
-        const doc = exact?.doc
-        const nextIsbn = doc?.isbn13 || doc?.isbn
-        if (!cancelled && nextIsbn) {
-          setResolvedIsbn(nextIsbn)
-          if (doc?.bookImageURL) {
-            setSelectedBookImage(normalizeImageUrl(doc.bookImageURL))
-          }
-          if (!title && doc?.bookname) {
-            setSelectedBookTitle(doc.bookname)
-          }
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
-    loadByTitle()
-    return () => {
-      cancelled = true
-    }
-  }, [isbn, title])
+    const hasCounts = Object.keys(availableCounts).length > 0
+    updateGuLabels(availableCounts, hasCounts)
+  }, [selectedGu, availableCounts, libraryCounts, mapMode])
 
   useEffect(() => {
     if (!resolvedIsbn || resolvedIsbn === lastIsbnRef.current) return
@@ -198,26 +659,22 @@ function LibraryMapPage() {
     const loadBookByIsbn = async () => {
       try {
         const data = await searchBooks(resolvedIsbn)
-        const docs = data.response?.docs || []
-        const exact = docs.find(item => item.doc?.isbn13 === resolvedIsbn) || docs[0]
-        const doc = exact?.doc
-        if (doc) {
-          if (doc.bookImageURL) {
-            setSelectedBookImage(normalizeImageUrl(doc.bookImageURL))
-          }
-          if (!title && doc.bookname) {
-            setSelectedBookTitle(doc.bookname)
+        const results = parseSearchResults(data)
+        const match = results.find(item => item.isbn === resolvedIsbn) || results[0]
+        if (match) {
+          setSelectedBookImage(normalizeImageUrl(match.img))
+          if (!title && match.title) {
+            setSelectedBookTitle(match.title)
           }
         }
       } catch (e) {
-        console.error(e)
+        console.error('ISBN 검색 실패:', e)
       }
     }
 
     loadBookByIsbn()
   }, [resolvedIsbn, title])
 
-  // 지도 초기화
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
 
@@ -248,6 +705,7 @@ function LibraryMapPage() {
               direction: 'center',
               className: 'gu-label'
             })
+            guLayerMap.current[name] = layer
             layer.on('click', () => {
               setSelectedGu(name)
               filterAndZoom(name)
@@ -255,269 +713,156 @@ function LibraryMapPage() {
           }
         }).addTo(map)
       })
+      .catch((e) => {
+        console.error('지도 데이터 로드 실패:', e)
+      })
 
     return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove()
-        mapInstance.current = null
-      }
+      map.remove()
+      mapInstance.current = null
+      markerGroup.current = null
+      guLayerMap.current = {}
     }
   }, [])
 
-  const filterAndZoom = async (guOverride) => {
-    const { isbn: currentIsbn, libraryData: currentLibraryData, selectedGu: currentGu } = latestDataRef.current
-    const targetGu = guOverride || currentGu
-    if (!targetGu || !currentIsbn) {
-      if (!currentIsbn) {
-        alert('Select a book first.')
-      }
-      return
-    }
-
-    setLoading(true)
-    markerGroup.current?.clearLayers()
-    const bounds = []
-
-    const targets = currentLibraryData.filter(lib => lib[LIB_KEYS.gu] === targetGu)
-
-    for (const lib of targets) {
-      try {
-        const codeKey = Object.keys(lib).find(k => k.replace(/\s/g, '').includes(LIB_KEYS.code))
-        const libCode = lib[codeKey]
-
-        const data = await checkLoan(libCode, currentIsbn)
-
-        const isAvailable =
-          (data.response?.result?.loanAvailable === 'Y') ||
-          (data.status === 'Y')
-
-        if (isAvailable) {
-          const lat = parseFloat(lib[LIB_KEYS.lat])
-          const lng = parseFloat(lib[LIB_KEYS.lng])
-
-          const marker = L.circleMarker([lat, lng], {
-            radius: 9,
-            color: 'black',
-            fillColor: '#FF7043',
-            fillOpacity: 0.8,
-            weight: 2
-          }).addTo(markerGroup.current)
-
-          const address = lib[LIB_KEYS.address] || lib[LIB_KEYS.addressFallback]
-          const tooltipContent = `
-            <div style="min-width: 180px; position: relative;">
-              <span style="color: #0050b3; font-size: 14px; font-weight: bold;">${lib[LIB_KEYS.name]}</span><br>
-              <div style="display: flex; align-items: center; gap: 6px; margin-top: 5px;">
-                <span style="font-size: 11px; color: #555;">${address}</span>
-              </div>
-            </div>
-          `
-
-          marker.bindTooltip(tooltipContent, {
-            direction: 'top',
-            sticky: false,
-            interactive: true,
-            offset: [0, -10],
-            className: 'custom-tooltip'
-          })
-
-          bounds.push([lat, lng])
-        }
-      } catch (e) {
-        console.error('대출 확인 실패:', e)
-      }
-    }
-
-    if (bounds.length > 0) {
-      mapInstance.current?.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 })
-    } else {
-      alert('대출 가능한 도서관이 없습니다.')
-    }
-
-    setLoading(false)
-  }
-
-
-  const runSearch = async (value) => {
-    const trimmed = value.trim()
-    if (!trimmed) {
-      alert('검색어를 입력해주세요')
-      return
-    }
-
-    setSearchLoading(true)
-    setSearchError('')
-    setSearchResults([])
-
-    try {
-      const data = await searchBooks(trimmed)
-      const bookList = data.response?.docs || []
-      if (bookList.length === 0) {
-        setSearchError('검색 결과가 없습니다.')
-      } else {
-        setSearchResults(bookList)
-      }
-    } catch (e) {
-      console.error(e)
-      setSearchError('도서 검색 중 문제가 발생했습니다.')
-    } finally {
-      setSearchLoading(false)
-    }
-  }
-
-  const toggleSearch = () => {
-    if (!showSearch && !searchQuery && title) {
-      setSearchQuery(title)
-    }
-    setShowSearch(prev => !prev)
-  }
-
-  const handleSearchKeyUp = (e) => {
-    if (e.key === 'Enter') {
-      runSearch(searchQuery)
-    }
-  }
-
-  const selectBook = (nextIsbn, nextTitle, nextImage) => {
-    if (!nextIsbn || nextIsbn === 'undefined') {
-      alert('ISBN 정보가 없는 도서입니다.')
-      return
-    }
-    setSelectedBookImage(normalizeImageUrl(nextImage))
-    setSelectedBookTitle(nextTitle || '')
-    navigate(`/library/map?isbn=${nextIsbn}&title=${encodeURIComponent(nextTitle)}`)
-    setShowSearch(false)
-  }
-
   return (
     <div className="flex h-screen">
-      {/* 사이드바 */}
-      <div className="w-80 p-5 bg-white border-r border-gray-200 z-10 overflow-y-auto">
-        {(selectedBookTitle || title) && (
-                  <div className="mt-4">
-                    <div className="text-sm font-bold text-gray-800 mb-2">선택한 책</div>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={normalizeImageUrl(selectedBookImage) || fallbackCover}
-                        alt="book cover"
-                        className="h-24 w-16 rounded-lg border border-gray-300 object-cover bg-gray-100 flex-shrink-0"
-                      />
-                      <div className="text-sm text-gray-700">
-                        {selectedBookTitle || title}
-                      </div>
-                    </div>
-                  </div>
-                )}
+      <div className="w-[320px] p-6 bg-white border-r border-gray-200 overflow-y-auto">
         <button
-                  onClick={toggleSearch}
-                  className="w-full py-3 bg-gray-500 text-white rounded-lg font-bold mt-4 hover:bg-gray-600 transition"
-                >
-                  {showSearch ? '\uAC80\uC0C9 \uB2EB\uAE30' : '\uB2E4\uB978 \uCC45 \uAC80\uC0C9\uD558\uAE30'}
-                </button>
+          onClick={() => {
+            setMapMode('all')
+            setSelectedGu(ALL_GU)
+            setLoanMessage('')
+            handleShowAllLibraries(ALL_GU)
+          }}
+          className="w-full mb-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl"
+        >
+          서울시 전체 도서관 위치
+        </button>
 
-                {showSearch && (
-                  <div className="mt-4 bg-gray-50 p-4 rounded-xl">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyUp={handleSearchKeyUp}
-                      placeholder="도서명 또는 ISBN을 입력하세요"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+        <div className="text-sm font-bold text-gray-800 mb-2">선택한 책</div>
+
+        {(selectedBookTitle || title) && (
+          <div className="mt-4">
+            <div className="flex items-center gap-3">
+              <img
+                src={selectedBookImage || fallbackCover}
+                alt="book cover"
+                className="w-[60px] h-[80px] rounded-lg border object-cover"
+              />
+              <div className="text-sm text-gray-700 flex-1">{selectedBookTitle || title}</div>
+              <button
+                type="button"
+                onClick={handleClearSelectedBook}
+                className="text-xs text-gray-500 border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
+                aria-label="선택한 책 지우기"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            if (showSearch) {
+              setSearchQuery('')
+              setSearchResults([])
+              setSearchError('')
+            }
+            setShowSearch(!showSearch)
+          }}
+          className="w-full mt-4 py-2 bg-gray-600 text-white rounded-xl"
+        >
+          {showSearch ? '검색 닫기' : '다른 책 검색하기'}
+        </button>
+
+        {showSearch && (
+          <div className="mt-4">
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="책제목 또는 ISBN을 입력"
+              className="w-full p-2 border rounded-lg text-sm"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={searchLoading}
+              className="w-full mt-2 py-2 bg-gray-800 text-white rounded-lg"
+            >
+              {searchLoading ? '검색 중...' : '도서 검색하기'}
+            </button>
+
+            {searchError && (
+              <div className="mt-2 text-sm text-red-500">{searchError}</div>
+            )}
+
+            {searchResults.length > 0 && (
+              <div className="mt-4 max-h-[300px] overflow-y-auto">
+                {searchResults.map((book) => (
+                  <div
+                    key={`${book.isbn}-${book.title}`}
+                    className="p-2 border rounded-lg mb-2 flex gap-2 items-center"
+                  >
+                    <img
+                      src={book.img || fallbackCover}
+                      alt="book cover"
+                      className="w-[50px] h-[70px] object-cover rounded"
                     />
-                    <button
-                      onClick={() => runSearch(searchQuery)}
-                      disabled={searchLoading}
-                      className="w-full mt-3 py-2 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-gray-700 transition disabled:bg-gray-400"
-                    >
-                      {searchLoading ? '검색 중...' : '도서 검색하기'}
-                    </button>
-
-                    {searchError && (
-                      <p className="text-center text-red-500 text-xs mt-3">{searchError}</p>
-                    )}
-
-                    <div className="max-h-72 overflow-y-auto space-y-3 mt-3">
-                      {searchResults.map((item, index) => {
-                        const book = item.doc
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-start p-3 border border-gray-200 rounded-lg bg-white"
-                          >
-                            <img
-                              src={book.bookImageURL || fallbackCover}
-                              alt="표지"
-                              className="w-12 h-16 rounded object-cover border border-gray-200 mr-3 flex-shrink-0"
-                            />
-                            <div className="flex-1">
-                              <div className="font-semibold text-gray-800 text-xs leading-tight mb-1">
-                                {book.bookname}
-                              </div>
-                              <div className="text-[11px] text-gray-500 mb-1">
-                                {book.authors}
-                              </div>
-                              <div className="text-[10px] text-gray-400">
-                                ISBN: {book.isbn13}
-                              </div>
-                              <button
-                                onClick={() => selectBook(book.isbn13, book.bookname, book.bookImageURL)}
-                                className="mt-2 px-2 py-1 bg-pink-300 text-white rounded text-[11px] font-bold hover:bg-pink-400 transition"
-                              >
-                                이 책으로 변경
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
+                    <div className="text-sm">
+                      <div className="font-bold">{book.title}</div>
+                      <div className="text-xs text-gray-500">ISBN: {book.isbn}</div>
+                      <button
+                        onClick={() => handleSelectBook(book)}
+                        className="mt-1 px-2 py-1 bg-pink-400 text-white rounded text-xs"
+                      >
+                        이 책으로 변경
+                      </button>
                     </div>
                   </div>
-                )}
-        <div className="bg-gray-50 p-4 rounded-xl">
-                  <label className="font-bold text-sm">지역(구) 선택</label>
-                  <select
-                    value={selectedGu}
-                    onChange={(e) => setSelectedGu(e.target.value)}
-                    className="w-full mt-2 p-3 border border-gray-300 rounded-lg"
-                  >
-                    {guList.map((gu, index) => (
-                      <option key={index} value={gu}>{gu}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={filterAndZoom}
-                    disabled={loading}
-                    className="w-full mt-3 py-3 bg-gray-800 text-white rounded-lg font-bold hover:bg-gray-700 transition disabled:bg-gray-400"
-                  >
-                    {loading ? '확인 중...' : '대출 가능 도서관 찾기'}
-                  </button>
-                </div>
-        {loading && (
-                  <div className="mt-4 text-center text-red-400 font-bold">
-                    대출 가능 여부 확인 중...
-                  </div>
-                )}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
+        <div className="bg-gray-50 p-4 rounded-xl mt-4">
+          <label className="font-bold text-sm">지역(구) 선택</label>
+          <select
+            value={selectedGu}
+            onChange={(e) => setSelectedGu(e.target.value)}
+            className="w-full p-2 border rounded-lg text-sm mt-2"
+          >
+            <option value="">구 선택</option>
+            {guList.map((gu) => (
+              <option key={gu} value={gu}>
+                {gu}
+              </option>
+            ))}
+          </select>
 
+          <button
+            onClick={() => {
+              setMapMode('loan')
+              handleCheckLoan()
+            }}
+            className="w-full mt-2 py-2 bg-gray-900 text-white rounded-xl"
+          >
+            {loading || countsLoading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="w-4 h-4 text-white" />
+                조회 중...
+              </span>
+            ) : (
+              '대출 가능 도서관 찾기'
+            )}
+          </button>
+        </div>
 
-
-
-
-
-
-        
-
-        
-
-        
-
-        
       </div>
 
-      {/* 지도 */}
       <div ref={mapRef} className="flex-1" />
 
-      {/* 커스텀 툴팁 스타일 */}
       <style>{`
         .custom-tooltip {
           pointer-events: auto !important;
@@ -529,9 +874,69 @@ function LibraryMapPage() {
           padding: 12px !important;
           opacity: 1 !important;
           white-space: normal !important;
+          max-width: 320px !important;
+          width: 320px !important;
         }
         .leaflet-tooltip-top.custom-tooltip::before {
           display: none !important;
+        }
+        .custom-popup .leaflet-popup-content {
+          margin: 10px 12px !important;
+        }
+        .custom-popup .leaflet-popup-content-wrapper {
+          border-radius: 10px !important;
+        }
+        .custom-popup .leaflet-popup-tip {
+          background: #ffffff !important;
+        }
+        .tooltip-content {
+          width: 300px;
+          max-width: 320px;
+          white-space: normal;
+          word-break: keep-all;
+        }
+        .custom-popup .tooltip-content {
+          width: 300px;
+          max-width: 320px;
+        }
+        .tooltip-address-row {
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+          justify-content: space-between;
+        }
+        .tooltip-title {
+          font-weight: 700;
+          margin-bottom: 4px;
+          color: #111827;
+        }
+        .tooltip-address {
+          font-size: 12px;
+          color: #4b5563;
+          margin-bottom: 6px;
+          line-height: 1.4;
+          flex: 1;
+        }
+        .copy-address-btn {
+          border: 1px solid #d1d5db;
+          background: #ffffff;
+          color: #374151;
+          font-size: 11px;
+          padding: 2px 6px;
+          border-radius: 6px;
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+        .copy-address-btn:disabled {
+          cursor: default;
+          opacity: 0.7;
+        }
+        .tooltip-status {
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .tooltip-status.available {
+          color: #059669;
         }
         .gu-label {
           background: transparent !important;

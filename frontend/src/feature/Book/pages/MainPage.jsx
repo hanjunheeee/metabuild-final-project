@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { fetchAladinBestsellers, fetchKyoboBestsellers, fetchYes24Bestsellers } from '../api/bookApi'
+import {
+  fetchAladinBestsellers,
+  fetchKyoboBestsellers,
+  fetchYes24Bestsellers,
+  fetchSeoulLoanTop10
+} from '../api/bookApi'
+import { fetchCommunities } from '@/feature/Community/api/communityApi'
+import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 
 function MainPage() {
   const moodKeywords = [
@@ -30,10 +37,14 @@ function MainPage() {
   const [page, setPage] = useState(0)
   const booksPerPage = 5
 
-  const rankingBooks = Array.from({ length: 10 }, (_, i) => ({
+  const [loanRankingBooks, setLoanRankingBooks] = useState([])
+
+  const fallbackLoanRankingBooks = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    title: `서울시 대출 랭킹 도서 ${i + 1}`,
+    title: `???????????? ??? ${i + 1}`,
   }))
+
+  const rankingBooks = loanRankingBooks.length ? loanRankingBooks : fallbackLoanRankingBooks
 
   const maxPage = Math.ceil(rankingBooks.length / booksPerPage) - 1
 
@@ -41,6 +52,26 @@ function MainPage() {
     page * booksPerPage,
     page * booksPerPage + booksPerPage
   )
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchSeoulLoanTop10()
+      .then((data) => {
+        if (cancelled) return
+        setLoanRankingBooks(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (cancelled) return
+      })
+      .finally(() => {
+        if (cancelled) return
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   /* ===============================
      서점별 베스트셀러 TOP10
@@ -101,6 +132,86 @@ function MainPage() {
       cancelled = true
     }
   }, [])
+
+  const { getPostTitle } = useCommunityHelpers()
+  const [communityPosts, setCommunityPosts] = useState([])
+  const [communityLoading, setCommunityLoading] = useState(false)
+  const [communityError, setCommunityError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    setCommunityLoading(true)
+    setCommunityError('')
+
+    fetchCommunities()
+      .then((data) => {
+        if (cancelled) return
+        setCommunityPosts(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (cancelled) return
+        setCommunityError('COMMUNITY_FETCH_FAILED')
+      })
+      .finally(() => {
+        if (cancelled) return
+        setCommunityLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const getCommunitySortTime = (post) => {
+    const dateValue = post?.createdAt || post?.updatedAt
+    return dateValue ? new Date(dateValue).getTime() : 0
+  }
+
+  const isNoticePost = (post) => Number(post?.isNotice) === 1
+
+  const { noticePosts, regularPosts } = useMemo(() => {
+    const notices = communityPosts
+      .filter((post) => isNoticePost(post))
+      .sort((a, b) => getCommunitySortTime(b) - getCommunitySortTime(a))
+      .slice(0, 3)
+    const regulars = communityPosts.filter((post) => !isNoticePost(post))
+    return { noticePosts: notices, regularPosts: regulars }
+  }, [communityPosts])
+
+  const latestCommunityPosts = useMemo(() => {
+    return [...regularPosts]
+      .sort((a, b) => getCommunitySortTime(b) - getCommunitySortTime(a))
+      .slice(0, 5)
+  }, [regularPosts])
+
+  const topCommunityPosts = useMemo(() => {
+    return [...regularPosts]
+      .sort((a, b) => (b.communityGreat || 0) - (a.communityGreat || 0))
+      .slice(0, 3)
+  }, [regularPosts])
+
+  const popularCommunityIds = useMemo(() => {
+    return new Set(topCommunityPosts.map((post) => post.communityId))
+  }, [topCommunityPosts])
+
+  const mainCommunityPosts = useMemo(() => {
+    const combined = [...noticePosts, ...latestCommunityPosts]
+    const seen = new Set()
+    const deduped = []
+
+    combined.forEach((post) => {
+      if (!post?.communityId || seen.has(post.communityId)) return
+      seen.add(post.communityId)
+      deduped.push(post)
+    })
+
+    return deduped.slice(0, 5)
+  }, [noticePosts, latestCommunityPosts])
+
+  const handleCommunityClick = (communityId) => {
+    if (!communityId) return
+    navigate(`/community/${communityId}`)
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6">
@@ -192,27 +303,6 @@ function MainPage() {
         <h2 className="text-3xl font-bold mb-6 text-gray-900">
           서울시 도서관 월간 대출랭킹
         </h2>
-
-        {/* 카테고리 */}
-        <div className="flex gap-3 mb-8">
-          {['전체', '아동','청소년', '성인'].map(label => (
-            <button
-              key={label}
-              onClick={() => setPage(0)}
-              className="
-                px-5
-                py-2
-                rounded-full
-                bg-gray-900
-                text-white
-                text-sm
-                hover:opacity-90
-              "
-            >
-              {label}
-            </button>
-          ))}
-        </div>
 
         {/* 슬라이더 */}
         <div className="relative">
@@ -395,7 +485,7 @@ function MainPage() {
       </section>
 
       {/* ===============================
-         하단 정보 영역 (커뮤니티 / 트렌드)
+         커뮤니티 & 트렌드 (인기글 / 최신글)
       =============================== */}
       <section className="mb-32">
         <h2 className="text-3xl font-bold mb-10 text-gray-900">
@@ -407,35 +497,72 @@ function MainPage() {
           <div className="col-span-12 lg:col-span-5">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold">커뮤니티</h3>
-              <button className="text-sm text-gray-500 hover:underline">더보기</button>
+              <button
+                type="button"
+                onClick={() => navigate('/community')}
+                className="text-sm text-gray-500 hover:underline"
+              >
+                더보기
+              </button>
             </div>
 
-            <div className="h-[260px] rounded-2xl bg-gray-200 p-6">
-              <ul className="space-y-3 text-gray-500 text-sm">
-                <li>인기 게시글 1</li>
-                <li>인기 게시글 2</li>
-                <li>인기 게시글 3</li>
-                <li>게시글</li>
-                <li>게시글</li>
-                <li>게시글</li>
+            <div className="relative h-[260px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 p-6 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.45)]">
+              <div className="pointer-events-none absolute -top-24 -right-16 h-48 w-48 rounded-full bg-emerald-100/50 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full bg-sky-100/50 blur-3xl" />
+              <ul className="relative space-y-3 text-gray-700 text-sm">
+                {communityLoading && (
+                  <li className="text-gray-500">로딩 중...</li>
+                )}
+                {!communityLoading && communityError && (
+                  <li className="text-red-500">???? ???? ??</li>
+                )}
+                {!communityLoading && !communityError && mainCommunityPosts.length === 0 && (
+                  <li className="text-gray-500">??? ?? ????.</li>
+                )}
+                {mainCommunityPosts.map((post) => {
+                  const isNotice = isNoticePost(post)
+                  const isPopular = popularCommunityIds.has(post.communityId)
+
+                  return (
+                    <li key={post.communityId}>
+                      <button
+                        type="button"
+                        onClick={() => handleCommunityClick(post.communityId)}
+                        className="w-full text-left hover:underline line-clamp-1"
+                      >
+                        {isNotice && (
+                          <span className="mr-1 inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">
+                            [공지]
+                          </span>
+                        )}
+                        {isPopular && (
+                          <span className="mr-1 inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                            [인기]
+                          </span>
+                        )}
+                        {getPostTitle(post)}
+                      </button>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           </div>
 
           {/* 트렌드 */}
           <div className="col-span-12 lg:col-span-4">
-            <h3 className="text-xl font-semibold mb-4">파워 트렌드</h3>
+            <h3 className="text-xl font-semibold mb-4">검색어 트렌드</h3>
             <div className="h-[260px] rounded-2xl bg-gray-200 flex items-center justify-center text-gray-500">
-              파워 트렌드
+              트렌드 준비중
             </div>
           </div>
 
-          {/* 인기 책 TOP3 */}
+          {/* 트렌드 도서 TOP3 */}
           <div className="col-span-12 lg:col-span-3">
-            <h3 className="text-xl font-semibold mb-4">인기 책 TOP 3</h3>
+            <h3 className="text-xl font-semibold mb-4">트렌드 도서 TOP 3</h3>
             <div className="h-[260px] rounded-2xl bg-gray-200 flex items-center justify-center text-gray-700 text-center px-6">
-              파워 검색량으로<br />
-              인기 책 TOP 3
+              트렌드 도서 TOP 3<br />
+              준비중
             </div>
           </div>
         </div>
