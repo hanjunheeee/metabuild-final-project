@@ -1,4 +1,4 @@
-﻿package com.example.ex02.Library.service;
+package com.example.ex02.Library.service;
 
 import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
@@ -22,8 +22,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class LibraryService {
-    private static final String CSV_FILE = "\uC11C\uC6B8\uC2DC_\uB3C4\uC11C\uAD00_\uCF54\uB4DC\uD3EC\uD568.csv";
-    private static final String KEY_GU = "\uAD6C\uBA85";
+    private static final String CSV_FILE = "서울시_도서관_코드포함.csv";
+    private static final String KEY_GU = "구명";
 
     private final BookRepository bookRepository;
 
