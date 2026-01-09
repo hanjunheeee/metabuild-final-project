@@ -10,13 +10,6 @@ import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 
 function MainPage() {
-  const moodKeywords = [
-    { label: '밝은 분위기 좋아요', keyword: '밝은 소설' },
-    { label: '마음을 복잡하게', keyword: '힐링 에세이' },
-    { label: '짧게 읽기 좋아요', keyword: '짧은 소설' },
-    { label: '가볍게 생각 바꾸기', keyword: '처음 에세이' },
-  ]
-
   /* ===============================
      통합 검색
   =============================== */
@@ -215,33 +208,6 @@ function MainPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-6">
-      {/* ===============================
-         분위기 추천 검색
-      =============================== */}
-      <div className="mb-16 flex flex-wrap justify-center gap-4">
-        {moodKeywords.map(item => (
-          <button
-            key={item.label}
-            onClick={() =>
-              navigate(`/searchbook?keyword=${encodeURIComponent(item.keyword)}`)
-            }
-            className="
-              px-6 py-3
-              rounded-full
-              bg-gray-100
-              text-gray-800
-              text-sm
-              border
-              hover:bg-gray-900
-              hover:text-white
-              transition
-            "
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
       {/* ===============================
          메인 검색바
       =============================== */}
