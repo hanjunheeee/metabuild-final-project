@@ -6,6 +6,7 @@ import {
   fetchYes24Bestsellers,
   fetchSeoulLoanTop10
 } from '../api/bookApi'
+import { fetchKeywordTrends, fetchPurchaseTrends } from '../api/analyticsApi'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 
@@ -119,6 +120,40 @@ function MainPage() {
       .finally(() => {
         if (cancelled) return
         setBestSellerLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  /* ===============================
+     검색어 트렌드 (워드클라우드)
+  =============================== */
+  const [keywordTrends, setKeywordTrends] = useState([])
+  const [trendBooks, setTrendBooks] = useState([])
+  const [trendLoading, setTrendLoading] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setTrendLoading(true)
+
+    Promise.allSettled([
+      fetchKeywordTrends(),
+      fetchPurchaseTrends()
+    ])
+      .then(([keywordResult, purchaseResult]) => {
+        if (cancelled) return
+        if (keywordResult.status === 'fulfilled') {
+          setKeywordTrends(Array.isArray(keywordResult.value) ? keywordResult.value : [])
+        }
+        if (purchaseResult.status === 'fulfilled') {
+          setTrendBooks(Array.isArray(purchaseResult.value) ? purchaseResult.value.slice(0, 3) : [])
+        }
+      })
+      .finally(() => {
+        if (cancelled) return
+        setTrendLoading(false)
       })
 
     return () => {
@@ -553,20 +588,96 @@ function MainPage() {
             </div>
           </div>
 
-          {/* 트렌드 */}
+          {/* 트렌드 - 워드클라우드 */}
           <div className="col-span-12 lg:col-span-4">
             <h3 className="text-xl font-semibold mb-4">검색어 트렌드</h3>
-            <div className="h-[260px] rounded-2xl bg-gray-200 flex items-center justify-center text-gray-500">
-              트렌드 준비중
+            <div className="h-[260px] rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 p-4 overflow-hidden">
+              {trendLoading ? (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  로딩 중...
+                </div>
+              ) : keywordTrends.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-500 text-center">
+                  검색 데이터를 수집 중입니다.<br />
+                  <span className="text-sm">잠시 후 트렌드가 표시됩니다.</span>
+                </div>
+              ) : (
+                <div className="h-full flex flex-wrap items-center justify-center gap-2 content-center">
+                  {keywordTrends.slice(0, 20).map((trend, idx) => {
+                    // 검색 횟수에 따라 크기 계산
+                    const maxValue = keywordTrends[0]?.value || 1
+                    const ratio = (trend.value / maxValue)
+                    const fontSize = Math.max(12, Math.min(28, 12 + ratio * 16))
+                    const opacity = Math.max(0.5, ratio)
+                    
+                    // 색상 배열
+                    const colors = [
+                      'text-rose-600', 'text-blue-600', 'text-emerald-600',
+                      'text-amber-600', 'text-purple-600', 'text-cyan-600',
+                      'text-pink-600', 'text-indigo-600', 'text-teal-600'
+                    ]
+                    const colorClass = colors[idx % colors.length]
+
+                    return (
+                      <button
+                        key={trend.text}
+                        onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(trend.text)}`)}
+                        className={`${colorClass} hover:underline cursor-pointer transition-transform hover:scale-110`}
+                        style={{ fontSize: `${fontSize}px`, opacity }}
+                      >
+                        {trend.text}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
           {/* 트렌드 도서 TOP3 */}
           <div className="col-span-12 lg:col-span-3">
             <h3 className="text-xl font-semibold mb-4">트렌드 도서 TOP 3</h3>
-            <div className="h-[260px] rounded-2xl bg-gray-200 flex items-center justify-center text-gray-700 text-center px-6">
-              트렌드 도서 TOP 3<br />
-              준비중
+            <div className="h-[260px] rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-200 p-4">
+              {trendLoading ? (
+                <div className="h-full flex items-center justify-center text-gray-500">
+                  로딩 중...
+                </div>
+              ) : trendBooks.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-500 text-center text-sm">
+                  관심 도서 데이터를<br />수집 중입니다.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {trendBooks.map((book, idx) => (
+                    <button
+                      key={book.bookId}
+                      onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(book.text)}`)}
+                      className="w-full flex items-center gap-3 p-2 rounded-lg bg-white/70 hover:bg-white transition-colors text-left"
+                    >
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                        idx === 0 ? 'bg-amber-500' : idx === 1 ? 'bg-gray-400' : 'bg-amber-700'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      {book.imageUrl && (
+                        <img
+                          src={book.imageUrl}
+                          alt={book.text}
+                          className="w-10 h-14 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                          {book.text}
+                        </p>
+                        <p className="text-xs text-gray-500 line-clamp-1">
+                          {book.author}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import useBooks from '../hooks/useBooks'
 import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSummaryApi } from '../api/bookApi'
+import { logSearch, logBookAction } from '../api/analyticsApi'
 import Spinner from '../../../shared/components/icons/Spinner'
 
 function SearchPage() {
@@ -33,6 +34,9 @@ function SearchPage() {
       return
     }
 
+    // 구매 조회 로그
+    logBookAction(book.bookId, 'PURCHASE_VIEW')
+
     // Use cached shops if already loaded
     if (shops[book.bookId]) {
       setOpenBookId(book.bookId)
@@ -62,6 +66,9 @@ function SearchPage() {
     if (summaries[bookId]) {
       return
     }
+
+    // AI 요약 로그
+    logBookAction(bookId, 'AI_SUMMARY')
 
     setLoadingSummaryIds(prev => ({
       ...prev,
@@ -99,6 +106,9 @@ function SearchPage() {
   }
 
   const goToLibrarySearch = (book) => {
+    // 도서관 검색 로그
+    logBookAction(book.bookId, 'LIBRARY_SEARCH')
+    
     const params = new URLSearchParams()
     if (book.title) {
       params.set('title', book.title)
@@ -121,6 +131,16 @@ function SearchPage() {
   const [visibleCount, setVisibleCount] = useState(10)
 
   const { books, loading } = useBooks(initialKeyword)
+
+  // 검색 결과의 첫 번째 책 제목 (ISBN 검색 시 변환용)
+  const firstBookTitle = books.length > 0 ? books[0].title : null
+
+  // 검색 로그 전송 (검색 결과 로드 후)
+  useEffect(() => {
+    if (initialKeyword && books.length > 0) {
+      logSearch(initialKeyword, firstBookTitle)
+    }
+  }, [initialKeyword, books.length, firstBookTitle])
 
   const handleSearch = () => {
     if (!keyword.trim()) {
