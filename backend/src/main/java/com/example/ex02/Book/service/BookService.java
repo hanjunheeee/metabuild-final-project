@@ -30,7 +30,14 @@ public class BookService {
             return getAllBooks();
         }
 
-        return bookRepository.findByTitleContainingIgnoreCaseOrIsbnContaining(trimmed, trimmed).stream()
+        return bookRepository
+                .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+                        trimmed,
+                        trimmed,
+                        trimmed,
+                        trimmed
+                )
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

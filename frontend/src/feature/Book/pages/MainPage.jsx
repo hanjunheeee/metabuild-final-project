@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import cloud from 'd3-cloud'
 import {
   fetchAladinBestsellers,
   fetchKyoboBestsellers,
@@ -9,6 +10,87 @@ import {
 import { fetchKeywordTrends, fetchPurchaseTrends } from '../api/analyticsApi'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
+
+function WordCloud({ words, onWordClick }) {
+  const containerRef = useRef(null)
+  const [layoutWords, setLayoutWords] = useState([])
+  const [size, setSize] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const updateSize = () => {
+      const rect = containerRef.current.getBoundingClientRect()
+      if (rect.width && rect.height) {
+        setSize({ width: rect.width, height: rect.height })
+      }
+    }
+    updateSize()
+    const observer = new ResizeObserver(() => updateSize())
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!size.width || !size.height || words.length === 0) {
+      setLayoutWords([])
+      return
+    }
+
+    const maxValue = Math.max(...words.map((w) => w.value || 1), 1)
+    const palette = [
+      '#e11d48', '#2563eb', '#059669', '#f59e0b',
+      '#7c3aed', '#0ea5e9', '#be123c', '#10b981',
+      '#f97316', '#334155'
+    ]
+
+    cloud()
+      .size([size.width, size.height])
+      .words(words.map((w, idx) => ({
+        text: w.text,
+        value: w.value || 1,
+        size: 10 + ((w.value || 1) / maxValue) * 12,
+        rotate: idx % 5 === 0 ? 90 : 0,
+        color: palette[idx % palette.length]
+      })))
+      .padding(2)
+      .rotate((d) => d.rotate)
+      .font('sans-serif')
+      .fontSize((d) => d.size)
+      .on('end', (result) => setLayoutWords(result))
+      .start()
+  }, [words, size.width, size.height])
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      {layoutWords.length > 0 && (
+        <svg width="100%" height="100%" viewBox={`${-size.width / 2} ${-size.height / 2} ${size.width} ${size.height}`}>
+          {layoutWords.map((w) => (
+            <text
+              key={`${w.text}-${w.x}-${w.y}`}
+              textAnchor="middle"
+              transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
+              style={{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', fill: w.color, opacity: 0.85 }}
+              onClick={() => onWordClick?.(w.text)}
+            >
+              {w.text}
+            </text>
+          ))}
+        </svg>
+      )}
+    </div>
+  )
+}
+
+function TwoLineTitle({ text, className = '' }) {
+  return (
+    <p
+      title={text}
+      className={`line-clamp-2 break-keep ${className}`}
+    >
+      {text}
+    </p>
+  )
+}
 
 function MainPage() {
   /* ===============================
@@ -133,6 +215,17 @@ function MainPage() {
   const [keywordTrends, setKeywordTrends] = useState([])
   const [trendBooks, setTrendBooks] = useState([])
   const [trendLoading, setTrendLoading] = useState(false)
+
+  const wordCloudItems = useMemo(() => {
+    return keywordTrends
+      .slice(0, 30)
+      .map((trend, idx) => ({
+        text: trend.text || '',
+        value: typeof trend.value === 'number' ? trend.value : 1,
+        index: idx
+      }))
+      .filter((item) => item.text)
+  }, [keywordTrends])
 
   useEffect(() => {
     let cancelled = false
@@ -269,6 +362,9 @@ function MainPage() {
     }
   }
 
+
+
+
   return (
     <div className="max-w-7xl mx-auto px-6">
       {/* ===============================
@@ -377,9 +473,10 @@ function MainPage() {
                 ) : (
                   <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
                 )}
-                <p className="text-sm text-gray-800 text-center line-clamp-2">
-                  {book.title}
-                </p>
+                <TwoLineTitle
+                  text={book.title || ''}
+                  className="text-sm text-gray-800 text-center leading-snug"
+                />
               </div>
             ))}
           </div>
@@ -442,7 +539,7 @@ function MainPage() {
                 text-sm
                 border-2
                 ${baseColor}
-                ${isActive ? 'border-gray-900 shadow-[0_0_0_2px_rgba(17,24,39,0.15)]' : 'border-transparent'}
+                ${isActive ? 'border-black shadow-[0_0_0_2px_#000000]' : 'border-transparent'}
               `}
             >
               {provider.label}
@@ -494,9 +591,10 @@ function MainPage() {
                 ) : (
                   <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
                 )}
-                <p className="text-sm text-gray-800 text-center line-clamp-2">
-                  {book.title}
-                </p>
+                <TwoLineTitle
+                  text={book.title || ''}
+                  className="text-sm text-gray-800 text-center leading-snug"
+                />
               </div>
             ))}
           </div>
@@ -602,34 +700,12 @@ function MainPage() {
                   <span className="text-sm">잠시 후 트렌드가 표시됩니다.</span>
                 </div>
               ) : (
-                <div className="h-full flex flex-wrap items-center justify-center gap-2 content-center">
-                  {keywordTrends.slice(0, 20).map((trend, idx) => {
-                    // 검색 횟수에 따라 크기 계산
-                    const maxValue = keywordTrends[0]?.value || 1
-                    const ratio = (trend.value / maxValue)
-                    const fontSize = Math.max(12, Math.min(28, 12 + ratio * 16))
-                    const opacity = Math.max(0.5, ratio)
-                    
-                    // 색상 배열
-                    const colors = [
-                      'text-rose-600', 'text-blue-600', 'text-emerald-600',
-                      'text-amber-600', 'text-purple-600', 'text-cyan-600',
-                      'text-pink-600', 'text-indigo-600', 'text-teal-600'
-                    ]
-                    const colorClass = colors[idx % colors.length]
-
-                    return (
-                      <button
-                        key={trend.text}
-                        onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(trend.text)}`)}
-                        className={`${colorClass} hover:underline cursor-pointer transition-transform hover:scale-110`}
-                        style={{ fontSize: `${fontSize}px`, opacity }}
-                      >
-                        {trend.text}
-                      </button>
-                    )
-                  })}
-                </div>
+                <WordCloud
+                  words={wordCloudItems}
+                  onWordClick={(textValue) =>
+                    navigate(`/searchbook?keyword=${encodeURIComponent(textValue)}`)
+                  }
+                />
               )}
             </div>
           </div>

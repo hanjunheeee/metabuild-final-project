@@ -78,6 +78,4 @@ public class BookController {
     public ResponseEntity<List<BestsellerItemDTO>> getSeoulLoanTop10() {
         return ResponseEntity.ok(data4LibraryLoanRankingService.fetchSeoulMonthlyTop10());
     }
-
-
 }

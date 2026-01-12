@@ -14,9 +14,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HashSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +46,33 @@ public class SearchTrendService {
     private static final int RETENTION_DAYS = 7;      // 로그 보관 기간
     private static final int TREND_LIMIT = 50;        // 트렌드 조회 개수
     private static final int CACHE_MINUTES = 5;       // 캐시 갱신 주기
+    private static final String BLOCKED_KEYWORDS_RESOURCE = "blocked-keywords.sha256";
+    private static final Set<String> DEFAULT_BLOCKED_KEYWORDS = Set.copyOf(Arrays.asList(
+            "광고",
+            "홍보",
+            "협찬",
+            "쿠폰",
+            "할인코드",
+            "이벤트",
+            "무료",
+            "바로가기",
+            "링크",
+            "클릭",
+            "문의주세요",
+            "카톡",
+            "오픈카톡",
+            "텔레그램",
+            "구독",
+            "팔로우",
+            "좋아요",
+            "카지노",
+            "토토",
+            "바카라",
+            "성인",
+            "야동"
+    ));
+    private static final Set<String> DEFAULT_BLOCKED_KEYWORD_HASHES = hashKeywordSet(DEFAULT_BLOCKED_KEYWORDS);
+    private static final Set<String> BLOCKED_KEYWORDS = loadBlockedKeywords();
 
     // ========================================
     // 검색 로그 저장
@@ -53,9 +89,8 @@ public class SearchTrendService {
         if (isIsbn(keyword) && bookTitle != null && !bookTitle.isEmpty()) {
             logKeyword = bookTitle;
         }
-
-        // 너무 짧은 검색어 필터링
-        if (logKeyword == null || logKeyword.trim().length() < 2) {
+        logKeyword = normalizeKeyword(logKeyword);
+        if (!isValidKeyword(logKeyword)) {
             return;
         }
 
@@ -215,6 +250,78 @@ public class SearchTrendService {
     /**
      * ISBN 패턴 체크 (숫자만 10~13자리)
      */
+    
+    private static Set<String> hashKeywordSet(Set<String> keywords) {
+        return keywords.stream()
+                .map(keyword -> hashKeyword(keyword.toLowerCase(Locale.ROOT)))
+                .collect(Collectors.toSet());
+    }
+
+    private static String hashKeyword(String keyword) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashed = digest.digest(keyword.getBytes(StandardCharsets.UTF_8));
+            StringBuilder builder = new StringBuilder(hashed.length * 2);
+            for (byte value : hashed) {
+                builder.append(String.format("%02x", value));
+            }
+            return builder.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException("SHA-256 hashing failed", e);
+        }
+    }
+
+    private static Set<String> loadBlockedKeywords() {
+        Set<String> loaded = new HashSet<>();
+        try (InputStream in = SearchTrendService.class.getClassLoader()
+                .getResourceAsStream(BLOCKED_KEYWORDS_RESOURCE)) {
+            if (in != null) {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                    reader.lines()
+                            .map(String::trim)
+                            .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+                            .map(line -> line.toLowerCase(Locale.ROOT))
+                            .forEach(loaded::add);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Blocked keyword resource load failed: {}", e.getMessage());
+        }
+
+        if (loaded.isEmpty()) {
+            return DEFAULT_BLOCKED_KEYWORD_HASHES;
+        }
+        loaded.addAll(DEFAULT_BLOCKED_KEYWORD_HASHES);
+        return Set.copyOf(loaded);
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null) return "";
+        String normalized = keyword.replaceAll("\\s+", " ").trim();
+        normalized = normalized.replaceAll("^[\\p{Punct}\\s]+|[\\p{Punct}\\s]+$", "");
+        return normalized.trim();
+    }
+
+    private boolean isValidKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) return false;
+        if (keyword.matches("^\\d+$")) return false;
+
+        String lower = keyword.toLowerCase(Locale.ROOT);
+        String hashed = hashKeyword(lower);
+        if (BLOCKED_KEYWORDS.contains(hashed)) return false;
+
+        long koreanCount = keyword.chars().filter(ch -> ch >= 0xAC00 && ch <= 0xD7A3).count();
+        long englishCount = keyword.chars().filter(ch -> (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')).count();
+        long digitCount = keyword.chars().filter(Character::isDigit).count();
+        long otherCount = keyword.length() - koreanCount - englishCount - digitCount;
+
+        if (koreanCount > 0 && koreanCount < 2) return false;
+        if (englishCount > 0 && koreanCount == 0 && otherCount == 0 && englishCount < 3) return false;
+
+        return true;
+    }
+
     private boolean isIsbn(String keyword) {
         if (keyword == null) return false;
         String cleaned = keyword.replaceAll("-", "");

@@ -87,7 +87,13 @@ public class LibraryService {
             return emptySearchResponse();
         }
 
-        List<BookEntity> books = bookRepository.findByTitleContainingIgnoreCaseOrIsbnContaining(normalized, normalized);
+        List<BookEntity> books = bookRepository
+                .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+                        normalized,
+                        normalized,
+                        normalized,
+                        normalized
+                );
         JSONArray docs = new JSONArray();
 
         for (BookEntity book : books) {

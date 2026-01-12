@@ -29,6 +29,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // === 공개 API ===
                 .requestMatchers("/api/books/**").permitAll()
+                .requestMatchers("/api/analytics/log/search", "/api/analytics/log/action").permitAll()
                 // 인증 관련 (로그인, 회원가입, 이메일 확인, 비밀번호 재설정 등)
                 .requestMatchers("/api/users/login", "/api/users/signup", "/api/users/check-email").permitAll()
                 .requestMatchers("/api/users/forgot-password", "/api/users/verify-reset-token", "/api/users/reset-password").permitAll()
