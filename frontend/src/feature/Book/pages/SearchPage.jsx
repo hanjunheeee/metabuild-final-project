@@ -175,7 +175,7 @@ function SearchPage() {
         >
           <input
             type="text"
-            placeholder="도서명 또는 ISBN으로 검색하세요"
+            placeholder="도서명, 저자명 또는 ISBN으로 검색하세요"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="w-full h-16 pl-6 pr-16 text-lg rounded-full border border-gray-300"
