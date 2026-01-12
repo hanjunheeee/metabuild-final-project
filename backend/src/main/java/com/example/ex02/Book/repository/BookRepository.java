@@ -8,10 +8,11 @@ import java.util.List;
 
 @Repository
 public interface BookRepository extends JpaRepository<BookEntity, Long> {
-    List<BookEntity> findByTitleContainingIgnoreCaseOrIsbnContaining(String title, String isbn);
-    
-    // 제목, ISBN, 작가명으로 검색
-    List<BookEntity> findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCase(
-            String title, String isbn, String author);
+    List<BookEntity> findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+            String title,
+            String isbn,
+            String author,
+            String publisher
+    );
 }
 

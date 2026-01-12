@@ -108,7 +108,10 @@ function LibraryMapPage() {
   const updateGuLabels = (counts = {}, showCounts = false) => {
     Object.entries(guLayerMap.current).forEach(([name, layer]) => {
       const count = counts[name] ?? 0
-      const label = showCounts ? `${name} (${count})` : name
+      const countClass = count === 0 ? 'gu-count is-zero' : 'gu-count'
+      const label = showCounts
+        ? `<div class="gu-name">${name}</div><div class="${countClass}">(${count})</div>`
+        : `<div class="gu-name">${name}</div>`
       layer.setTooltipContent(label)
     })
   }
@@ -676,6 +679,27 @@ function LibraryMapPage() {
   }, [resolvedIsbn, title])
 
   useEffect(() => {
+    if (resolvedIsbn) return
+    if (!title) return
+
+    const loadBookByTitle = async () => {
+      try {
+        const data = await searchBooks(title)
+        const results = parseSearchResults(data)
+        const match = results.find(item => item.title === title) || results[0]
+        if (match) {
+          setSelectedBookImage(normalizeImageUrl(match.img))
+          setSelectedBookTitle(match.title || title)
+        }
+      } catch (e) {
+        console.error('제목 검색 실패:', e)
+      }
+    }
+
+    loadBookByTitle()
+  }, [resolvedIsbn, title])
+
+  useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
 
     const map = L.map(mapRef.current, { maxZoom: 20 }).setView([37.5665, 126.9780], 11)
@@ -735,110 +759,113 @@ function LibraryMapPage() {
   return (
     <div className="flex h-screen">
       <div className="w-[320px] p-6 bg-white border-r border-gray-200 overflow-y-auto">
-        <button
-          onClick={() => {
-            setMapMode('all')
-            setSelectedGu(ALL_GU)
-            setLoanMessage('')
-            handleShowAllLibraries(ALL_GU)
-          }}
-          className="w-full mb-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl"
-        >
-          서울시 전체 도서관 위치
-        </button>
+        <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3">
+          <button
+            onClick={() => {
+              setMapMode('all')
+              setSelectedGu(ALL_GU)
+              setLoanMessage('')
+              handleShowAllLibraries(ALL_GU)
+            }}
+            className="w-full py-2 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+          >
+            서울시 전체 도서관 위치
+          </button>
+        </div>
 
-        <div className="text-sm font-bold text-gray-800 mb-2">선택한 책</div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="text-sm font-bold text-gray-800 mb-3">선택한 책</div>
 
-        {(selectedBookTitle || title) && (
-          <div className="mt-4">
-            <div className="flex items-center gap-3">
-              <img
-                src={selectedBookImage || fallbackCover}
-                alt="book cover"
-                className="w-[60px] h-[80px] rounded-lg border object-cover"
-              />
-              <div className="text-sm text-gray-700 flex-1">{selectedBookTitle || title}</div>
-              <button
-                type="button"
-                onClick={handleClearSelectedBook}
-                className="text-xs text-gray-500 border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
-                aria-label="선택한 책 지우기"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => {
-            if (showSearch) {
-              setSearchQuery('')
-              setSearchResults([])
-              setSearchError('')
-            }
-            setShowSearch(!showSearch)
-          }}
-          className="w-full mt-4 py-2 bg-gray-600 text-white rounded-xl"
-        >
-          {showSearch ? '검색 닫기' : '다른 책 검색하기'}
-        </button>
-
-        {showSearch && (
-          <div className="mt-4">
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="책제목 또는 ISBN을 입력"
-              className="w-full p-2 border rounded-lg text-sm"
-            />
-            <button
-              onClick={handleSearch}
-              disabled={searchLoading}
-              className="w-full mt-2 py-2 bg-gray-800 text-white rounded-lg"
-            >
-              {searchLoading ? '검색 중...' : '도서 검색하기'}
-            </button>
-
-            {searchError && (
-              <div className="mt-2 text-sm text-red-500">{searchError}</div>
-            )}
-
-            {searchResults.length > 0 && (
-              <div className="mt-4 max-h-[300px] overflow-y-auto">
-                {searchResults.map((book) => (
-                  <div
-                    key={`${book.isbn}-${book.title}`}
-                    className="p-2 border rounded-lg mb-2 flex gap-2 items-center"
-                  >
-                    <img
-                      src={book.img || fallbackCover}
-                      alt="book cover"
-                      className="w-[50px] h-[70px] object-cover rounded"
-                    />
-                    <div className="text-sm">
-                      <div className="font-bold">{book.title}</div>
-                      <div className="text-xs text-gray-500">ISBN: {book.isbn}</div>
-                      <button
-                        onClick={() => handleSelectBook(book)}
-                        className="mt-1 px-2 py-1 bg-pink-400 text-white rounded text-xs"
-                      >
-                        이 책으로 변경
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          {(selectedBookTitle || title) && (
+            <div className="mt-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={selectedBookImage || fallbackCover}
+                  alt="book cover"
+                  className="w-[60px] h-[80px] rounded-lg border object-cover"
+                />
+                <div className="text-sm text-gray-700 flex-1">{selectedBookTitle || title}</div>
+                <button
+                  type="button"
+                  onClick={handleClearSelectedBook}
+                  className="text-xs text-gray-500 border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
+                  aria-label="선택한 책 지우기"
+                >
+                  ×
+                </button>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+          <button
+            onClick={() => {
+              if (showSearch) {
+                setSearchQuery('')
+                setSearchResults([])
+                setSearchError('')
+              }
+              setShowSearch(!showSearch)
+            }}
+            className="w-full mt-3 py-2 bg-gray-600 text-white rounded-xl"
+          >
+            {showSearch ? '검색 닫기' : '다른 책 검색하기'}
+          </button>
 
-        <div className="bg-gray-50 p-4 rounded-xl mt-4">
+          {showSearch && (
+            <div className="mt-4">
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="책제목 또는 ISBN을 입력"
+                className="w-full p-2 border rounded-lg text-sm"
+              />
+              <button
+                onClick={handleSearch}
+                disabled={searchLoading}
+                className="w-full mt-2 py-2 bg-gray-800 text-white rounded-lg"
+              >
+                {searchLoading ? '검색 중...' : '도서 검색하기'}
+              </button>
+
+              {searchError && (
+                <div className="mt-2 text-sm text-red-500">{searchError}</div>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className="mt-4 max-h-[300px] overflow-y-auto">
+                  {searchResults.map((book) => (
+                    <div
+                      key={`${book.isbn}-${book.title}`}
+                      className="p-2 border rounded-lg mb-2 flex gap-2 items-center"
+                    >
+                      <img
+                        src={book.img || fallbackCover}
+                        alt="book cover"
+                        className="w-[50px] h-[70px] object-cover rounded"
+                      />
+                      <div className="text-sm">
+                        <div className="font-bold">{book.title}</div>
+                        <div className="text-xs text-gray-500">ISBN: {book.isbn}</div>
+                        <button
+                          onClick={() => handleSelectBook(book)}
+                          className="mt-2 w-full px-2 py-1 bg-pink-400 text-white rounded text-xs"
+                        >
+                          이 책으로 변경
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-3">
           <label className="font-bold text-sm">지역(구) 선택</label>
           <select
             value={selectedGu}
             onChange={(e) => setSelectedGu(e.target.value)}
-            className="w-full p-2 border rounded-lg text-sm mt-2"
+            className="w-full h-11 px-3 border rounded-xl text-sm mt-2"
           >
             <option value="">구 선택</option>
             {guList.map((gu) => (
@@ -853,7 +880,7 @@ function LibraryMapPage() {
               setMapMode('loan')
               handleCheckLoan()
             }}
-            className="w-full mt-2 py-2 bg-gray-900 text-white rounded-xl"
+            className="w-full mt-2 h-11 bg-gray-900 text-white rounded-xl"
           >
             {loading || countsLoading ? (
               <span className="inline-flex items-center justify-center gap-2">
@@ -951,8 +978,21 @@ function LibraryMapPage() {
           box-shadow: none !important;
           color: #1f2937 !important;
           font-weight: 600 !important;
-          font-size: 12px !important;
           text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+          text-align: center;
+        }
+        .gu-label .gu-name {
+          font-size: 12px;
+          display: block;
+        }
+        .gu-label .gu-count {
+          font-size: 14px;
+          line-height: 1.1;
+          display: block;
+          color: #2563eb;
+        }
+        .gu-label .gu-count.is-zero {
+          color: #dc2626;
         }
       `}</style>
     </div>

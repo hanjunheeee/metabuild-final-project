@@ -30,9 +30,11 @@ public class BookService {
             return getAllBooks();
         }
 
-        // 제목, ISBN, 작가명으로 검색
-        return bookRepository.findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCase(
-                trimmed, trimmed, trimmed).stream()
+        // 제목, ISBN, 작가명, 출판사로 검색
+        return bookRepository
+                .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+                        trimmed, trimmed, trimmed, trimmed)
+                .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
