@@ -16,6 +16,15 @@ function SearchPage() {
   const [summaries, setSummaries] = useState({})
   const [loadingSummaryIds, setLoadingSummaryIds] = useState({})
 
+  const decodeHtmlEntities = (value) => {
+    if (!value || typeof value !== 'string') {
+      return value || ''
+    }
+    const textarea = document.createElement('textarea')
+    textarea.innerHTML = value
+    return textarea.value
+  }
+
   const fetchBookShops = async (book) => {
 
     // Toggle close if already open
@@ -61,9 +70,10 @@ function SearchPage() {
 
     try {
       const data = await fetchBookSummaryApi(bookId)
+      const decodedSummary = decodeHtmlEntities(data?.summary)
       setSummaries(prev => ({
         ...prev,
-        [bookId]: data.summary
+        [bookId]: decodedSummary
       }))
     } catch (e) {
       setSummaries(prev => ({

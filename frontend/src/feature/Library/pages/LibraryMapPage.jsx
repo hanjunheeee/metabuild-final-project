@@ -687,7 +687,7 @@ function LibraryMapPage() {
     fetch('https://raw.githubusercontent.com/southkorea/seoul-maps/master/kostat/2013/json/seoul_municipalities_geo_simple.json')
       .then(res => res.json())
       .then(data => {
-        L.geoJson(data, {
+        const seoulLayer = L.geoJson(data, {
           style: (feature) => {
             const name = getGuName(feature?.properties)
             return {
@@ -712,6 +712,13 @@ function LibraryMapPage() {
             })
           }
         }).addTo(map)
+
+        const seoulBounds = seoulLayer.getBounds()
+        if (seoulBounds && seoulBounds.isValid()) {
+          map.fitBounds(seoulBounds, { padding: [20, 20] })
+          map.setMaxBounds(seoulBounds.pad(0.08))
+          map.setMinZoom(map.getZoom())
+        }
       })
       .catch((e) => {
         console.error('지도 데이터 로드 실패:', e)
