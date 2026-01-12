@@ -27,8 +27,12 @@ function CommunityWritePage() {
           setLoading(true)
           const post = await fetchCommunityById(editId)
           
-          // 작성자 확인
-          if (post.userId !== currentUser?.userId) {
+          // 작성자 확인 (관리자는 공지사항 수정 가능)
+          const isAdmin = currentUser?.role === 'ADMIN'
+          const isAuthor = post.userId === currentUser?.userId
+          const canEdit = isAuthor || (isAdmin && post.isNotice === 1)
+          
+          if (!canEdit) {
             alert('본인이 작성한 게시글만 수정할 수 있습니다.')
             navigate('/community')
             return
@@ -51,6 +55,8 @@ function CommunityWritePage() {
             title,
             content,
             communityKind: post.communityKind || 'FREE',
+            isNotice: post.isNotice,  // 공지사항 여부 저장
+            originalUserId: post.userId,  // 원작성자 ID 저장
             book: post.bookId ? {
               bookId: post.bookId,
               title: post.bookTitle,
@@ -88,9 +94,13 @@ function CommunityWritePage() {
       const thumbnailUrl = extractFirstImage(processedContent)
       
       if (isEditMode) {
-        // 수정 모드
+        // 수정 모드 - 관리자가 공지사항 수정 시 userId를 null로 전달
+        const isAdminEditingNotice = currentUser?.role === 'ADMIN' 
+          && initialData?.isNotice === 1 
+          && initialData?.originalUserId !== currentUser.userId
+        
         const result = await updateCommunity(editId, {
-          userId: currentUser.userId,
+          userId: isAdminEditingNotice ? null : currentUser.userId,
           bookId: formData.bookId,
           title: formData.title,
           content: processedContent,

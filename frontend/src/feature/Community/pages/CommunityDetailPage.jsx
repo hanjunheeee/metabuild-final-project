@@ -118,7 +118,11 @@ function CommunityDetailPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return
 
     try {
-      const result = await deleteCommunity(post.communityId, currentUser.userId)
+      // 관리자가 삭제 시 userId를 null로 전달 (작성자 확인 생략)
+      const userIdParam = (currentUser.role === 'ADMIN' && post.userId !== currentUser.userId) 
+        ? null 
+        : currentUser.userId
+      const result = await deleteCommunity(post.communityId, userIdParam)
       if (result.success) {
         alert('게시글이 삭제되었습니다.')
         navigate('/community')
@@ -230,6 +234,11 @@ function CommunityDetailPage() {
   }
 
   const isAuthor = currentUser?.userId === post.userId
+  const isAdmin = currentUser?.role === 'ADMIN'
+  // 수정 권한: 작성자이거나 관리자(공지사항의 경우)
+  const canEdit = isAuthor || (isAdmin && post.isNotice === 1)
+  // 삭제 권한: 작성자이거나 관리자(모든 글)
+  const canDelete = isAuthor || isAdmin
 
   return (
     <div className="flex-1 py-8 px-4">
@@ -302,22 +311,28 @@ function CommunityDetailPage() {
               </div>
 
               {/* 수정/삭제 버튼 */}
-              {isAuthor && (
+              {(canEdit || canDelete) && (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleEdit}
-                    className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 
-                             hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    수정
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="px-3 py-1.5 text-xs text-red-600 border border-red-300 
-                             hover:bg-red-50 transition-colors cursor-pointer"
-                  >
-                    삭제
-                  </button>
+                  {/* 수정 버튼: 작성자 또는 관리자(공지사항) */}
+                  {canEdit && (
+                    <button
+                      onClick={handleEdit}
+                      className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 
+                               hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      수정
+                    </button>
+                  )}
+                  {/* 삭제 버튼: 작성자 또는 관리자(모든 글) */}
+                  {canDelete && (
+                    <button
+                      onClick={handleDelete}
+                      className="px-3 py-1.5 text-xs text-red-600 border border-red-300 
+                               hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      삭제
+                    </button>
+                  )}
                 </div>
               )}
             </div>

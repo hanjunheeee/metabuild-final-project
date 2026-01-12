@@ -1,5 +1,6 @@
 import ReplyItem from './ReplyItem'
 import BookInfoCard from '../BookInfoCard'
+import { isAdmin, getDisplayName, getDisplayPhoto, getAdminBadge } from '@/shared/utils/userDisplay'
 
 /**
  * 개별 부모 댓글 컴포넌트
@@ -74,24 +75,27 @@ function CommentItem({
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-3">
             {/* 프로필 이미지 */}
-            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-              {comment.userProfileImage ? (
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(comment) ? 'ring-2 ring-yellow-400' : 'bg-gray-200'}`}>
+              {getDisplayPhoto(comment) ? (
                 <img 
-                  src={`http://localhost:7878/uploads/profile/${comment.userProfileImage}`} 
-                  alt={comment.userNickname}
+                  src={getDisplayPhoto(comment)} 
+                  alt={getDisplayName(comment)}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-main-bg text-white text-sm font-bold">
-                  {(comment.userNickname || '?')[0].toUpperCase()}
+                  {getDisplayName(comment)[0].toUpperCase()}
                 </div>
               )}
             </div>
             {/* 닉네임 + 시간 */}
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-gray-800">
-                  {comment.userNickname || '익명'}
+                {getAdminBadge(comment) && (
+                  <span className="text-sm">{getAdminBadge(comment)}</span>
+                )}
+                <span className={`text-sm font-medium ${isAdmin(comment) ? 'text-yellow-600' : 'text-gray-800'}`}>
+                  {getDisplayName(comment)}
                 </span>
                 {comment.updatedAt && (
                   <span className="text-xs text-gray-400">(수정됨)</span>

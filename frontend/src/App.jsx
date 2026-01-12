@@ -20,6 +20,7 @@ import BookManagePage from '@/feature/Admin/pages/BookManagePage'
 import PostManagePage from '@/feature/Admin/pages/PostManagePage'
 import NoticeWritePage from '@/feature/Admin/pages/NoticeWritePage'
 import UserManagePage from '@/feature/Admin/pages/UserManagePage'
+import UserDetailPage from '@/feature/Admin/pages/UserDetailPage'
 
 function App() {
   const routes = [
@@ -57,6 +58,7 @@ function App() {
             { path: 'posts', element: <PostManagePage /> },
             { path: 'notice', element: <NoticeWritePage /> },
             { path: 'users', element: <UserManagePage /> },
+            { path: 'users/:userId', element: <UserDetailPage /> },
           ],
         },
       ],

@@ -44,6 +44,60 @@ public class BookService {
         return convertToDTO(book);
     }
 
+    // ========================================
+    // 도서 생성
+    // ========================================
+    @Transactional
+    public BookDTO createBook(BookDTO dto) {
+        BookEntity book = new BookEntity();
+        updateEntityFromDTO(book, dto);
+        BookEntity saved = bookRepository.save(book);
+        return convertToDTO(saved);
+    }
+
+    // ========================================
+    // 도서 수정
+    // ========================================
+    @Transactional
+    public BookDTO updateBook(Long id, BookDTO dto) {
+        BookEntity book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+        updateEntityFromDTO(book, dto);
+        BookEntity saved = bookRepository.save(book);
+        return convertToDTO(saved);
+    }
+
+    // ========================================
+    // 도서 삭제
+    // ========================================
+    @Transactional
+    public void deleteBook(Long id) {
+        if (!bookRepository.existsById(id)) {
+            throw new RuntimeException("Book not found with id: " + id);
+        }
+        bookRepository.deleteById(id);
+    }
+
+    // DTO -> Entity 필드 업데이트
+    private void updateEntityFromDTO(BookEntity book, BookDTO dto) {
+        book.setIsbn(dto.getIsbn());
+        book.setTitle(dto.getTitle());
+        book.setAuthor(dto.getAuthor());
+        book.setPublisher(dto.getPublisher());
+        book.setPublishedDate(dto.getPublishedDate());
+        book.setSummary(dto.getSummary());
+        book.setImageUrl(dto.getImageUrl());
+        if (dto.getAges() != null && !dto.getAges().isEmpty()) {
+            try {
+                book.setAges(BookEntity.AgeGroup.valueOf(dto.getAges()));
+            } catch (IllegalArgumentException e) {
+                book.setAges(null);
+            }
+        } else {
+            book.setAges(null);
+        }
+    }
+
     // Entity -> DTO 변환
     private BookDTO convertToDTO(BookEntity book) {
         BookDTO dto = new BookDTO();

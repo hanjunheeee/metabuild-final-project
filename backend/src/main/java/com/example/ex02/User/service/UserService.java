@@ -156,6 +156,17 @@ public class UserService {
         userRepository.save(user);
     }
 
+    // 회원 활성/비활성 상태 변경 (관리자용)
+    @Transactional
+    public UserDTO updateUserStatus(Long userId, String isActive) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        user.setIsActive(isActive);
+        UserEntity savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
     // Entity -> DTO 변환
     private UserDTO convertToDTO(UserEntity user) {
         UserDTO dto = new UserDTO();

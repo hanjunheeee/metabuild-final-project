@@ -15,5 +15,6 @@ public class CommunityCreateDTO {
     private String content;       // 내용 (HTML)
     private String communityKind; // 게시판 종류 (FREE, QUESTION, REVIEW)
     private String thumbnailUrl;  // 썸네일 URL (선택)
+    private Integer isNotice;     // 공지 여부 (0: 일반, 1: 공지)
 }
 

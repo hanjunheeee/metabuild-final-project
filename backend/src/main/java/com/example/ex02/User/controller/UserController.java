@@ -194,5 +194,26 @@ public class UserController {
             ));
         }
     }
+
+    // 회원 활성/비활성 상태 변경 (관리자용)
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateUserStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String isActive = request.get("isActive");
+            UserDTO updatedUser = userService.updateUserStatus(id, isActive);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "user", updatedUser,
+                "message", "Y".equals(isActive) ? "회원이 활성화되었습니다." : "회원이 비활성화되었습니다."
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
 }
 

@@ -47,9 +47,10 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
                 
                 // === 인증 필요 API ===
-                // POST, PUT, DELETE는 인증 필요 (생성, 수정, 삭제)
+                // POST, PUT, PATCH, DELETE는 인증 필요 (생성, 수정, 삭제)
                 .requestMatchers(HttpMethod.POST, "/api/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/**").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/**").authenticated()
                 
                 // 나머지 요청

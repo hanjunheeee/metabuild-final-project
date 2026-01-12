@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { getUserFromSession } from '@/shared/api/authApi'
 
 /**
  * 책 정보 카드 컴포넌트
@@ -26,6 +27,8 @@ function BookInfoCard({
   className = ''
 }) {
   const navigate = useNavigate()
+  const currentUser = getUserFromSession()
+  const isAdmin = currentUser?.role === 'ADMIN'
   
   if (!book) return null
 
@@ -132,8 +135,8 @@ function BookInfoCard({
           )}
         </div>
 
-        {/* 북마크 버튼 */}
-        {showBookmark && onBookmark && (
+        {/* 북마크 버튼 (관리자는 숨김) */}
+        {showBookmark && onBookmark && !isAdmin && (
           <button
             onClick={handleBookmarkClick}
             disabled={bookmarkLoading}

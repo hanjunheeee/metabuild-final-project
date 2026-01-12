@@ -50,9 +50,11 @@ public class CommunityController {
         }
     }
 
-    // 커뮤니티 글 삭제
+    // 커뮤니티 글 삭제 (userId 없으면 관리자 삭제로 처리)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCommunity(@PathVariable Long id, @RequestParam Long userId) {
+    public ResponseEntity<?> deleteCommunity(
+            @PathVariable Long id, 
+            @RequestParam(required = false) Long userId) {
         try {
             communityService.deleteCommunity(id, userId);
             return ResponseEntity.ok(Map.of(

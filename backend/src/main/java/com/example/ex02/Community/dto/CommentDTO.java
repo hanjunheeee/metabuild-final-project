@@ -16,6 +16,7 @@ public class CommentDTO {
     private Long userId;
     private String userNickname;
     private String userProfileImage;  // 사용자 프로필 이미지
+    private String role;  // 사용자 역할 (ADMIN/USER)
     private String content;
     private Long parentId;  // 부모 댓글 ID (답글인 경우에만 값 있음)
     private LocalDateTime createdAt;

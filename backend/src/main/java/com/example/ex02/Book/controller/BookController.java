@@ -79,5 +79,26 @@ public class BookController {
         return ResponseEntity.ok(data4LibraryLoanRankingService.fetchSeoulMonthlyTop10());
     }
 
+    // ========================================
+    // Admin CRUD APIs
+    // ========================================
 
+    // Create a new book
+    @PostMapping
+    public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
+        return ResponseEntity.ok(bookService.createBook(bookDTO));
+    }
+
+    // Update a book
+    @PutMapping("/{id}")
+    public ResponseEntity<BookDTO> updateBook(@PathVariable Long id, @RequestBody BookDTO bookDTO) {
+        return ResponseEntity.ok(bookService.updateBook(id, bookDTO));
+    }
+
+    // Delete a book
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
 }

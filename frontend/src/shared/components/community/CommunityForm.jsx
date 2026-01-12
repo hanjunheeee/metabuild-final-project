@@ -18,13 +18,15 @@ const COMMUNITY_KINDS = [
  * @param {Function} onSubmit - 제출 핸들러 (formData) => void
  * @param {Function} onCancel - 취소 핸들러
  * @param {boolean} isSubmitting - 제출 중 여부
+ * @param {boolean} hideKindSelector - 종류 선택 숨김 여부 (공지 작성 시)
  */
 function CommunityForm({ 
   mode = 'create', 
   initialData = null, 
   onSubmit, 
   onCancel,
-  isSubmitting = false 
+  isSubmitting = false,
+  hideKindSelector = false,
 }) {
   const [title, setTitle] = useState('')
   const [communityKind, setCommunityKind] = useState('FREE')
@@ -164,32 +166,34 @@ function CommunityForm({
         </div>
       )}
 
-      {/* 게시판 종류 선택 */}
-      <div className="mb-5">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          게시판 종류 <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2">
-          {COMMUNITY_KINDS.map((kind) => (
-            <button
-              key={kind.value}
-              type="button"
-              onClick={() => setCommunityKind(kind.value)}
-              className={`flex-1 py-2.5 px-4 text-sm font-medium border transition-colors
-                        ${communityKind === kind.value
-                          ? kind.color === 'purple'
-                            ? 'bg-purple-500 text-white border-purple-500'
-                            : kind.color === 'green'
-                              ? 'bg-green-500 text-white border-green-500'
-                              : 'bg-gray-500 text-white border-gray-500'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                        }`}
-            >
-              {kind.label}
-            </button>
-          ))}
+      {/* 게시판 종류 선택 (공지 작성 시 숨김) */}
+      {!hideKindSelector && (
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            게시판 종류 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-2">
+            {COMMUNITY_KINDS.map((kind) => (
+              <button
+                key={kind.value}
+                type="button"
+                onClick={() => setCommunityKind(kind.value)}
+                className={`flex-1 py-2.5 px-4 text-sm font-medium border transition-colors
+                          ${communityKind === kind.value
+                            ? kind.color === 'purple'
+                              ? 'bg-purple-500 text-white border-purple-500'
+                              : kind.color === 'green'
+                                ? 'bg-green-500 text-white border-green-500'
+                                : 'bg-gray-500 text-white border-gray-500'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                          }`}
+              >
+                {kind.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 책 선택 */}
       <div className="mb-5">

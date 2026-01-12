@@ -82,7 +82,7 @@ public class CommunityService {
         entity.setCommunityKind(createDTO.getCommunityKind() != null ? createDTO.getCommunityKind() : "FREE");
         entity.setThumbnailUrl(createDTO.getThumbnailUrl());
         entity.setCommunityGreat(0);
-        entity.setIsNotice(0);
+        entity.setIsNotice(createDTO.getIsNotice() != null ? createDTO.getIsNotice() : 0);
 
         // 저장
         CommunityEntity saved = communityRepository.save(entity);
@@ -90,14 +90,14 @@ public class CommunityService {
         return CommunityDTO.fromEntity(saved, 0);
     }
 
-    // 커뮤니티 글 삭제
+    // 커뮤니티 글 삭제 (userId가 null이면 관리자 삭제로 처리)
     @Transactional
     public void deleteCommunity(Long communityId, Long userId) {
         CommunityEntity entity = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
 
-        // 작성자 확인
-        if (!entity.getUser().getUserId().equals(userId)) {
+        // 작성자 확인 (userId가 null이면 관리자 삭제 - 확인 생략)
+        if (userId != null && !entity.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("본인이 작성한 게시글만 삭제할 수 있습니다.");
         }
 
@@ -117,8 +117,8 @@ public class CommunityService {
         CommunityEntity entity = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
 
-        // 작성자 확인
-        if (!entity.getUser().getUserId().equals(updateDTO.getUserId())) {
+        // 작성자 확인 (userId가 null이면 관리자 수정 - 공지사항만 허용)
+        if (updateDTO.getUserId() != null && !entity.getUser().getUserId().equals(updateDTO.getUserId())) {
             throw new RuntimeException("본인이 작성한 게시글만 수정할 수 있습니다.");
         }
 

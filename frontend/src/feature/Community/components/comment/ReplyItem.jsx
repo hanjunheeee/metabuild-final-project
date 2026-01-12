@@ -1,4 +1,5 @@
 import BookInfoCard from '../BookInfoCard'
+import { isAdmin, getDisplayName, getDisplayPhoto, getAdminBadge } from '@/shared/utils/userDisplay'
 
 /**
  * 개별 답글 컴포넌트
@@ -46,24 +47,27 @@ function ReplyItem({
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-3">
           {/* 프로필 이미지 */}
-          <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-            {reply.userProfileImage ? (
+          <div className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(reply) ? 'ring-2 ring-yellow-400' : 'bg-gray-200'}`}>
+            {getDisplayPhoto(reply) ? (
               <img 
-                src={`http://localhost:7878/uploads/profile/${reply.userProfileImage}`} 
-                alt={reply.userNickname}
+                src={getDisplayPhoto(reply)} 
+                alt={getDisplayName(reply)}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-main-bg text-white text-xs font-bold">
-                {(reply.userNickname || '?')[0].toUpperCase()}
+                {getDisplayName(reply)[0].toUpperCase()}
               </div>
             )}
           </div>
           {/* 닉네임 + 시간 */}
           <div className="flex flex-col">
             <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-gray-800">
-                {reply.userNickname || '익명'}
+              {getAdminBadge(reply) && (
+                <span className="text-sm">{getAdminBadge(reply)}</span>
+              )}
+              <span className={`text-sm font-medium ${isAdmin(reply) ? 'text-yellow-600' : 'text-gray-800'}`}>
+                {getDisplayName(reply)}
               </span>
               {reply.updatedAt && (
                 <span className="text-xs text-gray-400">(수정됨)</span>

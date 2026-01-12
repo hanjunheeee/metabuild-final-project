@@ -26,7 +26,7 @@ export const uploadImage = async (imageData) => {
 }
 
 // 커뮤니티 글 작성
-export const createCommunity = async ({ userId, bookId, title, content, communityKind, thumbnailUrl }) => {
+export const createCommunity = async ({ userId, bookId, title, content, communityKind, thumbnailUrl, isNotice = 0 }) => {
   const response = await fetch(`${BASE_URL}/api/communities`, {
     method: 'POST',
     headers: {
@@ -40,6 +40,7 @@ export const createCommunity = async ({ userId, bookId, title, content, communit
       content,
       communityKind,
       thumbnailUrl,
+      isNotice,
     }),
   })
   return response.json()

@@ -215,6 +215,7 @@ public class CommentService {
         dto.setUserId(comment.getUser().getUserId());
         dto.setUserNickname(comment.getUser().getNickname());
         dto.setUserProfileImage(comment.getUser().getUserPhoto());
+        dto.setRole(comment.getUser().getRole());  // 사용자 역할 추가
         dto.setContent(comment.getContent());
         dto.setParentId(comment.getParent() != null ? comment.getParent().getCommentId() : null);
         dto.setCreatedAt(comment.getCreatedAt());
