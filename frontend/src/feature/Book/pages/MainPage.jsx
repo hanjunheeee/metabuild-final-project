@@ -198,12 +198,40 @@ function MainPage() {
       deduped.push(post)
     })
 
-    return deduped.slice(0, 5)
+    return deduped.slice(0, 7)
   }, [noticePosts, latestCommunityPosts])
 
   const handleCommunityClick = (communityId) => {
     if (!communityId) return
     navigate(`/community/${communityId}`)
+  }
+
+  const getCommunityKindLabel = (post) => {
+    if (isNoticePost(post)) return '\uACF5\uC9C0'
+    switch (post?.communityKind) {
+      case 'QUESTION':
+        return '\uC9C8\uBB38'
+      case 'REVIEW':
+        return '\uB9AC\uBDF0'
+      case 'FREE':
+        return '\uC790\uC720'
+      default:
+        return '\uC790\uC720'
+    }
+  }
+
+  const getCommunityKindStyle = (post) => {
+    if (isNoticePost(post)) return 'bg-orange-100 text-orange-700'
+    switch (post?.communityKind) {
+      case 'QUESTION':
+        return 'bg-purple-100 text-purple-700'
+      case 'REVIEW':
+        return 'bg-green-100 text-green-700'
+      case 'FREE':
+        return 'bg-gray-100 text-gray-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
   }
 
   return (
@@ -359,23 +387,34 @@ function MainPage() {
           { label: '\uAD50\uBCF4\uBB38\uACE0', value: 'KYOBO' },
           { label: '\uC54C\uB77C\uB518', value: 'ALADIN' },
           { label: 'YES24', value: 'YES24' }
-        ].map(provider => (
+        ].map(provider => {
+          const isActive = provider.value === bestSellerProvider
+          const baseColor =
+            provider.value === 'KYOBO'
+              ? 'bg-emerald-600 hover:bg-emerald-700'
+              : provider.value === 'YES24'
+                ? 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-fuchsia-600 hover:bg-fuchsia-700'
+          return (
             <button
               key={provider.value}
               onClick={() => { setBestPage(0); setBestSellerProvider(provider.value) }}
-              className="
+              className={`
                 px-5
                 py-2
                 rounded-full
-                bg-gray-900
                 text-white
                 text-sm
-                hover:opacity-90
-              "
+                border-2
+                ${baseColor}
+                ${isActive ? 'border-gray-900 shadow-[0_0_0_2px_rgba(17,24,39,0.15)]' : 'border-transparent'}
+              `}
             >
               {provider.label}
             </button>
-          ))}
+          )
+        })}
+
         </div>
 
         {/* 슬라이더 */}
@@ -480,14 +519,15 @@ function MainPage() {
                   <li className="text-gray-500">로딩 중...</li>
                 )}
                 {!communityLoading && communityError && (
-                  <li className="text-red-500">???? ???? ??</li>
+                  <li className="text-red-500">커뮤니티를 불러오지 못했습니다</li>
                 )}
                 {!communityLoading && !communityError && mainCommunityPosts.length === 0 && (
-                  <li className="text-gray-500">??? ?? ????.</li>
+                  <li className="text-gray-500">커뮤니티 게시글이 없습니다</li>
                 )}
-                {mainCommunityPosts.map((post) => {
-                  const isNotice = isNoticePost(post)
+                                                {mainCommunityPosts.map((post) => {
                   const isPopular = popularCommunityIds.has(post.communityId)
+                  const kindLabel = getCommunityKindLabel(post)
+                  const kindClass = getCommunityKindStyle(post)
 
                   return (
                     <li key={post.communityId}>
@@ -496,22 +536,20 @@ function MainPage() {
                         onClick={() => handleCommunityClick(post.communityId)}
                         className="w-full text-left hover:underline line-clamp-1"
                       >
-                        {isNotice && (
-                          <span className="mr-1 inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">
-                            [공지]
-                          </span>
-                        )}
                         {isPopular && (
                           <span className="mr-1 inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
-                            [인기]
+                            HOT
                           </span>
                         )}
+                        <span className={`mr-1 inline-flex items-center rounded-full ${kindClass} px-2 py-0.5 text-xs font-semibold`}>
+                          [{kindLabel}]
+                        </span>
                         {getPostTitle(post)}
                       </button>
                     </li>
                   )
                 })}
-              </ul>
+</ul>
             </div>
           </div>
 
