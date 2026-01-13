@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+// 커뮤니티 좋아요 조회 리포지토리
 public interface CommunityLikeRepository extends JpaRepository<CommunityLikeEntity, Long> {
     
     // 사용자가 해당 게시글에 좋아요 했는지 확인

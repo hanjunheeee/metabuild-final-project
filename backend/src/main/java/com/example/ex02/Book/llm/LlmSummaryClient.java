@@ -6,6 +6,7 @@ import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Gemini API 호출 클라이언트
 @Service
 public class LlmSummaryClient {
 
@@ -26,6 +27,7 @@ public class LlmSummaryClient {
         this.model = model;
     }
 
+    // 프롬프트 기반 요약 생성
     public String summarize(String prompt) {
         if (prompt == null || prompt.isBlank()) {
             logger.warn("Gemini summarize skipped: empty prompt");

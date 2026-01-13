@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// 검색/액션 로그 집계 및 트렌드 캐시 서비스
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -82,6 +83,7 @@ public class SearchTrendService {
      * 검색어 로그 저장 (ISBN인 경우 책 제목으로 변환)
      */
     @Transactional
+    // 검색 로그 저장(ISBN 검색 시 제목으로 변환)
     public void logSearch(String keyword, Long userId, String bookTitle) {
         String logKeyword = keyword;
 
@@ -112,6 +114,7 @@ public class SearchTrendService {
      * 책 클릭 액션 로그 저장 (구매조회, 도서관검색, AI요약)
      */
     @Transactional
+    // 도서 액션 로그 저장(구매/대출/요약)
     public void logBookAction(Long bookId, Long userId, ActionType actionType) {
         if (bookId == null || actionType == ActionType.SEARCH) {
             return;
@@ -143,6 +146,7 @@ public class SearchTrendService {
     /**
      * 인기 검색어 조회 (워드클라우드용)
      */
+    // 검색어 트렌드 조회
     public List<SearchTrendDTO> getKeywordTrends() {
         refreshCacheIfNeeded();
         return cachedKeywordTrends;
@@ -151,6 +155,7 @@ public class SearchTrendService {
     /**
      * 구매 인기 도서 조회
      */
+    // 구매 트렌드 조회
     public List<SearchTrendDTO> getPurchaseTrends() {
         refreshCacheIfNeeded();
         return cachedPurchaseTrends;
@@ -159,6 +164,7 @@ public class SearchTrendService {
     /**
      * 대출 인기 도서 조회
      */
+    // 대출 트렌드 조회
     public List<SearchTrendDTO> getLibraryTrends() {
         refreshCacheIfNeeded();
         return cachedLibraryTrends;
@@ -168,6 +174,7 @@ public class SearchTrendService {
     // 캐시 갱신
     // ========================================
 
+    // 캐시 갱신 필요 여부 확인
     private void refreshCacheIfNeeded() {
         if (lastCacheUpdate == null || 
             lastCacheUpdate.plusMinutes(CACHE_MINUTES).isBefore(LocalDateTime.now())) {
@@ -175,6 +182,7 @@ public class SearchTrendService {
         }
     }
 
+    // 로그 집계 캐시 갱신
     private synchronized void refreshCache() {
         LocalDateTime since = LocalDateTime.now().minusDays(RETENTION_DAYS);
 
@@ -229,6 +237,7 @@ public class SearchTrendService {
      */
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
+    // 오래된 로그 정리
     public void cleanupOldLogs() {
         LocalDateTime threshold = LocalDateTime.now().minusDays(RETENTION_DAYS);
         int deletedCount = searchLogRepository.deleteByCreatedAtBefore(threshold);
@@ -239,6 +248,7 @@ public class SearchTrendService {
      * 5분마다 캐시 갱신
      */
     @Scheduled(fixedRate = 300000)
+    // 주기적 캐시 갱신
     public void scheduledCacheRefresh() {
         refreshCache();
     }
@@ -296,6 +306,7 @@ public class SearchTrendService {
         return Set.copyOf(loaded);
     }
 
+    // 검색어 정규화
     private String normalizeKeyword(String keyword) {
         if (keyword == null) return "";
         String normalized = keyword.replaceAll("\\s+", " ").trim();
@@ -303,6 +314,7 @@ public class SearchTrendService {
         return normalized.trim();
     }
 
+    // 검색어 유효성 검사
     private boolean isValidKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) return false;
         if (keyword.matches("^\\d+$")) return false;
@@ -322,6 +334,7 @@ public class SearchTrendService {
         return true;
     }
 
+    // ISBN 형식 여부 확인
     private boolean isIsbn(String keyword) {
         if (keyword == null) return false;
         String cleaned = keyword.replaceAll("-", "");

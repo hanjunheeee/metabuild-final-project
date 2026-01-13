@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+// 사용자 엔티티
 public class UserEntity {
 
     @Id

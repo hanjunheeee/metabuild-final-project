@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
+// 검색/액션 로그 조회 리포지토리
 public interface BookSearchLogRepository extends JpaRepository<BookSearchLogEntity, Long> {
 
     // 오래된 로그 삭제 (스케줄러용)
@@ -58,4 +59,3 @@ public interface BookSearchLogRepository extends JpaRepository<BookSearchLogEnti
         """)
     List<Object[]> findTopBooks(@Param("since") LocalDateTime since);
 }
-

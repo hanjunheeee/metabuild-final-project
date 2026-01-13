@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor         
+// 커뮤니티 게시글 엔티티
 public class CommunityEntity {
 
     @Id
@@ -62,4 +63,3 @@ public class CommunityEntity {
         this.updatedAt = LocalDate.now();
     }
 }
-

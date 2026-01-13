@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+// 커뮤니티 좋아요 엔티티
 public class CommunityLikeEntity {
 
     @Id

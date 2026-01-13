@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+// 교보/YES24 베스트셀러 스크래핑 서비스(캐시 포함)
 @Service
 public class StoreBestsellerScrapeService {
 
@@ -53,14 +54,17 @@ public class StoreBestsellerScrapeService {
 
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
+    // 교보 베스트셀러 TOP10 조회
     public List<BestsellerItemDTO> fetchKyoboTop10() {
         return getOrFetch("KYOBO", this::scrapeKyoboTop10);
     }
 
+    // YES24 베스트셀러 TOP10 조회
     public List<BestsellerItemDTO> fetchYes24Top10() {
         return getOrFetch("YES24", this::scrapeYes24Top10);
     }
 
+    // 캐시 우선 조회 후 필요 시 재수집
     private List<BestsellerItemDTO> getOrFetch(String key, Fetcher fetcher) {
         CacheEntry cached = cache.get(key);
         if (cached != null && !isExpired(cached.fetchedAt)) {
@@ -83,6 +87,7 @@ public class StoreBestsellerScrapeService {
         return fetchedAt.plus(CACHE_TTL).isBefore(Instant.now());
     }
 
+    // 교보 베스트셀러 수집(엑셀/스토어/모바일/레거시 순)
     private List<BestsellerItemDTO> scrapeKyoboTop10() {
         List<BestsellerItemDTO> excel = fetchKyoboExcelTop10();
         if (!excel.isEmpty()) {
@@ -129,6 +134,7 @@ public class StoreBestsellerScrapeService {
         }
     }
 
+    // YES24 베스트셀러 수집
     private List<BestsellerItemDTO> scrapeYes24Top10() {
         String url = "https://www.yes24.com/Product/Category/BestSeller?categoryNumber=001&sumgb=07";
         try {
@@ -235,6 +241,7 @@ public class StoreBestsellerScrapeService {
         }
     }
 
+    // 교보 엑셀 다운로드 기반 수집
     private List<BestsellerItemDTO> fetchKyoboExcelTop10() {
         try {
             String url = KYOBO_EXCEL_URL
@@ -264,6 +271,7 @@ public class StoreBestsellerScrapeService {
         }
     }
 
+    // 교보 엑셀 파싱
     private List<BestsellerItemDTO> parseKyoboExcel(byte[] data) {
         try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(data))) {
             Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
@@ -457,6 +465,7 @@ public class StoreBestsellerScrapeService {
         }
     }
 
+    // 재시도 포함 HTML 요청
     private Document fetchDocumentWithRetries(String url, String referrer, int timeoutMs) throws Exception {
         Exception lastException = null;
         for (int attempt = 1; attempt <= KYOBO_RETRY_COUNT; attempt++) {
@@ -531,6 +540,7 @@ public class StoreBestsellerScrapeService {
         return trimmed;
     }
 
+    // 교보 DOM 파싱 결과 추출
     private List<BestsellerItemDTO> extractKyoboItems(Document doc) {
         Elements items = doc.select("li.prod_item, .prod_list .prod_item, .prod_list_type .prod_item");
         if (items.isEmpty()) {

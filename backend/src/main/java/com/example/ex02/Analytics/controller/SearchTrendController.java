@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+// 검색/액션 트렌드 API
 @RestController
 @RequestMapping("/api/analytics")
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ public class SearchTrendController {
      * 인기 검색어 조회 (워드클라우드용)
      * GET /api/analytics/trends/keywords
      */
+    // 검색어 트렌드 조회
     @GetMapping("/trends/keywords")
     public ResponseEntity<List<SearchTrendDTO>> getKeywordTrends() {
         List<SearchTrendDTO> trends = searchTrendService.getKeywordTrends();
@@ -36,6 +38,7 @@ public class SearchTrendController {
      * 구매 인기 도서 조회
      * GET /api/analytics/trends/purchase
      */
+    // 구매 트렌드 조회
     @GetMapping("/trends/purchase")
     public ResponseEntity<List<SearchTrendDTO>> getPurchaseTrends() {
         List<SearchTrendDTO> trends = searchTrendService.getPurchaseTrends();
@@ -46,6 +49,7 @@ public class SearchTrendController {
      * 대출 인기 도서 조회
      * GET /api/analytics/trends/library
      */
+    // 대출 트렌드 조회
     @GetMapping("/trends/library")
     public ResponseEntity<List<SearchTrendDTO>> getLibraryTrends() {
         List<SearchTrendDTO> trends = searchTrendService.getLibraryTrends();
@@ -61,6 +65,7 @@ public class SearchTrendController {
      * POST /api/analytics/log/search
      * Body: { "keyword": "클린코드", "bookTitle": "클린 코드" }
      */
+    // 검색 로그 저장
     @PostMapping("/log/search")
     public ResponseEntity<Map<String, String>> logSearch(
             @RequestBody Map<String, String> request,
@@ -83,6 +88,7 @@ public class SearchTrendController {
      * POST /api/analytics/log/action
      * Body: { "bookId": 123, "actionType": "PURCHASE_VIEW" }
      */
+    // 도서 액션 로그 저장
     @PostMapping("/log/action")
     public ResponseEntity<Map<String, String>> logBookAction(
             @RequestBody Map<String, Object> request,
@@ -112,4 +118,3 @@ public class SearchTrendController {
         return ResponseEntity.ok(Map.of("status", "success"));
     }
 }
-

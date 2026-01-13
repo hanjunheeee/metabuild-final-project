@@ -2,6 +2,7 @@ package com.example.ex02.Book.llm;
 
 import java.util.List;
 
+// Gemini 응답 DTO
 public class GeminiResponse {
 
     private List<Candidate> candidates;
@@ -14,6 +15,7 @@ public class GeminiResponse {
         this.candidates = candidates;
     }
 
+    // 첫 번째 후보 텍스트 추출
     public String firstText() {
         if (candidates == null || candidates.isEmpty()) {
             return null;

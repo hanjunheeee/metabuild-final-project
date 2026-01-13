@@ -3,15 +3,18 @@ import { getAuthHeader } from '@/shared/api/authApi'
 const BASE_URL = 'http://localhost:7878'
 
 // 전체 커뮤니티 글 목록 조회
+// 커뮤니티 목록 조회
 export const fetchCommunities = () => {
   return fetch(`${BASE_URL}/api/communities`).then(res => res.json())
 }
 
 // 커뮤니티 글 단건 조회
+// 커뮤니티 상세 조회
 export const fetchCommunityById = (id) => {
   return fetch(`${BASE_URL}/api/communities/${id}`).then(res => res.json())
 }
 
+// Base64 이미지 업로드
 // Base64 이미지 업로드
 export const uploadImage = async (imageData) => {
   const response = await fetch(`${BASE_URL}/api/community-images/upload`, {
@@ -26,6 +29,7 @@ export const uploadImage = async (imageData) => {
 }
 
 // 커뮤니티 글 작성
+// 커뮤니티 글 생성
 export const createCommunity = async ({ userId, bookId, title, content, communityKind, thumbnailUrl, isNotice = 0 }) => {
   const response = await fetch(`${BASE_URL}/api/communities`, {
     method: 'POST',
@@ -47,6 +51,7 @@ export const createCommunity = async ({ userId, bookId, title, content, communit
 }
 
 // 커뮤니티 글 삭제
+// 커뮤니티 글 삭제
 export const deleteCommunity = async (communityId, userId) => {
   const response = await fetch(`${BASE_URL}/api/communities/${communityId}?userId=${userId}`, {
     method: 'DELETE',
@@ -57,6 +62,7 @@ export const deleteCommunity = async (communityId, userId) => {
   return response.json()
 }
 
+// 커뮤니티 글 수정
 // 커뮤니티 글 수정
 export const updateCommunity = async (communityId, { userId, bookId, title, content, communityKind, thumbnailUrl }) => {
   const response = await fetch(`${BASE_URL}/api/communities/${communityId}`, {
@@ -78,6 +84,7 @@ export const updateCommunity = async (communityId, { userId, bookId, title, cont
 }
 
 // 좋아요 토글
+// 좋아요 토글
 export const likeCommunity = async (communityId, userId) => {
   const response = await fetch(`${BASE_URL}/api/communities/${communityId}/like?userId=${userId}`, {
     method: 'POST',
@@ -89,6 +96,7 @@ export const likeCommunity = async (communityId, userId) => {
 }
 
 // 좋아요 여부 확인
+// 좋아요 여부 확인
 export const checkLike = async (communityId, userId) => {
   const response = await fetch(`${BASE_URL}/api/communities/${communityId}/like?userId=${userId}`, {
     headers: {
@@ -99,6 +107,7 @@ export const checkLike = async (communityId, userId) => {
 }
 
 // 사용자가 좋아요한 게시글 ID 목록 조회
+// 사용자가 좋아요한 게시글 ID 목록
 export const fetchLikedCommunityIds = async (userId) => {
   const response = await fetch(`${BASE_URL}/api/communities/liked/${userId}`, {
     headers: {
@@ -109,12 +118,14 @@ export const fetchLikedCommunityIds = async (userId) => {
 }
 
 // 주간 HOT 게시글 조회
+// 주간 HOT 게시글 조회
 export const fetchHotPosts = async (limit = 5) => {
   const response = await fetch(`${BASE_URL}/api/communities/hot?limit=${limit}`)
   return response.json()
 }
 
 // HTML 콘텐츠에서 Base64 이미지를 찾아서 서버에 업로드하고 URL로 교체
+// HTML 본문 내 Base64 이미지를 업로드하고 URL로 치환
 export const processImagesInContent = async (htmlContent) => {
   // Base64 이미지 패턴 찾기
   const base64Pattern = /<img[^>]+src=["'](data:image\/[^;]+;base64,[^"']+)["'][^>]*>/g
@@ -145,4 +156,3 @@ export const processImagesInContent = async (htmlContent) => {
 
   return processedContent
 }
-

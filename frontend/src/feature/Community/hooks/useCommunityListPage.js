@@ -45,11 +45,15 @@ function useCommunityListPage() {
   const helpers = useCommunityHelpers()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const allowedKinds = new Set(['ALL', 'NOTICE', 'REVIEW', 'FREE', 'QUESTION'])
+  const initialQuery = searchParams.get('query') || ''
+  const initialKindParam = (searchParams.get('kind') || 'ALL').toUpperCase()
+  const initialKind = allowedKinds.has(initialKindParam) ? initialKindParam : 'ALL'
 
   // 필터/정렬/페이지 상태
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(initialQuery)
   const [sortBy, setSortBy] = useState('latest')
-  const [kindFilter, setKindFilter] = useState('ALL')
+  const [kindFilter, setKindFilter] = useState(initialKind)
   const [currentPage, setCurrentPage] = useState(1)
 
   // 현재 로그인한 사용자
@@ -59,6 +63,15 @@ function useCommunityListPage() {
   const filterUserId = searchParams.get('userId')
   const filterUserName = searchParams.get('userName')
   const isUserFilterMode = !!filterUserId
+
+  useEffect(() => {
+    const nextQuery = searchParams.get('query') || ''
+    const nextKindParam = (searchParams.get('kind') || 'ALL').toUpperCase()
+    const nextKind = allowedKinds.has(nextKindParam) ? nextKindParam : 'ALL'
+    setSearchTerm(nextQuery)
+    setKindFilter(nextKind)
+    setCurrentPage(1)
+  }, [searchParams])
 
   // 팔로우 상태
   const [isFollowing, setIsFollowing] = useState(false)
@@ -339,4 +352,3 @@ function useCommunityListPage() {
 }
 
 export default useCommunityListPage
-

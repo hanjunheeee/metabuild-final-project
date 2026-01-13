@@ -13,6 +13,7 @@ import org.xml.sax.InputSource;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 
+// Data4Library 도서 정보 조회 클라이언트
 @Service
 public class Data4LibraryClient {
 
@@ -30,6 +31,7 @@ public class Data4LibraryClient {
         this.baseUrl = baseUrl;
     }
 
+    // ISBN13 기준 도서 상세 조회
     public Data4LibraryBookInfo fetchByIsbn13(String isbn13) {
         if (isbn13 == null || isbn13.isBlank()) {
             logger.warn("Data4Library fetch skipped: empty isbn13");
@@ -62,6 +64,7 @@ public class Data4LibraryClient {
         }
     }
 
+    // XML 응답 파싱
     private Data4LibraryBookInfo parseXml(String xml) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(false);
@@ -89,6 +92,7 @@ public class Data4LibraryClient {
         );
     }
 
+    // 태그 첫 번째 텍스트 추출
     private String firstTagText(Document doc, String tagName) {
         NodeList nodes = doc.getElementsByTagName(tagName);
         if (nodes == null || nodes.getLength() == 0) {
@@ -98,6 +102,7 @@ public class Data4LibraryClient {
         return text != null ? text.trim() : null;
     }
 
+    // 공백 체크 유틸
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }

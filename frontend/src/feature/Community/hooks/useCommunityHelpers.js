@@ -2,8 +2,10 @@
  * 커뮤니티 관련 유틸리티 함수들을 제공하는 훅
  * CommunityListPage, MyPostsPage 등에서 공통으로 사용
  */
+// 커뮤니티 화면 공통 포맷/추출 유틸
 function useCommunityHelpers() {
   // 날짜 포맷 (YY.MM.DD 형식)
+  // 날짜 포맷(YY.MM.DD)
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
     const date = new Date(dateStr)
@@ -14,6 +16,7 @@ function useCommunityHelpers() {
   }
 
   // 게시글 제목 추출 (contentJson에서)
+  // contentJson에서 제목 추출
   const getPostTitle = (post) => {
     try {
       const parsed = JSON.parse(post.contentJson || '{}')
@@ -24,6 +27,7 @@ function useCommunityHelpers() {
   }
 
   // HTML 태그 제거 함수 (줄바꿈 보존)
+  // HTML 태그 제거 및 줄바꿈 유지
   const stripHtml = (html) => {
     if (!html) return ''
     // <br> 태그를 줄바꿈으로 변환
@@ -44,6 +48,7 @@ function useCommunityHelpers() {
   }
 
   // 게시글 미리보기 내용 추출
+  // 미리보기 텍스트 추출
   const getPreviewContent = (post, maxLength = 120) => {
     try {
       const parsed = JSON.parse(post.contentJson || '{}')
@@ -56,6 +61,7 @@ function useCommunityHelpers() {
   }
 
   // 게시글 내 이미지 URL 추출
+  // 본문 이미지 URL 추출
   const getPostImages = (post) => {
     try {
       const parsed = JSON.parse(post.contentJson || '{}')
@@ -74,12 +80,14 @@ function useCommunityHelpers() {
   }
 
   // 게시글 종류 라벨 반환
+  // 게시글 종류 라벨
   const getKindLabel = (kind) => {
     const labels = { FREE: '자유', REVIEW: '리뷰', QUESTION: '질문' }
     return labels[kind] || kind
   }
 
   // 게시글 종류별 스타일 클래스 반환
+  // 게시글 종류별 스타일
   const getKindStyle = (kind) => {
     const styles = {
       FREE: 'bg-blue-100 text-blue-700',
@@ -90,6 +98,7 @@ function useCommunityHelpers() {
   }
 
   // 게시글 배지 설정 반환 (CommunityPostList용)
+  // 배지 텍스트/색상 구성
   const getBadgeConfig = (post, isNoticeFilter = false) => {
     if (isNoticeFilter || post.isNotice === 1) {
       return { text: '공지', color: 'amber' }
@@ -116,4 +125,3 @@ function useCommunityHelpers() {
 }
 
 export default useCommunityHelpers
-

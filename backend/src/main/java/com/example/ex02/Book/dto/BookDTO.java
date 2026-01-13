@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+// 도서 기본 정보 DTO
 public class BookDTO {
 
     private Long bookId;
@@ -24,4 +25,3 @@ public class BookDTO {
     private String tag;
     private Integer borrowedAmount;
 }
-

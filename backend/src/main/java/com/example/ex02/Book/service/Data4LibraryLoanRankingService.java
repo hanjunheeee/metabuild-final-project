@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// Data4Library 대출 랭킹 연동 서비스
 @Service
 public class Data4LibraryLoanRankingService {
 
@@ -38,6 +39,7 @@ public class Data4LibraryLoanRankingService {
         this.baseUrl = baseUrl;
     }
 
+    // 서울 지역 월간 대출 TOP10 조회
     public List<BestsellerItemDTO> fetchSeoulMonthlyTop10() {
         if (apiKey == null || apiKey.isBlank()) {
             logger.warn("Data4Library loan ranking skipped: missing API key");
@@ -72,6 +74,7 @@ public class Data4LibraryLoanRankingService {
         }
     }
 
+    // XML 응답 파싱
     private List<BestsellerItemDTO> parseXml(String xml) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(false);
@@ -99,6 +102,7 @@ public class Data4LibraryLoanRankingService {
         return results;
     }
 
+    // XML 태그 텍스트 추출
     private String textOf(Element element, String tagName) {
         NodeList nodes = element.getElementsByTagName(tagName);
         if (nodes == null || nodes.getLength() == 0) {
