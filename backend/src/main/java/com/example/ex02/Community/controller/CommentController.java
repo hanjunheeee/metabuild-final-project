@@ -2,6 +2,8 @@ package com.example.ex02.Community.controller;
 
 import com.example.ex02.Community.dto.CommentDTO;
 import com.example.ex02.Community.service.CommentService;
+import com.example.ex02.Title.dto.UserTitleDTO;
+import com.example.ex02.Title.service.UserTitleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class CommentController {
 
     private final CommentService commentService;
+    private final UserTitleService userTitleService;
 
     // 특정 커뮤니티 글의 댓글 목록 조회 (전체)
     @GetMapping("/community/{communityId}")
@@ -142,10 +145,19 @@ public class CommentController {
             Long userId = ((Number) request.get("userId")).longValue();
             Map<String, Object> result = commentService.toggleLike(commentId, userId);
             boolean isLiked = (Boolean) result.get("isLiked");
+            
+            // 좋아요가 추가된 경우, 댓글 작성자의 칭호 확인
+            List<UserTitleDTO> newTitles = List.of();
+            if (isLiked) {
+                Long commentAuthorId = (Long) result.get("commentAuthorId");
+                newTitles = userTitleService.checkAndAwardLikeTitles(commentAuthorId);
+            }
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", isLiked ? "좋아요가 반영되었습니다." : "좋아요가 취소되었습니다.",
-                "data", result
+                "data", result,
+                "newTitles", newTitles
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(

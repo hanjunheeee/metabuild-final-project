@@ -2,6 +2,8 @@ package com.example.ex02.Follow.controller;
 
 import com.example.ex02.Follow.dto.FollowDTO;
 import com.example.ex02.Follow.service.FollowService;
+import com.example.ex02.Title.dto.UserTitleDTO;
+import com.example.ex02.Title.service.UserTitleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.Map;
 public class FollowController {
 
     private final FollowService followService;
+    private final UserTitleService userTitleService;
 
     /**
      * 팔로우/언팔로우 토글
@@ -33,6 +36,15 @@ public class FollowController {
             response.put("success", true);
             response.put("isFollowing", isFollowing);
             response.put("message", isFollowing ? "팔로우 했습니다." : "언팔로우 했습니다.");
+            
+            // 팔로우가 추가된 경우, 팔로잉 대상의 칭호 확인
+            if (isFollowing) {
+                List<UserTitleDTO> newTitles = userTitleService.checkAndAwardFollowerTitles(followingId);
+                response.put("newTitles", newTitles);
+            } else {
+                response.put("newTitles", List.of());
+            }
+            
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             response.put("success", false);

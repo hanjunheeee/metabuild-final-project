@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import useComments from '../../hooks/useComments'
 import Pagination from '@/shared/components/navigation/Pagination'
 import { BookSearchModal } from '@/shared/components'
@@ -6,6 +6,8 @@ import BookInfoCard from '../BookInfoCard'
 import CommentItem from './CommentItem'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { toggleCommentLike, fetchLikedCommentIds } from '../../api/commentApi'
+
+const API_BASE_URL = 'http://localhost:7878'
 
 /**
  * 댓글 섹션 컴포넌트
@@ -69,6 +71,9 @@ function CommentSection({ communityId, currentUserId }) {
   // 댓글 좋아요 상태
   const [likedCommentIds, setLikedCommentIds] = useState(new Set())
 
+  // 사용자별 칭호 캐시 (userId -> titles[])
+  const [userTitles, setUserTitles] = useState({})
+
   // 북마크 및 좋아요 목록 로드
   useEffect(() => {
     const loadUserData = async () => {
@@ -87,6 +92,45 @@ function CommentSection({ communityId, currentUserId }) {
     }
     loadUserData()
   }, [currentUserId])
+
+  // 댓글 작성자들의 칭호 로드
+  useEffect(() => {
+    const loadUserTitles = async () => {
+      // 모든 댓글에서 고유한 userId 추출
+      const allUserIds = new Set()
+      parentComments.forEach(comment => {
+        if (comment.userId) allUserIds.add(comment.userId)
+        const replies = getReplies(comment.commentId)
+        replies.forEach(reply => {
+          if (reply.userId) allUserIds.add(reply.userId)
+        })
+      })
+
+      // 이미 조회한 userId는 제외
+      const newUserIds = [...allUserIds].filter(id => !userTitles[id])
+      if (newUserIds.length === 0) return
+
+      // 각 userId의 칭호 조회
+      const titlesMap = { ...userTitles }
+      await Promise.all(
+        newUserIds.map(async (userId) => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/titles/user/${userId}/top`)
+            const data = await res.json()
+            titlesMap[userId] = data || []
+          } catch (err) {
+            console.error(`칭호 조회 실패 (userId: ${userId}):`, err)
+            titlesMap[userId] = []
+          }
+        })
+      )
+      setUserTitles(titlesMap)
+    }
+
+    if (parentComments.length > 0) {
+      loadUserTitles()
+    }
+  }, [parentComments])
 
   // 북마크 토글
   const handleBookmark = async (book) => {
@@ -377,6 +421,7 @@ function CommentSection({ communityId, currentUserId }) {
                 onRemoveReplyBook={() => setReplySelectedBook(null)}
                 onLike={handleLikeComment}
                 likedCommentIds={likedCommentIds}
+                userTitles={userTitles}
                 formatDate={formatDate}
               />
             ))}

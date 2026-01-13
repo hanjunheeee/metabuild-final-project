@@ -65,6 +65,7 @@ function CommentItem({
   onRemoveReplyBook,
   onLike,
   likedCommentIds,
+  userTitles,
   formatDate,
 }) {
   const replyCount = replies.length
@@ -92,13 +93,27 @@ function CommentItem({
             </div>
             {/* 닉네임 + 시간 */}
             <div className="flex flex-col">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 {getAdminBadge(comment) && (
                   <span className="text-sm">{getAdminBadge(comment)}</span>
                 )}
                 <span className={`text-sm font-medium ${isAdmin(comment) ? 'text-yellow-600' : 'text-gray-800'}`}>
                   {getDisplayName(comment)}
                 </span>
+                {/* 칭호 표시 */}
+                {!isAdmin(comment) && userTitles?.[comment.userId]?.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {userTitles[comment.userId].map((title) => (
+                      <span 
+                        key={title.titleId}
+                        className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 rounded-full"
+                      >
+                        <span className="mr-0.5">{title.titleIcon}</span>
+                        {title.titleName}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {comment.updatedAt && (
                   <span className="text-xs text-gray-400">(수정됨)</span>
                 )}
@@ -359,6 +374,7 @@ function CommentItem({
           onRemoveEditBook={onRemoveEditBook}
           onLike={onLike}
           likedCommentIds={likedCommentIds}
+          userTitles={userTitles}
           formatDate={formatDate}
         />
       ))}

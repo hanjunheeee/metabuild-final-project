@@ -244,10 +244,14 @@ public class CommentService {
         
         CommentEntity updated = commentRepository.save(comment);
         
+        // 댓글 작성자 ID도 반환 (칭호 확인용)
+        Long commentAuthorId = comment.getUser().getUserId();
+        
         return Map.of(
                 "commentId", commentId,
                 "likeCount", updated.getLikeCount(),
-                "isLiked", isLiked
+                "isLiked", isLiked,
+                "commentAuthorId", commentAuthorId
         );
     }
 

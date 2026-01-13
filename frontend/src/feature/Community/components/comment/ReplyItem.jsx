@@ -41,6 +41,7 @@ function ReplyItem({
   onRemoveEditBook,
   onLike,
   likedCommentIds,
+  userTitles,
   formatDate,
 }) {
   return (
@@ -64,13 +65,27 @@ function ReplyItem({
           </div>
           {/* 닉네임 + 시간 */}
           <div className="flex flex-col">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap">
               {getAdminBadge(reply) && (
                 <span className="text-sm">{getAdminBadge(reply)}</span>
               )}
               <span className={`text-sm font-medium ${isAdmin(reply) ? 'text-yellow-600' : 'text-gray-800'}`}>
                 {getDisplayName(reply)}
               </span>
+              {/* 칭호 표시 */}
+              {!isAdmin(reply) && userTitles?.[reply.userId]?.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {userTitles[reply.userId].map((title) => (
+                    <span 
+                      key={title.titleId}
+                      className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 rounded-full"
+                    >
+                      <span className="mr-0.5">{title.titleIcon}</span>
+                      {title.titleName}
+                    </span>
+                  ))}
+                </div>
+              )}
               {reply.updatedAt && (
                 <span className="text-xs text-gray-400">(수정됨)</span>
               )}
