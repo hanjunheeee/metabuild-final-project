@@ -131,5 +131,47 @@ public class CommentController {
             ));
         }
     }
+
+    // 댓글 좋아요 토글 (좋아요/취소)
+    @PostMapping("/{commentId}/like")
+    public ResponseEntity<?> toggleLike(
+            @PathVariable Long commentId,
+            @RequestBody Map<String, Object> request
+    ) {
+        try {
+            Long userId = ((Number) request.get("userId")).longValue();
+            Map<String, Object> result = commentService.toggleLike(commentId, userId);
+            boolean isLiked = (Boolean) result.get("isLiked");
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", isLiked ? "좋아요가 반영되었습니다." : "좋아요가 취소되었습니다.",
+                "data", result
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    // 특정 사용자가 좋아요한 댓글 ID 목록 조회
+    @GetMapping("/user/{userId}/liked")
+    public ResponseEntity<?> getLikedCommentIds(@PathVariable Long userId) {
+        return ResponseEntity.ok(Map.of(
+            "userId", userId,
+            "likedCommentIds", commentService.getLikedCommentIds(userId)
+        ));
+    }
+
+    // 특정 사용자가 받은 총 댓글 좋아요 수 조회 (칭호 시스템용)
+    @GetMapping("/user/{userId}/total-likes")
+    public ResponseEntity<?> getTotalLikesByUserId(@PathVariable Long userId) {
+        int totalLikes = commentService.getTotalLikesByUserId(userId);
+        return ResponseEntity.ok(Map.of(
+            "userId", userId,
+            "totalLikes", totalLikes
+        ));
+    }
 }
 

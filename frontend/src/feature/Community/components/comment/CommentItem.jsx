@@ -63,6 +63,8 @@ function CommentItem({
   onOpenBookModal,
   onRemoveEditBook,
   onRemoveReplyBook,
+  onLike,
+  likedCommentIds,
   formatDate,
 }) {
   const replyCount = replies.length
@@ -218,9 +220,30 @@ function CommentItem({
           </>
         )}
 
-        {/* 답글 영역: 펼치기/접기 + 답글 달기 */}
+        {/* 답글 영역: 좋아요 + 펼치기/접기 + 답글 달기 */}
         {!isEditing && (
           <div className="mt-3 pl-13 flex items-center gap-4">
+            {/* 좋아요 버튼 */}
+            <button
+              onClick={() => onLike && onLike(comment.commentId)}
+              className={`flex items-center gap-1 text-xs cursor-pointer transition-colors ${
+                likedCommentIds?.has(comment.commentId) 
+                  ? 'text-red-500' 
+                  : 'text-gray-500 hover:text-red-500'
+              }`}
+              title={likedCommentIds?.has(comment.commentId) ? '좋아요 취소' : '좋아요'}
+            >
+              <svg 
+                className="w-4 h-4" 
+                fill={likedCommentIds?.has(comment.commentId) ? 'currentColor' : 'none'} 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span>{comment.likeCount || 0}</span>
+            </button>
+
             {/* 답글 펼치기/접기 버튼 */}
             {replyCount > 0 && (
               <button
@@ -334,6 +357,8 @@ function CommentItem({
           onDelete={onDelete}
           onOpenBookModal={onOpenBookModal}
           onRemoveEditBook={onRemoveEditBook}
+          onLike={onLike}
+          likedCommentIds={likedCommentIds}
           formatDate={formatDate}
         />
       ))}

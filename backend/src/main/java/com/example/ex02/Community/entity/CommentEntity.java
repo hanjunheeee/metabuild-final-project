@@ -43,6 +43,9 @@ public class CommentEntity {
     @JoinColumn(name = "parent_id")
     private CommentEntity parent;
 
+    @Column(name = "like_count")
+    private Integer likeCount = 0;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

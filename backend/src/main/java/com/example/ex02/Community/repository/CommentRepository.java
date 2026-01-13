@@ -4,6 +4,8 @@ import com.example.ex02.Community.entity.CommentEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -34,5 +36,9 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     
     // 해당 게시글의 모든 댓글 삭제
     void deleteByCommunity_CommunityId(Long communityId);
+    
+    // 특정 사용자가 받은 총 댓글 좋아요 수 (칭호 시스템용)
+    @Query("SELECT SUM(c.likeCount) FROM CommentEntity c WHERE c.user.userId = :userId")
+    Integer sumLikeCountByUserId(@Param("userId") Long userId);
 }
 

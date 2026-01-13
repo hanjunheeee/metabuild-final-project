@@ -4,7 +4,9 @@ import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
 import com.example.ex02.Community.dto.CommentDTO;
 import com.example.ex02.Community.entity.CommentEntity;
+import com.example.ex02.Community.entity.CommentLikeEntity;
 import com.example.ex02.Community.entity.CommunityEntity;
+import com.example.ex02.Community.repository.CommentLikeRepository;
 import com.example.ex02.Community.repository.CommentRepository;
 import com.example.ex02.Community.repository.CommunityRepository;
 import com.example.ex02.User.entity.UserEntity;
@@ -19,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 public class CommentService {
 
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final CommunityRepository communityRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
@@ -207,6 +212,58 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
+    // 댓글 좋아요 토글 (좋아요/취소)
+    @Transactional
+    public Map<String, Object> toggleLike(Long commentId, Long userId) {
+        CommentEntity comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+        
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        
+        Optional<CommentLikeEntity> existingLike = 
+                commentLikeRepository.findByUser_UserIdAndComment_CommentId(userId, commentId);
+        
+        boolean isLiked;
+        int currentLikes = comment.getLikeCount() != null ? comment.getLikeCount() : 0;
+        
+        if (existingLike.isPresent()) {
+            // 이미 좋아요한 경우 -> 취소
+            commentLikeRepository.delete(existingLike.get());
+            comment.setLikeCount(Math.max(0, currentLikes - 1));
+            isLiked = false;
+        } else {
+            // 좋아요하지 않은 경우 -> 좋아요 추가
+            CommentLikeEntity newLike = new CommentLikeEntity();
+            newLike.setUser(user);
+            newLike.setComment(comment);
+            commentLikeRepository.save(newLike);
+            comment.setLikeCount(currentLikes + 1);
+            isLiked = true;
+        }
+        
+        CommentEntity updated = commentRepository.save(comment);
+        
+        return Map.of(
+                "commentId", commentId,
+                "likeCount", updated.getLikeCount(),
+                "isLiked", isLiked
+        );
+    }
+
+    // 특정 사용자가 좋아요한 댓글 ID 목록 조회
+    public Set<Long> getLikedCommentIds(Long userId) {
+        return commentLikeRepository.findByUser_UserId(userId).stream()
+                .map(like -> like.getComment().getCommentId())
+                .collect(Collectors.toSet());
+    }
+
+    // 특정 사용자가 받은 총 댓글 좋아요 수 조회 (칭호 시스템용)
+    public int getTotalLikesByUserId(Long userId) {
+        Integer total = commentRepository.sumLikeCountByUserId(userId);
+        return total != null ? total : 0;
+    }
+
     // Entity -> DTO 변환
     private CommentDTO convertToDTO(CommentEntity comment) {
         CommentDTO dto = new CommentDTO();
@@ -218,6 +275,7 @@ public class CommentService {
         dto.setRole(comment.getUser().getRole());  // 사용자 역할 추가
         dto.setContent(comment.getContent());
         dto.setParentId(comment.getParent() != null ? comment.getParent().getCommentId() : null);
+        dto.setLikeCount(comment.getLikeCount() != null ? comment.getLikeCount() : 0);
         dto.setCreatedAt(comment.getCreatedAt());
         dto.setUpdatedAt(comment.getUpdatedAt());
         

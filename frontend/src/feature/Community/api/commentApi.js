@@ -59,3 +59,28 @@ export const deleteComment = async (commentId, userId) => {
   return response.json()
 }
 
+// 댓글 좋아요 토글 (좋아요/취소)
+export const toggleCommentLike = async (commentId, userId) => {
+  const response = await fetch(`${BASE_URL}/api/comments/${commentId}/like`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify({ userId }),
+  })
+  return response.json()
+}
+
+// 특정 사용자가 좋아요한 댓글 ID 목록 조회
+export const fetchLikedCommentIds = async (userId) => {
+  const response = await fetch(`${BASE_URL}/api/comments/user/${userId}/liked`)
+  return response.json()
+}
+
+// 특정 사용자가 받은 총 댓글 좋아요 수 조회
+export const fetchTotalLikesByUserId = async (userId) => {
+  const response = await fetch(`${BASE_URL}/api/comments/user/${userId}/total-likes`)
+  return response.json()
+}
+

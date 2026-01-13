@@ -5,6 +5,7 @@ import { BookSearchModal } from '@/shared/components'
 import BookInfoCard from '../BookInfoCard'
 import CommentItem from './CommentItem'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
+import { toggleCommentLike, fetchLikedCommentIds } from '../../api/commentApi'
 
 /**
  * 댓글 섹션 컴포넌트
@@ -41,6 +42,7 @@ function CommentSection({ communityId, currentUserId }) {
     handleSubmitEdit,
     handleDeleteComment,
     handleCancelReply,
+    updateCommentLikeCount,
 
     // 유틸
     formatDate,
@@ -64,18 +66,26 @@ function CommentSection({ communityId, currentUserId }) {
   const [bookmarkedBookIds, setBookmarkedBookIds] = useState(new Set())
   const [bookmarkLoading, setBookmarkLoading] = useState(null) // 로딩 중인 bookId
 
-  // 북마크 목록 로드
+  // 댓글 좋아요 상태
+  const [likedCommentIds, setLikedCommentIds] = useState(new Set())
+
+  // 북마크 및 좋아요 목록 로드
   useEffect(() => {
-    const loadBookmarks = async () => {
+    const loadUserData = async () => {
       if (!currentUserId) return
       try {
-        const ids = await fetchBookmarkedBookIds(currentUserId)
-        setBookmarkedBookIds(new Set(ids))
+        // 북마크 목록 로드
+        const bookmarkIds = await fetchBookmarkedBookIds(currentUserId)
+        setBookmarkedBookIds(new Set(bookmarkIds))
+        
+        // 좋아요한 댓글 목록 로드
+        const likeData = await fetchLikedCommentIds(currentUserId)
+        setLikedCommentIds(new Set(likeData.likedCommentIds || []))
       } catch (err) {
-        console.error('북마크 목록 로딩 실패:', err)
+        console.error('사용자 데이터 로딩 실패:', err)
       }
     }
-    loadBookmarks()
+    loadUserData()
   }, [currentUserId])
 
   // 북마크 토글
@@ -204,6 +214,35 @@ function CommentSection({ communityId, currentUserId }) {
   const handleReplySubmit = async (parentId) => {
     const success = await handleSubmitReply(parentId, replySelectedBook?.bookId || null)
     if (success) setReplySelectedBook(null)
+  }
+
+  // 댓글 좋아요 토글
+  const handleLikeComment = async (commentId) => {
+    if (!currentUserId) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+    
+    try {
+      const result = await toggleCommentLike(commentId, currentUserId)
+      if (result.success && result.data) {
+        // 좋아요 수 업데이트
+        updateCommentLikeCount(commentId, result.data.likeCount)
+        
+        // 좋아요 상태 업데이트
+        setLikedCommentIds(prev => {
+          const newSet = new Set(prev)
+          if (result.data.isLiked) {
+            newSet.add(commentId)
+          } else {
+            newSet.delete(commentId)
+          }
+          return newSet
+        })
+      }
+    } catch (err) {
+      console.error('좋아요 실패:', err)
+    }
   }
 
   if (loading) {
@@ -336,6 +375,8 @@ function CommentSection({ communityId, currentUserId }) {
                 onOpenBookModal={openBookModal}
                 onRemoveEditBook={() => setEditSelectedBook(null)}
                 onRemoveReplyBook={() => setReplySelectedBook(null)}
+                onLike={handleLikeComment}
+                likedCommentIds={likedCommentIds}
                 formatDate={formatDate}
               />
             ))}

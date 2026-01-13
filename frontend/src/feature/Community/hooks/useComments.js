@@ -221,6 +221,15 @@ function useComments(communityId, currentUserId, pageSize = 10) {
     })
   }, [])
 
+  // 좋아요 수 로컬 업데이트 (API 호출 후 사용)
+  const updateCommentLikeCount = useCallback((commentId, newLikeCount) => {
+    setComments(prev => prev.map(c => 
+      c.commentId === commentId 
+        ? { ...c, likeCount: newLikeCount }
+        : c
+    ))
+  }, [])
+
   return {
     // 데이터
     comments,
@@ -252,6 +261,7 @@ function useComments(communityId, currentUserId, pageSize = 10) {
     handleSubmitEdit,
     handleDeleteComment,
     handleCancelReply,
+    updateCommentLikeCount,
 
     // 유틸
     formatDate,

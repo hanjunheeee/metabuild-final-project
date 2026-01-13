@@ -39,6 +39,8 @@ function ReplyItem({
   onDelete,
   onOpenBookModal,
   onRemoveEditBook,
+  onLike,
+  likedCommentIds,
   formatDate,
 }) {
   return (
@@ -187,6 +189,28 @@ function ReplyItem({
               />
             </div>
           )}
+          {/* 좋아요 버튼 */}
+          <div className="mt-2 pl-12">
+            <button
+              onClick={() => onLike && onLike(reply.commentId)}
+              className={`flex items-center gap-1 text-xs cursor-pointer transition-colors ${
+                likedCommentIds?.has(reply.commentId) 
+                  ? 'text-red-500' 
+                  : 'text-gray-500 hover:text-red-500'
+              }`}
+              title={likedCommentIds?.has(reply.commentId) ? '좋아요 취소' : '좋아요'}
+            >
+              <svg 
+                className="w-4 h-4" 
+                fill={likedCommentIds?.has(reply.commentId) ? 'currentColor' : 'none'} 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span>{reply.likeCount || 0}</span>
+            </button>
+          </div>
         </>
       )}
     </div>
