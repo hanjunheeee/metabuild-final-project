@@ -29,7 +29,6 @@ function SignupPage() {
     // Refs
     passwordRef,
     passwordConfirmRef,
-    agreeCheckboxRef,
     errorRef,
 
     // 이메일 인증
@@ -41,12 +40,6 @@ function SignupPage() {
     isVerifying,
     emailVerifyMessage,
 
-    // 약관 동의
-    termsAgreed,
-    setTermsAgreed,
-    privacyAgreed,
-    setPrivacyAgreed,
-
     // 폼 상태
     isLoading,
     setIsLoading,
@@ -57,7 +50,6 @@ function SignupPage() {
     handleEmailChange,
     sendVerificationCode,
     verifyCode,
-    saveFormData,
     validateForm,
     uploadPhoto,
     cleanup,
@@ -181,7 +173,7 @@ function SignupPage() {
             id="password"
             name="password"
             label="비밀번호"
-            placeholder="8자 이상 입력해 주세요."
+            placeholder="영문, 숫자, 특수문자 포함 8자 이상"
             required
           />
 
@@ -242,55 +234,6 @@ function SignupPage() {
             </div>
             <p className="mt-2 text-xs text-gray-400">JPG, PNG, GIF (최대 5MB)</p>
           </div>
-
-          {/* 이용약관 동의 */}
-          <div className="flex items-start gap-2">
-            <input
-              ref={agreeCheckboxRef}
-              type="checkbox"
-              id="agree"
-              className="w-4 h-4 mt-0.5 border-gray-300 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-              required
-              checked={termsAgreed && privacyAgreed}
-              onChange={(e) => {
-                if (!e.target.checked) {
-                  setTermsAgreed(false)
-                  setPrivacyAgreed(false)
-                }
-              }}
-            />
-            <label htmlFor="agree" className="text-sm text-gray-600">
-              <Link 
-                to="/terms" 
-                state={{ from: 'signup' }}
-                className="text-sub-bg hover:text-main-bg"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  saveFormData()
-                }}
-              >
-                이용약관
-              </Link>
-              {' '}및{' '}
-              <Link 
-                to="/privacy" 
-                state={{ from: 'signup' }}
-                className="text-sub-bg hover:text-main-bg"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  saveFormData()
-                }}
-              >
-                개인정보처리방침
-              </Link>
-              에 동의합니다.
-            </label>
-          </div>
-          {(!termsAgreed || !privacyAgreed) && (
-            <p className="text-xs text-red-500 mt-1">
-              이용약관과 개인정보처리방침을 모두 확인하고 동의해주세요.
-            </p>
-          )}
 
           {/* 회원가입 버튼 */}
           <Button type="submit" isLoading={isLoading} loadingText="가입 중...">

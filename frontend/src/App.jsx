@@ -21,6 +21,7 @@ import PostManagePage from '@/feature/Admin/pages/PostManagePage'
 import NoticeWritePage from '@/feature/Admin/pages/NoticeWritePage'
 import UserManagePage from '@/feature/Admin/pages/UserManagePage'
 import UserDetailPage from '@/feature/Admin/pages/UserDetailPage'
+import TrendManagePage from '@/feature/Admin/pages/TrendManagePage'
 
 function App() {
   const routes = [
@@ -59,6 +60,7 @@ function App() {
             { path: 'notice', element: <NoticeWritePage /> },
             { path: 'users', element: <UserManagePage /> },
             { path: 'users/:userId', element: <UserDetailPage /> },
+            { path: 'trends', element: <TrendManagePage /> },
           ],
         },
       ],

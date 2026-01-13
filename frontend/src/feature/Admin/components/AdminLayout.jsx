@@ -11,6 +11,7 @@ function AdminLayout() {
     { path: '/admin/posts', label: '커뮤니티 게시글 관리' },
     { path: '/admin/notice', label: '공지 작성' },
     { path: '/admin/users', label: '회원 관리' },
+    { path: '/admin/trends', label: '검색어 트렌드 관리' },
   ]
 
   return (

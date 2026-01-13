@@ -15,12 +15,6 @@ function Footer() {
         {/* 오른쪽: 링크 + 참여 인원 + 저작권 */}
         <div className="text-right">
           <div className="flex justify-end gap-4 mb-2">
-            <Link to="/terms" className="text-sm text-gray-600 hover:text-main-bg">
-              이용약관
-            </Link>
-            <Link to="/privacy" className="text-sm text-gray-600 hover:text-main-bg">
-              개인정보처리방침
-            </Link>
             <Link to="/about" className="text-sm text-gray-600 hover:text-main-bg">
               사이트 소개
             </Link>

@@ -52,10 +52,35 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  // ISBN 입력 핸들러 (숫자만, 최대 13자리)
+  const handleIsbnChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 13)
+    setFormData(prev => ({ ...prev, isbn: value }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.title.trim()) {
-      alert('도서명은 필수입니다.')
+    
+    // 유효성 검증 (이미지 URL, 요약 제외)
+    const requiredFields = [
+      { name: 'title', label: '도서명' },
+      { name: 'author', label: '저자' },
+      { name: 'publisher', label: '출판사' },
+      { name: 'isbn', label: 'ISBN' },
+      { name: 'publishedDate', label: '출판일' },
+      { name: 'ages', label: '연령 구분' },
+    ]
+
+    for (const field of requiredFields) {
+      if (!formData[field.name]?.trim()) {
+        alert(`${field.label}은(는) 필수 항목입니다.`)
+        return
+      }
+    }
+
+    // ISBN 형식 검증 (숫자 13자리)
+    if (formData.isbn.length !== 13) {
+      alert('ISBN은 13자리 숫자여야 합니다.')
       return
     }
 
@@ -94,60 +119,76 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">저자</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  저자 <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="author"
                   value={formData.author}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+                  required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">출판사</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  출판사 <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="publisher"
                   value={formData.publisher}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+                  required
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ISBN <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="isbn"
                   value={formData.isbn}
-                  onChange={handleInputChange}
+                  onChange={handleIsbnChange}
                   placeholder="9788966260959"
+                  maxLength={13}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+                  required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">출판일</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  출판일 <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="date"
                   name="publishedDate"
                   value={formData.publishedDate}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+                  required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">연령 구분</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                연령 구분 <span className="text-red-500">*</span>
+              </label>
               <select
                 name="ages"
                 value={formData.ages}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+                required
               >
-                <option value="">선택 안함</option>
+                <option value="">선택해주세요</option>
                 <option value="아동">아동</option>
                 <option value="청소년">청소년</option>
                 <option value="성인">성인</option>
@@ -155,7 +196,9 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">이미지 URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                이미지 URL <span className="text-gray-400 text-xs">(선택)</span>
+              </label>
               <input
                 type="text"
                 name="imageUrl"
@@ -167,7 +210,9 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">요약</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                요약 <span className="text-gray-400 text-xs">(선택)</span>
+              </label>
               <textarea
                 name="summary"
                 value={formData.summary}

@@ -82,23 +82,6 @@ export const HiddenFileInput = forwardRef(function HiddenFileInput({
   )
 })
 
-// 이용약관 체크박스
-export function AgreeCheckbox({ id, required, children }) {
-  return (
-    <div className="flex items-start gap-2">
-      <input
-        type="checkbox"
-        id={id}
-        className="w-4 h-4 mt-0.5 border-gray-300 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-        required={required}
-      />
-      <label htmlFor={id} className="text-sm text-gray-600">
-        {children}
-      </label>
-    </div>
-  )
-}
-
 // 입력 필드 라벨
 export function InputLabel({ htmlFor, children, optional = false }) {
   return (

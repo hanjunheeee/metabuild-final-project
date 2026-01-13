@@ -38,7 +38,8 @@ public class BookEntity {
     @Column(name = "published_date")
     private LocalDate publishedDate;
 
-    @Column(length = 300)
+    @Lob
+    @Column(columnDefinition = "CLOB")
     private String summary;
 
     @Column(name = "image_url", length = 100)

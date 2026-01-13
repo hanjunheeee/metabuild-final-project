@@ -11,7 +11,6 @@ export {
   VerificationCodeInput,
   PhotoPreview,
   HiddenFileInput,
-  AgreeCheckbox,
   InputLabel,
   ValidationMessage,
   InfoMessage

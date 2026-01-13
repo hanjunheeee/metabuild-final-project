@@ -50,7 +50,6 @@ export function useSignupForm() {
   // === Refs ===
   const passwordRef = useRef(null)
   const passwordConfirmRef = useRef(null)
-  const agreeCheckboxRef = useRef(null)
   const errorRef = useRef(null)
 
   // === 이메일 인증 상태 ===
@@ -60,10 +59,6 @@ export function useSignupForm() {
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [emailVerifyMessage, setEmailVerifyMessage] = useState('')
-
-  // === 약관 동의 상태 ===
-  const [termsAgreed, setTermsAgreed] = useState(false)
-  const [privacyAgreed, setPrivacyAgreed] = useState(false)
 
   // === 폼 상태 ===
   const [isLoading, setIsLoading] = useState(false)
@@ -128,40 +123,13 @@ export function useSignupForm() {
         }
         // 복원 후 sessionStorage 삭제
         clearStorage()
-      } else {
-        // 첫 진입 시 약관 동의 상태 초기화
-        localStorage.removeItem('termsAgreed')
-        localStorage.removeItem('privacyAgreed')
-        setTermsAgreed(false)
-        setPrivacyAgreed(false)
       }
     }
 
     const timeoutId = setTimeout(restoreFormData, 0)
 
-    // 약관 동의 상태 확인
-    const checkAgreementStatus = () => {
-      const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
-      const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
-      setTermsAgreed(termsAgreedStorage)
-      setPrivacyAgreed(privacyAgreedStorage)
-
-      if (termsAgreedStorage && privacyAgreedStorage && agreeCheckboxRef.current) {
-        agreeCheckboxRef.current.checked = true
-      }
-    }
-
-    if (savedData) {
-      checkAgreementStatus()
-    }
-
-    window.addEventListener('storage', checkAgreementStatus)
-    window.addEventListener('focus', checkAgreementStatus)
-
     return () => {
       clearTimeout(timeoutId)
-      window.removeEventListener('storage', checkAgreementStatus)
-      window.removeEventListener('focus', checkAgreementStatus)
     }
   }, [])
 
@@ -259,22 +227,14 @@ export function useSignupForm() {
     if (password !== passwordConfirm) {
       return '비밀번호가 일치하지 않습니다.'
     }
-    if (password.length < 8) {
-      return '비밀번호는 8자 이상이어야 합니다.'
+    
+    // 비밀번호: 8자 이상, 영문, 숫자, 특수문자 포함
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+    if (!passwordRegex.test(password)) {
+      return '비밀번호는 8자 이상, 영문, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다.'
     }
     if (!nicknameCheck.isChecked) {
       return '닉네임 중복확인을 해주세요.'
-    }
-
-    const isAgreed = agreeCheckboxRef.current?.checked
-    if (!isAgreed) {
-      return '이용약관 및 개인정보처리방침에 동의해주세요.'
-    }
-
-    const termsAgreedStorage = localStorage.getItem('termsAgreed') === 'true'
-    const privacyAgreedStorage = localStorage.getItem('privacyAgreed') === 'true'
-    if (!termsAgreedStorage || !privacyAgreedStorage) {
-      return '이용약관 및 개인정보처리방침을 확인하고 동의해주세요.'
     }
 
     return null
@@ -311,8 +271,6 @@ export function useSignupForm() {
 
   // === 회원가입 후 정리 ===
   const cleanup = useCallback(() => {
-    localStorage.removeItem('termsAgreed')
-    localStorage.removeItem('privacyAgreed')
     clearStorage()
   }, [])
 
@@ -330,7 +288,6 @@ export function useSignupForm() {
     // Refs
     passwordRef,
     passwordConfirmRef,
-    agreeCheckboxRef,
     errorRef,
 
     // 이메일 인증
@@ -341,12 +298,6 @@ export function useSignupForm() {
     isSendingCode,
     isVerifying,
     emailVerifyMessage,
-
-    // 약관 동의
-    termsAgreed,
-    setTermsAgreed,
-    privacyAgreed,
-    setPrivacyAgreed,
 
     // 폼 상태
     isLoading,

@@ -1,6 +1,7 @@
 package com.example.ex02.Analytics.controller;
 
 import com.example.ex02.Analytics.dto.SearchTrendDTO;
+import com.example.ex02.Analytics.entity.BlockedKeywordEntity;
 import com.example.ex02.Analytics.entity.BookSearchLogEntity.ActionType;
 import com.example.ex02.Analytics.service.SearchTrendService;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -110,6 +112,75 @@ public class SearchTrendController {
 
         searchTrendService.logBookAction(bookId, userId, actionType);
         return ResponseEntity.ok(Map.of("status", "success"));
+    }
+
+    // ========================================
+    // 차단 키워드 관리 API (관리자용)
+    // ========================================
+
+    /**
+     * 차단된 키워드 목록 조회
+     * GET /api/analytics/blocked-keywords
+     */
+    @GetMapping("/blocked-keywords")
+    public ResponseEntity<List<Map<String, Object>>> getBlockedKeywords() {
+        List<BlockedKeywordEntity> blockedKeywords = searchTrendService.getBlockedKeywords();
+        
+        List<Map<String, Object>> result = blockedKeywords.stream()
+                .map(b -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("keyword", b.getKeyword());
+                    map.put("blockedAt", b.getCreatedAt() != null ? b.getCreatedAt().toLocalDate().toString() : null);
+                    return map;
+                })
+                .toList();
+        
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 키워드 차단 추가
+     * POST /api/analytics/blocked-keywords
+     * Body: { "keyword": "차단할키워드" }
+     */
+    @PostMapping("/blocked-keywords")
+    public ResponseEntity<Map<String, Object>> blockKeyword(@RequestBody Map<String, String> request) {
+        String keyword = request.get("keyword");
+        
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "키워드를 입력해주세요."));
+        }
+
+        try {
+            BlockedKeywordEntity blocked = searchTrendService.blockKeyword(keyword);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "keyword", blocked.getKeyword(),
+                    "message", "키워드가 차단되었습니다."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
+     * 키워드 차단 해제
+     * DELETE /api/analytics/blocked-keywords/{keyword}
+     */
+    @DeleteMapping("/blocked-keywords/{keyword}")
+    public ResponseEntity<Map<String, Object>> unblockKeyword(@PathVariable String keyword) {
+        try {
+            searchTrendService.unblockKeyword(keyword);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "키워드 차단이 해제되었습니다."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 }
 

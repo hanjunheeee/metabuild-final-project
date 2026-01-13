@@ -91,7 +91,7 @@ function useCommunityListPage() {
   useEffect(() => {
     const loadHotPosts = async () => {
       try {
-        const data = await fetchHotPosts(5)
+        const data = await fetchHotPosts(4)
         setHotPosts(data)
         setHotPostIds(new Set(data.map(post => post.communityId)))
       } catch (error) {

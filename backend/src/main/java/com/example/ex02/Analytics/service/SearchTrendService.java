@@ -1,8 +1,10 @@
 package com.example.ex02.Analytics.service;
 
 import com.example.ex02.Analytics.dto.SearchTrendDTO;
+import com.example.ex02.Analytics.entity.BlockedKeywordEntity;
 import com.example.ex02.Analytics.entity.BookSearchLogEntity;
 import com.example.ex02.Analytics.entity.BookSearchLogEntity.ActionType;
+import com.example.ex02.Analytics.repository.BlockedKeywordRepository;
 import com.example.ex02.Analytics.repository.BookSearchLogRepository;
 import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
@@ -36,6 +38,7 @@ public class SearchTrendService {
     private final BookSearchLogRepository searchLogRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final BlockedKeywordRepository blockedKeywordRepository;
 
     // 캐시된 트렌드 데이터
     private List<SearchTrendDTO> cachedKeywordTrends = new ArrayList<>();
@@ -177,10 +180,19 @@ public class SearchTrendService {
 
     private synchronized void refreshCache() {
         LocalDateTime since = LocalDateTime.now().minusDays(RETENTION_DAYS);
+        
+        // DB에서 차단된 키워드 목록 가져오기
+        Set<String> dbBlockedKeywords = blockedKeywordRepository.findAll().stream()
+                .map(b -> b.getKeyword().toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
 
-        // 인기 검색어
+        // 인기 검색어 (DB 차단 키워드 필터링 적용)
         List<Object[]> keywordResults = searchLogRepository.findTopKeywords(since);
         cachedKeywordTrends = keywordResults.stream()
+                .filter(row -> {
+                    String keyword = (String) row[0];
+                    return keyword != null && !dbBlockedKeywords.contains(keyword.toLowerCase(Locale.ROOT));
+                })
                 .limit(TREND_LIMIT)
                 .map(row -> new SearchTrendDTO((String) row[0], (Long) row[1]))
                 .collect(Collectors.toList());
@@ -326,6 +338,61 @@ public class SearchTrendService {
         if (keyword == null) return false;
         String cleaned = keyword.replaceAll("-", "");
         return cleaned.matches("^[0-9]{10,13}$");
+    }
+
+    // ========================================
+    // 차단 키워드 관리 (관리자용)
+    // ========================================
+
+    /**
+     * 모든 차단된 키워드 조회
+     */
+    public List<BlockedKeywordEntity> getBlockedKeywords() {
+        return blockedKeywordRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    /**
+     * 키워드 차단 추가
+     */
+    @Transactional
+    public BlockedKeywordEntity blockKeyword(String keyword) {
+        String normalizedKeyword = keyword.trim();
+        
+        if (blockedKeywordRepository.existsByKeyword(normalizedKeyword)) {
+            throw new IllegalArgumentException("이미 차단된 키워드입니다: " + normalizedKeyword);
+        }
+
+        BlockedKeywordEntity entity = BlockedKeywordEntity.builder()
+                .keyword(normalizedKeyword)
+                .build();
+
+        BlockedKeywordEntity saved = blockedKeywordRepository.save(entity);
+        
+        // 캐시 즉시 갱신
+        refreshCache();
+        
+        return saved;
+    }
+
+    /**
+     * 키워드 차단 해제
+     */
+    @Transactional
+    public void unblockKeyword(String keyword) {
+        BlockedKeywordEntity entity = blockedKeywordRepository.findByKeyword(keyword.trim())
+                .orElseThrow(() -> new IllegalArgumentException("차단된 키워드를 찾을 수 없습니다: " + keyword));
+        
+        blockedKeywordRepository.delete(entity);
+        
+        // 캐시 즉시 갱신
+        refreshCache();
+    }
+
+    /**
+     * 키워드가 차단되어 있는지 확인
+     */
+    public boolean isKeywordBlocked(String keyword) {
+        return blockedKeywordRepository.existsByKeyword(keyword.trim());
     }
 }
 
