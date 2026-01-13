@@ -197,6 +197,7 @@ function SearchPage() {
             placeholder="도서명, 저자명 또는 ISBN으로 검색하세요"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
+            maxLength={20}
             className="w-full h-16 pl-6 pr-16 text-lg rounded-full border border-gray-300"
           />
           <button
