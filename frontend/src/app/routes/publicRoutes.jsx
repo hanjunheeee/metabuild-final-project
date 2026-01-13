@@ -9,6 +9,7 @@ import NotFoundPage from '@/shared/pages/NotFoundPage'
 import AboutPage from '@/shared/pages/AboutPage'
 import CommunityListPage from '@/feature/Community/pages/CommunityListPage'
 import CommunityDetailPage from '@/feature/Community/pages/CommunityDetailPage'
+import CommunityRankPage from '@/feature/Community/pages/CommunityRankPage'
 import LibraryMapPage from '@/feature/Library/pages/LibraryMapPage'
 
 const publicRoutes = [
@@ -20,6 +21,7 @@ const publicRoutes = [
   { path: '/searchbook', element: <SearchPage /> },
   { path: '/about', element: <AboutPage /> },
   { path: '/community', element: <CommunityListPage /> },
+  { path: '/community/rank', element: <CommunityRankPage /> },
   { path: '/community/:id', element: <CommunityDetailPage /> },
   { path: '/library/map', element: <LibraryMapPage /> },
   { path: '*', element: <NotFoundPage /> },

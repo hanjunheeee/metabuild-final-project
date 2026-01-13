@@ -93,7 +93,8 @@ function MyBookmarksPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="책 제목 또는 저자로 검색..."
+            placeholder="책 제목 또는 저자로 검색...(최대 50자)"
+            maxLength={50}
             className="w-full px-4 py-2 pl-10 border border-gray-300 focus:outline-none focus:border-main-bg text-sm"
           />
           <svg 

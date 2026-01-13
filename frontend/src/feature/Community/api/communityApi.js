@@ -124,6 +124,12 @@ export const fetchHotPosts = async (limit = 5) => {
   return response.json()
 }
 
+// 명예의 전당 (팔로워 + 댓글 좋아요 TOP N)
+export const fetchHallOfFame = async (limit = 10) => {
+  const response = await fetch(`${BASE_URL}/api/ranking/hall-of-fame?limit=${limit}`)
+  return response.json()
+}
+
 // HTML 콘텐츠에서 Base64 이미지를 찾아서 서버에 업로드하고 URL로 교체
 // HTML 본문 내 Base64 이미지를 업로드하고 URL로 치환
 export const processImagesInContent = async (htmlContent) => {

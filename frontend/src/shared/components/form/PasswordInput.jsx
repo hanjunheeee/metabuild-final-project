@@ -7,6 +7,7 @@ const PasswordInput = forwardRef(function PasswordInput({
   label = '비밀번호', 
   placeholder = '••••••••',
   required = false,
+  maxLength,
   rightLink = null,
   defaultValue = '',
   value,
@@ -35,6 +36,7 @@ const PasswordInput = forwardRef(function PasswordInput({
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
           required={required}
+          maxLength={maxLength}
           {...inputProps}
           className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg"
         />

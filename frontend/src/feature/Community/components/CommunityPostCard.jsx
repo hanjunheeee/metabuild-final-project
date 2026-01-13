@@ -16,10 +16,12 @@ import BookInfoCard from './BookInfoCard'
  * @param {boolean} isHot - true이면 HOT 배지 표시
  * @param {Function} onBookmark - 북마크 토글 핸들러
  * @param {Set} bookmarkedBookIds - 북마크한 책 ID Set
+ * @param {Set} likedCommunityIds - 사용자가 좋아요한 게시글 ID Set
  */
-function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreviewContent, getPostImages, currentUserId, onDelete, onAuthorClick, preferBookInfo = false, isHot = false, onBookmark, bookmarkedBookIds }) {
+function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreviewContent, getPostImages, currentUserId, onDelete, onAuthorClick, preferBookInfo = false, isHot = false, onBookmark, bookmarkedBookIds, likedCommunityIds }) {
   // 북마크 상태 확인
   const isBookmarked = bookmarkedBookIds && post.bookId && bookmarkedBookIds.has(post.bookId)
+  const isLiked = likedCommunityIds && likedCommunityIds.has(post.communityId)
 
   // 북마크 버튼 클릭 핸들러
   const handleBookmark = (e) => {
@@ -164,7 +166,12 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
         <div className="flex-shrink-0 flex items-center justify-between pt-2 mt-auto border-t border-gray-100 text-sm text-gray-500">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className={`w-4 h-4 ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
+                fill={isLiked ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                       d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>

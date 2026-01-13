@@ -16,3 +16,5 @@ export {
   InfoMessage
 } from './SignupInput'
 
+export { default as TurnstileCaptcha } from './TurnstileCaptcha'
+

@@ -221,7 +221,8 @@ function TrendManagePage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="키워드 검색..."
+            placeholder="키워드 검색...(최대 30자)"
+            maxLength={30}
             className="w-full px-4 py-2.5 pl-10 border border-gray-300 text-sm focus:outline-none focus:border-main-bg"
           />
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

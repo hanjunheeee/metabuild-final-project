@@ -128,8 +128,9 @@ function UserManagePage() {
           type="text"
           value={searchTerm}
           onChange={handleSearchChange}
-          placeholder="이메일, 닉네임 검색..."
-          className="flex-1 md:flex-initial md:w-80 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
+          placeholder="이메일, 닉네임 검색...(최대 30자)"
+          maxLength={30}
+          className="flex-1 md:flex-initial md:w-[32rem] px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
         />
         <select 
           value={statusFilter}

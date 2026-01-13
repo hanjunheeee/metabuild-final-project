@@ -45,27 +45,27 @@ function TitleHistoryPage() {
   const getLevelStyle = (level) => {
     switch (level) {
       case 'GOLD':
-        return 'bg-gradient-to-r from-yellow-100 to-amber-100 border-yellow-300 text-yellow-700'
+        return 'bg-white border-gray-300 text-gray-800'
       case 'SILVER':
-        return 'bg-gradient-to-r from-gray-100 to-slate-100 border-gray-300 text-gray-600'
+        return 'bg-white border-gray-200 text-gray-700'
       case 'BRONZE':
-        return 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 text-orange-600'
+        return 'bg-white border-gray-200 text-gray-600'
       default:
         return 'bg-gray-50 border-gray-200 text-gray-600'
     }
   }
 
-  // 레벨 뱃지
-  const getLevelBadge = (level) => {
+  // 레벨 태그
+  const getLevelTag = (level) => {
     switch (level) {
       case 'GOLD':
-        return '🥇'
+        return { text: 'Lv.3', style: 'bg-sub-bg text-white' }
       case 'SILVER':
-        return '🥈'
+        return { text: 'Lv.2', style: 'bg-gray-500 text-white' }
       case 'BRONZE':
-        return '🥉'
+        return { text: 'Lv.1', style: 'bg-main-bg text-white' }
       default:
-        return ''
+        return { text: '', style: '' }
     }
   }
 
@@ -77,8 +77,8 @@ function TitleHistoryPage() {
   return (
     <div>
       {/* 페이지 헤더 */}
-      <div className="mb-6 pb-4 border-b border-gray-100">
-        <h2 className="text-lg font-bold text-gray-800">칭호 이력</h2>
+      <div className="mb-6 pb-4 border-b border-gray-200">
+        <h2 className="text-lg font-bold text-sub-bg">칭호 이력</h2>
         <p className="text-gray-400 text-sm mt-1">
           획득한 칭호와 달성 일시를 확인할 수 있습니다.
         </p>
@@ -87,24 +87,24 @@ function TitleHistoryPage() {
       {/* 칭호 통계 */}
       {!isLoading && titles.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 p-4 text-center">
+          <div className="bg-gray-50 border border-gray-200 p-4 text-center">
             <div className="text-2xl mb-1">🏆</div>
-            <div className="text-2xl font-bold text-yellow-600">{titles.length}</div>
-            <div className="text-xs text-yellow-600/70">획득한 칭호</div>
+            <div className="text-2xl font-bold text-sub-bg">{titles.length}</div>
+            <div className="text-xs text-gray-400">획득한 칭호</div>
           </div>
-          <div className="bg-gradient-to-br from-pink-50 to-red-50 border border-pink-200 p-4 text-center">
-            <div className="text-2xl mb-1">💬</div>
-            <div className="text-2xl font-bold text-pink-600">
+          <div className="bg-gray-50 border border-gray-200 p-4 text-center">
+            <div className="text-2xl mb-1">❤️</div>
+            <div className="text-2xl font-bold text-sub-bg">
               {titles.filter(t => t.titleType === 'LIKE').length}
             </div>
-            <div className="text-xs text-pink-600/70">좋아요 칭호</div>
+            <div className="text-xs text-gray-400">좋아요 칭호</div>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 p-4 text-center">
+          <div className="bg-gray-50 border border-gray-200 p-4 text-center">
             <div className="text-2xl mb-1">👥</div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-sub-bg">
               {titles.filter(t => t.titleType === 'FOLLOWER').length}
             </div>
-            <div className="text-xs text-blue-600/70">팔로워 칭호</div>
+            <div className="text-xs text-gray-400">팔로워 칭호</div>
           </div>
         </div>
       )}
@@ -128,24 +128,27 @@ function TitleHistoryPage() {
           {titles.map((title) => (
             <div
               key={title.titleId}
-              className={`p-4 border rounded-lg ${getLevelStyle(title.titleLevel)} transition-all hover:shadow-md`}
+              className={`p-4 border ${getLevelStyle(title.titleLevel)} transition-all`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{title.titleIcon}</span>
+                  {getLevelTag(title.titleLevel).text && (
+                    <span className={`text-xs px-2 py-1 font-bold ${getLevelTag(title.titleLevel).style}`}>
+                      {getLevelTag(title.titleLevel).text}
+                    </span>
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold">{title.titleName}</span>
-                      <span className="text-lg">{getLevelBadge(title.titleLevel)}</span>
+                      <span className="font-bold text-gray-800">{title.titleName}</span>
                     </div>
-                    <div className="text-xs opacity-70 mt-0.5">
+                    <div className="text-xs text-gray-400 mt-0.5">
                       {getTypeDescription(title.titleType)}
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs opacity-60">달성일</div>
-                  <div className="text-sm font-medium">
+                  <div className="text-xs text-gray-400">달성일</div>
+                  <div className="text-sm font-medium text-gray-600">
                     {formatDate(title.achievedAt)}
                   </div>
                 </div>
@@ -156,23 +159,23 @@ function TitleHistoryPage() {
       )}
 
       {/* 칭호 기준 안내 */}
-      <div className="mt-8 pt-6 border-t border-gray-100">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">📋 칭호 획득 기준</h3>
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <h3 className="text-sm font-medium text-sub-bg mb-3">📋 칭호 획득 기준</h3>
         <div className="grid grid-cols-2 gap-4 text-xs">
-          <div className="bg-gray-50 p-3 rounded border border-gray-100">
-            <div className="font-medium text-gray-700 mb-2">💬 댓글 좋아요</div>
+          <div className="bg-gray-50 p-3 border border-gray-200">
+            <div className="font-medium text-gray-700 mb-2">❤️ 댓글 좋아요</div>
             <ul className="space-y-1 text-gray-500">
-              <li>🥉 100개 → 공감의 시작</li>
-              <li>🥈 1,000개 → 공감 유발자</li>
-              <li>🥇 2,000개 → 소통의 달인</li>
+              <li><span className="text-main-bg font-medium">Lv.1</span> 100개 → 공감의 시작</li>
+              <li><span className="text-main-bg font-medium">Lv.2</span> 1,000개 → 공감 유발자</li>
+              <li><span className="text-main-bg font-medium">Lv.3</span> 2,000개 → 소통의 달인</li>
             </ul>
           </div>
-          <div className="bg-gray-50 p-3 rounded border border-gray-100">
+          <div className="bg-gray-50 p-3 border border-gray-200">
             <div className="font-medium text-gray-700 mb-2">👥 팔로워</div>
             <ul className="space-y-1 text-gray-500">
-              <li>🥉 10명 → 책방 이웃</li>
-              <li>🥈 100명 → 도서 큐레이터</li>
-              <li>🥇 500명 → 독서 인플루언서</li>
+              <li><span className="text-main-bg font-medium">Lv.1</span> 10명 → 책방 이웃</li>
+              <li><span className="text-main-bg font-medium">Lv.2</span> 100명 → 도서 큐레이터</li>
+              <li><span className="text-main-bg font-medium">Lv.3</span> 500명 → 독서 인플루언서</li>
             </ul>
           </div>
         </div>
@@ -182,4 +185,3 @@ function TitleHistoryPage() {
 }
 
 export default TitleHistoryPage
-

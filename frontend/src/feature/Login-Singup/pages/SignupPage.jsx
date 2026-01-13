@@ -13,7 +13,8 @@ import {
   HiddenFileInput,
   InputLabel,
   ValidationMessage,
-  InfoMessage
+  InfoMessage,
+  TurnstileCaptcha
 } from '../components'
 import { useSignupForm } from '../hooks'
 
@@ -43,8 +44,17 @@ function SignupPage() {
     // 폼 상태
     isLoading,
     setIsLoading,
-    error,
-    setError,
+    submitError,
+    setSubmitError,
+    fieldErrors,
+    setFieldError,
+    clearFieldError,
+
+    // CAPTCHA
+    turnstileSiteKey,
+    isCaptchaEnabled,
+    captchaToken,
+    setCaptchaToken,
 
     // 핸들러
     handleEmailChange,
@@ -53,17 +63,14 @@ function SignupPage() {
     validateForm,
     uploadPhoto,
     cleanup,
-    scrollToError,
   } = useSignupForm()
 
   const handleSignup = async (e) => {
     e.preventDefault()
-    setError('')
+    setSubmitError('')
 
-    const validationError = validateForm()
-    if (validationError) {
-      setError(validationError)
-      setTimeout(scrollToError, 100)
+    const isValid = validateForm()
+    if (!isValid) {
       return
     }
 
@@ -78,7 +85,7 @@ function SignupPage() {
       // 프로필 사진 업로드
       const userPhoto = await uploadPhoto()
 
-      await signup(email, password, nickname, userPhoto)
+      await signup(email, password, nickname, userPhoto, captchaToken)
       
       // 성공 시 정리
       cleanup()
@@ -86,7 +93,17 @@ function SignupPage() {
       alert('회원가입이 완료되었습니다. 로그인해주세요.')
       navigate('/login')
     } catch (err) {
-      setError(err.message)
+      const msg = err?.message || '회원가입에 실패했습니다.'
+      // 서버 메시지를 필드 에러로 최대한 매핑
+      if (msg.includes('이메일')) {
+        setFieldError('email', msg)
+      } else if (msg.includes('닉네임')) {
+        setFieldError('nickname', msg)
+      } else if (msg.toLowerCase().includes('captcha') || msg.includes('CAPTCHA')) {
+        setFieldError('captcha', msg)
+      } else {
+        setSubmitError(msg)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -103,9 +120,9 @@ function SignupPage() {
         </div>
 
         {/* 에러 메시지 */}
-        {error && (
+        {submitError && (
           <div ref={errorRef} className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm">
-            {error}
+            {submitError}
           </div>
         )}
 
@@ -122,6 +139,7 @@ function SignupPage() {
                 name="email"
                 type="email"
                 placeholder="이메일을 입력해 주세요."
+                maxLength={100}
                 required
                 onChange={handleEmailChange}
               />
@@ -139,6 +157,8 @@ function SignupPage() {
               isSending={isSendingCode}
               isVerified={isEmailVerified}
             />
+            {/* 이메일 유효성(회원가입) 메시지: 인증코드 발송 버튼 밑에 표시 */}
+            <ValidationMessage message={fieldErrors.email} isValid={false} />
 
             {/* 인증 코드 입력창 */}
             {showVerificationInput && (
@@ -174,8 +194,14 @@ function SignupPage() {
             name="password"
             label="비밀번호"
             placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+            maxLength={20}
             required
+            onChange={() => {
+              clearFieldError('password')
+              setSubmitError('')
+            }}
           />
+          <ValidationMessage message={fieldErrors.password} isValid={false} />
 
           {/* 비밀번호 확인 */}
           <PasswordInput
@@ -184,8 +210,14 @@ function SignupPage() {
             name="passwordConfirm"
             label="비밀번호 확인"
             placeholder="비밀번호를 다시 입력해 주세요."
+            maxLength={20}
             required
+            onChange={() => {
+              clearFieldError('passwordConfirm')
+              setSubmitError('')
+            }}
           />
+          <ValidationMessage message={fieldErrors.passwordConfirm} isValid={false} />
 
           {/* 닉네임 */}
           <div>
@@ -197,15 +229,20 @@ function SignupPage() {
                 name="nickname"
                 type="text"
                 placeholder="닉네임을 입력해 주세요."
-                maxLength={30}
+                maxLength={6}
                 required
-                onChange={nicknameCheck.reset}
+                onChange={(e) => {
+                  nicknameCheck.reset(e)
+                  clearFieldError('nickname')
+                  setSubmitError('')
+                }}
               />
               <SecondaryButton onClick={nicknameCheck.check} disabled={nicknameCheck.isChecking}>
                 {nicknameCheck.isChecking ? '확인 중...' : '닉네임 중복확인'}
               </SecondaryButton>
             </div>
             <ValidationMessage message={nicknameCheck.message} isValid={nicknameCheck.isChecked} />
+            <ValidationMessage message={fieldErrors.nickname} isValid={false} />
           </div>
 
           {/* 프로필 사진 */}
@@ -234,6 +271,28 @@ function SignupPage() {
             </div>
             <p className="mt-2 text-xs text-gray-400">JPG, PNG, GIF (최대 5MB)</p>
           </div>
+
+          {/* CAPTCHA */}
+          {isCaptchaEnabled && (
+            <div className="pt-2">
+              <InputLabel>CAPTCHA 인증</InputLabel>
+              <TurnstileCaptcha
+                siteKey={turnstileSiteKey}
+                onVerify={(token) => {
+                  setCaptchaToken(token)
+                  clearFieldError('captcha')
+                  setSubmitError('')
+                }}
+                onExpire={() => {
+                  setCaptchaToken('')
+                }}
+                onError={() => {
+                  setCaptchaToken('')
+                }}
+              />
+              <ValidationMessage message={fieldErrors.captcha} isValid={false} />
+            </div>
+          )}
 
           {/* 회원가입 버튼 */}
           <Button type="submit" isLoading={isLoading} loadingText="가입 중...">

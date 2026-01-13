@@ -18,13 +18,13 @@ const getCurrentStorage = () => {
 }
 
 // 회원가입
-export const signup = async (email, password, nickname, userPhoto = null) => {
+export const signup = async (email, password, nickname, userPhoto = null, captchaToken = null) => {
   const response = await fetch(`${BASE_URL}/api/users/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email, password, nickname, userPhoto }),
+    body: JSON.stringify({ email, password, nickname, userPhoto, captchaToken }),
   })
 
   if (!response.ok) {

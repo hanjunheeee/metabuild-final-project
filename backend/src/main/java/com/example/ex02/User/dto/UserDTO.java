@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -16,7 +16,7 @@ public class UserDTO {
     private String nickname;
     private String role;
     private String isActive;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private String userPhoto;
 }
 

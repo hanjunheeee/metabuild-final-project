@@ -5,6 +5,7 @@ import com.example.ex02.User.dto.UserDTO;
 import com.example.ex02.User.entity.UserEntity;
 import com.example.ex02.User.repository.UserRepository;
 import com.example.ex02.config.JwtUtil;
+import com.example.ex02.security.TurnstileVerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final TurnstileVerificationService turnstileVerificationService;
 
     // 전체 사용자 조회
     public List<UserDTO> getAllUsers() {
@@ -79,7 +81,10 @@ public class UserService {
 
     // 회원가입
     @Transactional
-    public UserDTO signup(String email, String password, String nickname, String userPhoto) {
+    public UserDTO signup(String email, String password, String nickname, String userPhoto, String captchaToken, String remoteIp) {
+        // CAPTCHA 검증 (활성화된 경우에만 강제)
+        turnstileVerificationService.verifyOrThrow(captchaToken, remoteIp);
+
         // 이메일 중복 확인
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("이미 사용 중인 이메일입니다.");

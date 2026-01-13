@@ -35,10 +35,10 @@ export function useSignupForm() {
     'nickname',
     (value) => {
       if (!value) return '닉네임을 입력해주세요.'
-      const nicknameRegex = /^[a-zA-Z0-9가-힣]{2,5}$/
+      const nicknameRegex = /^[a-zA-Z0-9가-힣]{2,6}$/
       if (!nicknameRegex.test(value)) {
         if (value.length < 2) return '닉네임은 2자 이상이어야 합니다.'
-        if (value.length > 5) return '닉네임은 5자 이하여야 합니다.'
+        if (value.length > 6) return '닉네임은 6자 이하여야 합니다.'
         return '닉네임은 영문, 숫자, 한글만 사용 가능합니다. (자음/모음 단독 불가)'
       }
       return null
@@ -62,7 +62,29 @@ export function useSignupForm() {
 
   // === 폼 상태 ===
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
+
+  // === 필드별 에러(회원가입 유효성) ===
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    password: '',
+    passwordConfirm: '',
+    nickname: '',
+    captcha: '',
+  })
+
+  const setFieldError = useCallback((field, message) => {
+    setFieldErrors((prev) => ({ ...prev, [field]: message }))
+  }, [])
+
+  const clearFieldError = useCallback((field) => {
+    setFieldErrors((prev) => ({ ...prev, [field]: '' }))
+  }, [])
+
+  // === CAPTCHA(Turnstile) ===
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITEKEY || ''
+  const isCaptchaEnabled = Boolean(turnstileSiteKey)
+  const [captchaToken, setCaptchaToken] = useState('')
 
   // === 폼 데이터 저장 ===
   const saveFormData = useCallback(() => {
@@ -140,6 +162,8 @@ export function useSignupForm() {
     setShowVerificationInput(false)
     setVerificationCode('')
     setEmailVerifyMessage('')
+    clearFieldError('email')
+    setSubmitError('')
   }, [emailCheck])
 
   // === 이메일 인증번호 발송 ===
@@ -202,6 +226,7 @@ export function useSignupForm() {
       if (data.success) {
         setIsEmailVerified(true)
         setEmailVerifyMessage('이메일 인증이 완료되었습니다.')
+        clearFieldError('email')
       } else {
         setEmailVerifyMessage(data.message || '인증번호가 올바르지 않습니다.')
       }
@@ -212,33 +237,88 @@ export function useSignupForm() {
     }
   }, [verificationCode])
 
-  // === 폼 유효성 검사 ===
+  // === 폼 유효성 검사 (필드별 에러 세팅) ===
   const validateForm = useCallback(() => {
-    if (!emailCheck.isChecked) {
-      return '이메일 중복확인을 해주세요.'
-    }
-    if (!isEmailVerified) {
-      return '이메일 인증을 완료해주세요.'
+    let hasError = false
+
+    // 이전 에러 초기화
+    setFieldErrors({
+      email: '',
+      password: '',
+      passwordConfirm: '',
+      nickname: '',
+      captcha: '',
+    })
+    setSubmitError('')
+
+    const email = emailCheck.inputRef.current?.value || ''
+    const nickname = nicknameCheck.inputRef.current?.value || ''
+
+    // 이메일: 중복확인 + 인증 필수
+    if (!email) {
+      hasError = true
+      setFieldError('email', '이메일을 입력해주세요.')
+    } else if (!emailCheck.isChecked) {
+      hasError = true
+      setFieldError('email', '이메일 중복확인을 해주세요.')
+    } else if (!isEmailVerified) {
+      hasError = true
+      setFieldError('email', '이메일 인증을 완료해주세요.')
     }
 
+    // 비밀번호
     const password = passwordRef.current?.value || ''
     const passwordConfirm = passwordConfirmRef.current?.value || ''
 
-    if (password !== passwordConfirm) {
-      return '비밀번호가 일치하지 않습니다.'
-    }
-    
-    // 비밀번호: 8자 이상, 영문, 숫자, 특수문자 포함
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
-    if (!passwordRegex.test(password)) {
-      return '비밀번호는 8자 이상, 영문, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다.'
-    }
-    if (!nicknameCheck.isChecked) {
-      return '닉네임 중복확인을 해주세요.'
+    if (!password) {
+      hasError = true
+      setFieldError('password', '비밀번호를 입력해주세요.')
+    } else {
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+      if (!passwordRegex.test(password)) {
+        hasError = true
+        setFieldError('password', '비밀번호는 8자 이상, 영문, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다.')
+      }
     }
 
-    return null
-  }, [emailCheck.isChecked, isEmailVerified, nicknameCheck.isChecked])
+    if (!passwordConfirm) {
+      hasError = true
+      setFieldError('passwordConfirm', '비밀번호 확인을 입력해주세요.')
+    } else if (password && password !== passwordConfirm) {
+      hasError = true
+      setFieldError('passwordConfirm', '비밀번호가 일치하지 않습니다.')
+    }
+
+    // 닉네임
+    const nicknameRegex = /^[a-zA-Z0-9가-힣]{2,6}$/
+    if (!nickname) {
+      hasError = true
+      setFieldError('nickname', '닉네임을 입력해주세요.')
+    } else if (!nicknameRegex.test(nickname)) {
+      hasError = true
+      if (nickname.length < 2) setFieldError('nickname', '닉네임은 2자 이상이어야 합니다.')
+      else if (nickname.length > 6) setFieldError('nickname', '닉네임은 6자 이하여야 합니다.')
+      else setFieldError('nickname', '닉네임은 영문, 숫자, 한글만 사용 가능합니다. (자음/모음 단독 불가)')
+    } else if (!nicknameCheck.isChecked) {
+      hasError = true
+      setFieldError('nickname', '닉네임 중복확인을 해주세요.')
+    }
+
+    // CAPTCHA
+    if (isCaptchaEnabled && !captchaToken) {
+      hasError = true
+      setFieldError('captcha', 'CAPTCHA 인증을 완료해주세요.')
+    }
+
+    return !hasError
+  }, [
+    emailCheck.isChecked,
+    isEmailVerified,
+    nicknameCheck.isChecked,
+    isCaptchaEnabled,
+    captchaToken,
+    setFieldError,
+  ])
 
   // === 프로필 사진 업로드 ===
   const uploadPhoto = useCallback(async () => {
@@ -302,8 +382,17 @@ export function useSignupForm() {
     // 폼 상태
     isLoading,
     setIsLoading,
-    error,
-    setError,
+    submitError,
+    setSubmitError,
+    fieldErrors,
+    setFieldError,
+    clearFieldError,
+
+    // CAPTCHA
+    turnstileSiteKey,
+    isCaptchaEnabled,
+    captchaToken,
+    setCaptchaToken,
 
     // 핸들러
     handleEmailChange,

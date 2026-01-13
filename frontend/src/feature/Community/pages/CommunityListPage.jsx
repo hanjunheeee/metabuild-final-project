@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom'
 import useCommunityListPage from '../hooks/useCommunityListPage'
 import { CommunityPostCard, CommunityPostList, SearchFilterBar, EmptyState } from '../components'
 import { Pagination } from '@/shared/components'
 import { Spinner } from '@/shared/components/icons'
 
 function CommunityListPage() {
+  const navigate = useNavigate()
   const {
     // 상태
     loading,
@@ -19,6 +21,7 @@ function CommunityListPage() {
     hotPosts,
     hotPostIds,
     bookmarkedBookIds,
+    likedCommunityIds,
     
     // 필터 모드
     filterUserId,
@@ -127,16 +130,27 @@ function CommunityListPage() {
             총 <span className="font-bold text-sub-bg">{filteredCommunities.length}</span>개의 게시글
           </p>
           {!isUserFilterMode && (
-            <button
-              onClick={handleWriteClick}
-              className="flex items-center gap-2 px-4 py-2 bg-main-bg text-white text-sm font-medium
-                       hover:bg-sub-bg transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              글쓰기
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/community/rank')}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 
+                         text-white text-sm font-medium hover:from-amber-600 hover:to-orange-600 
+                         transition-all cursor-pointer"
+              >
+                <span className="text-sm">🏆</span>
+                명예의전당
+              </button>
+              <button
+                onClick={handleWriteClick}
+                className="flex items-center gap-2 px-4 py-2 bg-main-bg text-white text-sm font-medium
+                         hover:bg-sub-bg transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                글쓰기
+              </button>
+            </div>
           )}
         </div>
 
@@ -180,6 +194,7 @@ function CommunityListPage() {
                     isHot={true}
                     onBookmark={handleBookmark}
                     bookmarkedBookIds={bookmarkedBookIds}
+                    likedCommunityIds={likedCommunityIds}
                   />
                 </div>
               ))}
@@ -245,6 +260,7 @@ function CommunityListPage() {
                     preferBookInfo={true}
                     onBookmark={handleBookmark}
                     bookmarkedBookIds={bookmarkedBookIds}
+                    likedCommunityIds={likedCommunityIds}
                   />
                 </div>
               ))}

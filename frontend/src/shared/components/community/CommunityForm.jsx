@@ -222,10 +222,11 @@ function CommunityForm({
             <div className="relative">
               <input
                 type="text"
-                placeholder="책 제목 또는 저자로 검색..."
+                placeholder="책 제목 또는 저자로 검색...(최대 30자)"
                 value={bookSearchTerm}
                 onChange={handleSearchChange}
                 onFocus={handleFocus}
+                maxLength={30}
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 
                          focus:outline-none focus:ring-2 focus:ring-main-bg focus:border-transparent
                          text-gray-700 placeholder-gray-400"
