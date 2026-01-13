@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
+// 커뮤니티 게시글 조회 리포지토리
 public interface CommunityRepository extends JpaRepository<CommunityEntity, Long> {
     
     // 특정 사용자의 게시글 수
@@ -22,4 +23,3 @@ public interface CommunityRepository extends JpaRepository<CommunityEntity, Long
            "ORDER BY c.communityGreat DESC, c.createdAt DESC")
     List<CommunityEntity> findWeeklyHotPosts(@Param("startDate") LocalDate startDate);
 }
-

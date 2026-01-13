@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+// 알라딘 검색 결과에서 가격/링크 추출
 @Component
 public class AladinPriceProvider implements BookPriceProvider {
 
     @Override
+    // ISBN/제목 검색으로 가격 조회
     public BookPriceDTO getPrice(String isbn, String title) {
 
         BookPriceDTO result = fetchByQuery(isbn);
@@ -22,6 +24,7 @@ public class AladinPriceProvider implements BookPriceProvider {
         return result;
     }
 
+    // 알라딘 검색 페이지 파싱
     private BookPriceDTO fetchByQuery(String query) {
         if (query == null || query.isBlank()) {
             return null;

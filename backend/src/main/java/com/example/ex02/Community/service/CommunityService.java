@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// 커뮤니티 글/댓글/좋아요 비즈니스 로직
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -32,6 +33,7 @@ public class CommunityService {
     private final BookRepository bookRepository;
 
     // 전체 커뮤니티 글 목록 조회 (최신순)
+    // 커뮤니티 목록 조회(최신순)
     public List<CommunityDTO> getAllCommunities() {
         List<CommunityEntity> entities = communityRepository.findAll(
                 Sort.by(Sort.Direction.DESC, "createdAt")
@@ -46,6 +48,7 @@ public class CommunityService {
     }
 
     // 커뮤니티 글 단건 조회
+    // 커뮤니티 상세 조회
     public CommunityDTO getCommunityById(Long communityId) {
         CommunityEntity entity = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
@@ -55,6 +58,7 @@ public class CommunityService {
 
     // 커뮤니티 글 작성
     @Transactional
+    // 커뮤니티 글 생성
     public CommunityDTO createCommunity(CommunityCreateDTO createDTO) {
         // 사용자 조회
         UserEntity user = userRepository.findById(createDTO.getUserId())
@@ -92,6 +96,7 @@ public class CommunityService {
 
     // 커뮤니티 글 삭제 (userId가 null이면 관리자 삭제로 처리)
     @Transactional
+    // 커뮤니티 글 삭제(관리자/본인)
     public void deleteCommunity(Long communityId, Long userId) {
         CommunityEntity entity = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
@@ -113,6 +118,7 @@ public class CommunityService {
 
     // 커뮤니티 글 수정
     @Transactional
+    // 커뮤니티 글 수정
     public CommunityDTO updateCommunity(Long communityId, CommunityCreateDTO updateDTO) {
         CommunityEntity entity = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
@@ -150,6 +156,7 @@ public class CommunityService {
 
     // 좋아요 토글
     @Transactional
+    // 좋아요 토글 및 카운트 갱신
     public LikeResult toggleLike(Long communityId, Long userId) {
         CommunityEntity community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
@@ -182,11 +189,13 @@ public class CommunityService {
     }
     
     // 좋아요 여부 확인
+    // 좋아요 여부 확인
     public boolean isLikedByUser(Long communityId, Long userId) {
         return communityLikeRepository.existsByUser_UserIdAndCommunity_CommunityId(userId, communityId);
     }
     
     // 사용자가 좋아요한 게시글 ID 목록만 조회 (N+1 문제 방지)
+    // 사용자가 좋아요한 게시글 ID 목록
     public List<Long> getLikedCommunityIdsByUserId(Long userId) {
         List<CommunityLikeEntity> likes = communityLikeRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
         return likes.stream()
@@ -195,6 +204,7 @@ public class CommunityService {
     }
     
     // 주간 HOT 게시글 조회 (최근 7일 내 작성, 좋아요 순)
+    // 주간 HOT 게시글 조회
     public List<CommunityDTO> getWeeklyHotPosts(int limit) {
         LocalDate startDate = LocalDate.now().minusDays(7);
         List<CommunityEntity> entities = communityRepository.findWeeklyHotPosts(startDate);
@@ -212,6 +222,7 @@ public class CommunityService {
     public record LikeResult(boolean liked, int likeCount) {}
 
     // JSON 문자열 이스케이프
+    // JSON 문자열 이스케이프 처리
     private String escapeJson(String str) {
         if (str == null) return "";
         return str
@@ -222,4 +233,3 @@ public class CommunityService {
             .replace("\t", "\\t");
     }
 }
-

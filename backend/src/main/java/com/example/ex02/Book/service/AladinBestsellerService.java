@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
+// 알라딘 베스트셀러 API 연동 서비스
 @Service
 public class AladinBestsellerService {
 
@@ -35,6 +36,7 @@ public class AladinBestsellerService {
         this.baseUrl = baseUrl;
     }
 
+    // 주간/기본 베스트셀러 TOP10 조회
     public List<BestsellerItemDTO> fetchTop10() {
         if (apiKey == null || apiKey.isBlank()) {
             logger.warn("Aladin API key is missing; returning empty bestseller list");
@@ -59,6 +61,7 @@ public class AladinBestsellerService {
         }
     }
 
+    // 주간 베스트셀러 API URL 구성
     private String buildWeeklyUrl(int year, int month, int week) {
         return UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("ttbkey", apiKey)
@@ -76,6 +79,7 @@ public class AladinBestsellerService {
                 .toUriString();
     }
 
+    // 기본 베스트셀러 API URL 구성
     private String buildDefaultUrl() {
         return UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("ttbkey", apiKey)
@@ -90,6 +94,7 @@ public class AladinBestsellerService {
                 .toUriString();
     }
 
+    // API 응답 파싱 -> DTO 변환
     private List<BestsellerItemDTO> fetchFromUrl(String url) throws Exception {
         String json = restTemplate.getForObject(url, String.class);
         if (json == null || json.isBlank()) {

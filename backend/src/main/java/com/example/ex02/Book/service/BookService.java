@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// 도서 조회 및 CRUD 비즈니스 로직
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -18,12 +19,14 @@ public class BookService {
     private final BookRepository bookRepository;
 
     // 전체 도서 조회
+    // 도서 전체 조회
     public List<BookDTO> getAllBooks() {
         return bookRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
+    // 제목/ISBN/저자/출판사 검색
     public List<BookDTO> searchBooks(String query) {
         String trimmed = query == null ? "" : query.trim();
         if (trimmed.isEmpty()) {
@@ -40,6 +43,7 @@ public class BookService {
     }
 
     // 도서 ID로 조회
+    // 도서 ID 조회
     public BookDTO getBookById(Long id) {
         BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
@@ -50,6 +54,7 @@ public class BookService {
     // 도서 생성
     // ========================================
     @Transactional
+    // 도서 생성
     public BookDTO createBook(BookDTO dto) {
         BookEntity book = new BookEntity();
         updateEntityFromDTO(book, dto);
@@ -61,6 +66,7 @@ public class BookService {
     // 도서 수정
     // ========================================
     @Transactional
+    // 도서 수정
     public BookDTO updateBook(Long id, BookDTO dto) {
         BookEntity book = bookRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
@@ -73,6 +79,7 @@ public class BookService {
     // 도서 삭제
     // ========================================
     @Transactional
+    // 도서 삭제
     public void deleteBook(Long id) {
         if (!bookRepository.existsById(id)) {
             throw new RuntimeException("Book not found with id: " + id);
@@ -81,6 +88,7 @@ public class BookService {
     }
 
     // DTO -> Entity 필드 업데이트
+    // DTO -> Entity 필드 매핑
     private void updateEntityFromDTO(BookEntity book, BookDTO dto) {
         book.setIsbn(dto.getIsbn());
         book.setTitle(dto.getTitle());
@@ -100,6 +108,7 @@ public class BookService {
         }
     }
 
+    // Entity -> DTO 변환
     // Entity -> DTO 변환
     private BookDTO convertToDTO(BookEntity book) {
         BookDTO dto = new BookDTO();

@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+// 커뮤니티 게시글 DTO
 public class CommunityDTO {
 
     private Long communityId;
@@ -81,4 +82,3 @@ public class CommunityDTO {
                 .build();
     }
 }
-

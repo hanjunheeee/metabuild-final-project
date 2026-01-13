@@ -5,6 +5,7 @@ import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSumma
 import { logSearch, logBookAction } from '../api/analyticsApi'
 import Spinner from '../../../shared/components/icons/Spinner'
 
+// 도서 검색 결과 화면(요약/구매/대출 경로 제공)
 function SearchPage() {
 
   /* ===============================
@@ -26,6 +27,7 @@ function SearchPage() {
     return textarea.value
   }
 
+  // 판매처 가격 조회(캐시 활용 + 토글)
   const fetchBookShops = async (book) => {
 
     // Toggle close if already open
@@ -62,6 +64,7 @@ function SearchPage() {
     }
   }
 
+  // LLM 요약 조회(결과 캐시)
   const fetchBookSummary = async (bookId) => {
     if (summaries[bookId]) {
       return
@@ -95,6 +98,7 @@ function SearchPage() {
     }
   }
 
+  // 알라딘 커버 이미지 크기 보정
   const getCoverUrl = (url) => {
     if (!url) {
       return ''
@@ -105,6 +109,7 @@ function SearchPage() {
     return url
   }
 
+  // 지도 페이지로 이동하면서 책 정보 전달
   const goToLibrarySearch = (book) => {
     // 도서관 검색 로그
     logBookAction(book.bookId, 'LIBRARY_SEARCH')
@@ -118,6 +123,17 @@ function SearchPage() {
     }
     const queryString = params.toString()
     navigate(`/library/map${queryString ? `?${queryString}` : ''}`)
+  }
+
+  // 커뮤니티 리뷰 목록으로 이동
+  const goToCommunityReviews = (book) => {
+    const params = new URLSearchParams()
+    params.set('kind', 'REVIEW')
+    const title = (book?.title || initialKeyword || '').trim()
+    if (title) {
+      params.set('query', title)
+    }
+    navigate(`/community?${params.toString()}`)
   }
 
   /* ===============================
@@ -136,12 +152,14 @@ function SearchPage() {
   const firstBookTitle = books.length > 0 ? books[0].title : null
 
   // 검색 로그 전송 (검색 결과 로드 후)
+  // 검색 결과 로딩 후 검색 로그 전송
   useEffect(() => {
     if (initialKeyword && books.length > 0) {
       logSearch(initialKeyword, firstBookTitle)
     }
   }, [initialKeyword, books.length, firstBookTitle])
 
+  // 검색어 변경 시 URL 갱신
   const handleSearch = () => {
     if (!keyword.trim()) {
       alert('검색어를 입력해주세요')
@@ -150,6 +168,7 @@ function SearchPage() {
     navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
   }
 
+  // URL 키워드 변경 시 입력/페이지 초기화
   useEffect(() => {
     setKeyword(initialKeyword)
     setVisibleCount(10)
@@ -282,7 +301,10 @@ function SearchPage() {
                     도서 구매 조회
                   </button>
 
-                  <button className="w-full py-2 rounded-lg bg-gray-700 text-white text-sm">
+                  <button
+                    className="w-full py-2 rounded-lg bg-gray-700 text-white text-sm"
+                    onClick={() => goToCommunityReviews(book)}
+                  >
                     관련 커뮤니티 게시글
                   </button>
                 </div>

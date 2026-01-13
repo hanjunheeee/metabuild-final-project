@@ -1,5 +1,6 @@
 package com.example.ex02.Book.external;
 
+// Data4Library 도서 상세 정보 DTO
 public class Data4LibraryBookInfo {
 
     private final String title;

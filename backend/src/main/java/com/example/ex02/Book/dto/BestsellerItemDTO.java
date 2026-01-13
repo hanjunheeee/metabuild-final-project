@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+// 베스트셀러 항목 DTO
 public class BestsellerItemDTO {
 
     private String title;

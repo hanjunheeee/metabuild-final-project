@@ -2,6 +2,7 @@ package com.example.ex02.Book.llm;
 
 import java.util.List;
 
+// Gemini 요청 DTO
 public class GeminiRequest {
 
     private List<Content> contents;
@@ -13,6 +14,7 @@ public class GeminiRequest {
         this.contents = contents;
     }
 
+    // 단일 프롬프트를 요청 포맷으로 감싸기
     public static GeminiRequest fromPrompt(String prompt) {
         return new GeminiRequest(List.of(
                 new Content(List.of(

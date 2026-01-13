@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+// LLM 기반 도서 요약 생성 서비스
 @Service
 @RequiredArgsConstructor
 public class BookSummaryService {
@@ -23,6 +24,7 @@ public class BookSummaryService {
     private final LlmSummaryClient llmSummaryClient;
     private final Data4LibraryClient data4LibraryClient;
 
+    // 도서 ID 기준 요약 생성(데이터 보강 + LLM 호출)
     public BookSummaryResponse getSummary(Long bookId) {
 
         BookDTO book = bookService.getBookById(bookId);
@@ -44,6 +46,7 @@ public class BookSummaryService {
         );
     }
 
+    // LLM 프롬프트 구성
     private String buildPrompt(BookDTO book, Data4LibraryBookInfo info) {
         String title = info != null && !isBlank(info.getTitle())
                 ? info.getTitle()
@@ -82,10 +85,12 @@ public class BookSummaryService {
         return sb.toString();
     }
 
+    // null 방지 유틸
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
     }
 
+    // 공백 체크 유틸
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
     }

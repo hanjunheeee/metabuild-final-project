@@ -1,5 +1,6 @@
 package com.example.ex02.Book.dto;
 
+// 도서 요약 응답 DTO
 public class BookSummaryResponse {
 
     private Long bookId;

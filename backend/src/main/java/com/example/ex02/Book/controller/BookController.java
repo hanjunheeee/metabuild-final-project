@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// 도서 관련 API 엔드포인트
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
@@ -28,25 +29,25 @@ public class BookController {
     private final StoreBestsellerScrapeService storeBestsellerScrapeService;
     private final Data4LibraryLoanRankingService data4LibraryLoanRankingService;
 
-    // Get all books (optionally filtered by query)
+    // 도서 목록 조회(검색어 선택)
     @GetMapping
     public ResponseEntity<List<BookDTO>> getAllBooks(@RequestParam(required = false) String query) {
         return ResponseEntity.ok(bookService.searchBooks(query));
     }
 
-    // Get a book by id
+    // 도서 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<BookDTO> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok(bookService.getBookById(id));
     }
 
-    // Get AI summary for a book
+    // AI 요약 조회
     @GetMapping("/{id}/summary")
     public ResponseEntity<BookSummaryResponse> getBookSummary(@PathVariable Long id) {
         return ResponseEntity.ok(bookSummaryService.getSummary(id));
     }
 
-    // Get shop prices
+    // 판매처 가격 조회
     @GetMapping("/{id}/shops")
     public ResponseEntity<?> getBookShops(
             @PathVariable Long id,
@@ -55,25 +56,25 @@ public class BookController {
         return ResponseEntity.ok(bookPriceService.getPrices(id, title));
     }
 
-    // Aladin bestseller TOP10
+    // 알라딘 베스트셀러 TOP10
     @GetMapping("/bestsellers/aladin")
     public ResponseEntity<?> getAladinBestsellers() {
         return ResponseEntity.ok(aladinBestsellerService.fetchTop10());
     }
 
-    // Kyobo bestseller TOP10 (scraped)
+    // 교보 베스트셀러 TOP10(스크래핑)
     @GetMapping("/bestsellers/kyobo")
     public ResponseEntity<?> getKyoboBestsellers() {
         return ResponseEntity.ok(storeBestsellerScrapeService.fetchKyoboTop10());
     }
 
-    // YES24 bestseller TOP10 (scraped)
+    // YES24 베스트셀러 TOP10(스크래핑)
     @GetMapping("/bestsellers/yes24")
     public ResponseEntity<?> getYes24Bestsellers() {
         return ResponseEntity.ok(storeBestsellerScrapeService.fetchYes24Top10());
     }
 
-    // Seoul public library monthly loan ranking TOP10
+    // 서울 대출 랭킹 TOP10
     @GetMapping("/loans/seoul")
     public ResponseEntity<List<BestsellerItemDTO>> getSeoulLoanTop10() {
         return ResponseEntity.ok(data4LibraryLoanRankingService.fetchSeoulMonthlyTop10());

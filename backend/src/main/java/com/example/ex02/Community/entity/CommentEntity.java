@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+// 커뮤니티 댓글 엔티티
 public class CommentEntity {
 
     @Id
@@ -62,4 +63,3 @@ public class CommentEntity {
         this.updatedAt = LocalDateTime.now();
     }
 }
-

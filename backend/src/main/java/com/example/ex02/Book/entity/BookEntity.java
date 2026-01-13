@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+// 도서 기본 엔티티
 public class BookEntity {
 
     public enum AgeGroup {
@@ -52,4 +53,3 @@ public class BookEntity {
     @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private BookDetailEntity bookDetail;
 }
-

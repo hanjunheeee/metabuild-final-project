@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+// 커뮤니티 API 엔드포인트
 @RestController
 @RequestMapping("/api/communities")
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class CommunityController {
     private final CommunityService communityService;
 
     // 전체 커뮤니티 글 목록 조회
+    // 커뮤니티 목록 조회
     @GetMapping
     public ResponseEntity<List<CommunityDTO>> getAllCommunities() {
         List<CommunityDTO> communities = communityService.getAllCommunities();
@@ -26,6 +28,7 @@ public class CommunityController {
     }
 
     // 커뮤니티 글 단건 조회
+    // 커뮤니티 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<CommunityDTO> getCommunityById(@PathVariable Long id) {
         CommunityDTO community = communityService.getCommunityById(id);
@@ -33,6 +36,7 @@ public class CommunityController {
     }
 
     // 커뮤니티 글 작성
+    // 커뮤니티 글 생성
     @PostMapping
     public ResponseEntity<?> createCommunity(@RequestBody CommunityCreateDTO createDTO) {
         try {
@@ -51,6 +55,7 @@ public class CommunityController {
     }
 
     // 커뮤니티 글 삭제 (userId 없으면 관리자 삭제로 처리)
+    // 커뮤니티 글 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCommunity(
             @PathVariable Long id, 
@@ -70,6 +75,7 @@ public class CommunityController {
     }
 
     // 커뮤니티 글 수정
+    // 커뮤니티 글 수정
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCommunity(@PathVariable Long id, @RequestBody CommunityCreateDTO updateDTO) {
         try {
@@ -87,6 +93,7 @@ public class CommunityController {
         }
     }
 
+    // 좋아요 토글
     // 좋아요 토글
     @PostMapping("/{id}/like")
     public ResponseEntity<?> toggleLike(@PathVariable Long id, @RequestParam Long userId) {
@@ -106,6 +113,7 @@ public class CommunityController {
     }
     
     // 좋아요 여부 확인
+    // 좋아요 여부 확인
     @GetMapping("/{id}/like")
     public ResponseEntity<?> checkLike(@PathVariable Long id, @RequestParam Long userId) {
         try {
@@ -123,6 +131,7 @@ public class CommunityController {
     }
     
     // 사용자가 좋아요한 게시글 ID 목록 조회
+    // 사용자가 좋아요한 게시글 ID 목록
     @GetMapping("/liked/{userId}")
     public ResponseEntity<List<Long>> getLikedCommunityIds(@PathVariable Long userId) {
         List<Long> communityIds = communityService.getLikedCommunityIdsByUserId(userId);
@@ -130,6 +139,7 @@ public class CommunityController {
     }
     
     // 주간 HOT 게시글 조회 (최근 7일 내 작성, 좋아요 순)
+    // 주간 HOT 게시글 조회
     @GetMapping("/hot")
     public ResponseEntity<List<CommunityDTO>> getWeeklyHotPosts(
             @RequestParam(defaultValue = "5") int limit) {
@@ -137,4 +147,3 @@ public class CommunityController {
         return ResponseEntity.ok(hotPosts);
     }
 }
-

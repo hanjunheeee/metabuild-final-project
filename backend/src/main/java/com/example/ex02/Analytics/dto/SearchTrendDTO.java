@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+// 트렌드 집계 결과 DTO
 public class SearchTrendDTO {
     
     // 워드클라우드용 키워드 트렌드
@@ -33,4 +34,3 @@ public class SearchTrendDTO {
         this.value = value;
     }
 }
-

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+// 검색/액션 로그 엔티티
 public class BookSearchLogEntity {
 
     public enum ActionType {
@@ -60,4 +61,3 @@ public class BookSearchLogEntity {
         createdAt = LocalDateTime.now();
     }
 }
-

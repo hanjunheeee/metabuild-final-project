@@ -1,5 +1,6 @@
 package com.example.ex02.Book.dto;
 
+// 판매처 가격 DTO
 public class BookPriceDTO {
 
     private String provider;

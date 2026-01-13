@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
+// 커뮤니티 댓글 조회 리포지토리
 public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
 
     List<CommentEntity> findByCommunity_CommunityIdOrderByCreatedAtDesc(Long communityId);

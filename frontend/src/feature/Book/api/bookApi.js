@@ -1,6 +1,6 @@
 const BASE_URL = 'http://localhost:7878'
 
-// Fetch all books (optionally filtered by query)
+// 도서 목록 조회(검색어 선택)
 export const fetchBooks = (query = '') => {
   const trimmed = query.trim()
   const url = trimmed
@@ -9,12 +9,12 @@ export const fetchBooks = (query = '') => {
   return fetch(url).then(res => res.json())
 }
 
-// Fetch a book by id
+// 도서 상세 조회
 export const fetchBookById = (id) => {
   return fetch(`${BASE_URL}/api/books/${id}`).then(res => res.json())
 }
 
-// Fetch book shops and prices
+// 판매처 가격 조회
 export const fetchBookShops = (bookId, title) => {
   const query = title ? `?title=${encodeURIComponent(title)}` : ''
   return fetch(`${BASE_URL}/api/books/${bookId}/shops${query}`).then(res => {
@@ -25,7 +25,7 @@ export const fetchBookShops = (bookId, title) => {
   })
 }
 
-// Fetch AI summary
+// AI 요약 조회
 export const fetchBookSummary = (bookId) => {
   return fetch(`${BASE_URL}/api/books/${bookId}/summary`).then(res => {
     if (!res.ok) {
@@ -35,7 +35,7 @@ export const fetchBookSummary = (bookId) => {
   })
 }
 
-// Fetch Aladin bestseller TOP10
+// 알라딘 베스트셀러 TOP10
 export const fetchAladinBestsellers = () => {
   return fetch(`${BASE_URL}/api/books/bestsellers/aladin`).then(res => {
     if (!res.ok) {
@@ -45,7 +45,7 @@ export const fetchAladinBestsellers = () => {
   })
 }
 
-// Fetch Kyobo bestseller TOP10 (scraped)
+// 교보 베스트셀러 TOP10(스크래핑)
 export const fetchKyoboBestsellers = () => {
   return fetch(`${BASE_URL}/api/books/bestsellers/kyobo`).then(res => {
     if (!res.ok) {
@@ -55,7 +55,7 @@ export const fetchKyoboBestsellers = () => {
   })
 }
 
-// Fetch YES24 bestseller TOP10 (scraped)
+// YES24 베스트셀러 TOP10(스크래핑)
 export const fetchYes24Bestsellers = () => {
   return fetch(`${BASE_URL}/api/books/bestsellers/yes24`).then(res => {
     if (!res.ok) {
@@ -65,7 +65,7 @@ export const fetchYes24Bestsellers = () => {
   })
 }
 
-// Fetch Seoul monthly loan ranking TOP10
+// 서울 대출 TOP10
 export const fetchSeoulLoanTop10 = () => {
   return fetch(`${BASE_URL}/api/books/loans/seoul`).then(res => {
     if (!res.ok) {

@@ -11,11 +11,13 @@ import { fetchKeywordTrends, fetchPurchaseTrends } from '../api/analyticsApi'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 
+// 키워드 트렌드 데이터를 워드클라우드로 렌더링
 function WordCloud({ words, onWordClick }) {
   const containerRef = useRef(null)
   const [layoutWords, setLayoutWords] = useState([])
   const [size, setSize] = useState({ width: 0, height: 0 })
 
+  // 컨테이너 사이즈를 추적해 레이아웃 계산에 반영
   useEffect(() => {
     if (!containerRef.current) return
     const updateSize = () => {
@@ -30,6 +32,7 @@ function WordCloud({ words, onWordClick }) {
     return () => observer.disconnect()
   }, [])
 
+  // 단어 데이터와 사이즈에 맞춰 워드클라우드 레이아웃 계산
   useEffect(() => {
     if (!size.width || !size.height || words.length === 0) {
       setLayoutWords([])
@@ -81,6 +84,7 @@ function WordCloud({ words, onWordClick }) {
   )
 }
 
+// 긴 제목을 2줄로 보이도록 자르기
 function TwoLineTitle({ text, className = '' }) {
   return (
     <p
@@ -92,6 +96,7 @@ function TwoLineTitle({ text, className = '' }) {
   )
 }
 
+// 메인페이지 데이터 로드/상태 관리
 function MainPage() {
   /* ===============================
      통합 검색
@@ -99,6 +104,7 @@ function MainPage() {
   const [keyword, setKeyword] = useState('')
   const navigate = useNavigate()
 
+  // 검색어 입력 후 검색 결과 페이지로 이동
   const handleSearch = () => {
     if (!keyword.trim()) {
       alert('검색어를 입력해주세요')
@@ -129,6 +135,7 @@ function MainPage() {
     page * booksPerPage + booksPerPage
   )
 
+  // 서울 대출 랭킹 데이터 로드
   useEffect(() => {
     let cancelled = false
 
@@ -173,6 +180,7 @@ function MainPage() {
     bestPage * bestBooksPerPage,
     bestPage * bestBooksPerPage + bestBooksPerPage
   )
+  // 알라딘/교보/YES24 베스트셀러 병렬 로드
   useEffect(() => {
     let cancelled = false
     setBestSellerLoading(true)
@@ -216,6 +224,7 @@ function MainPage() {
   const [trendBooks, setTrendBooks] = useState([])
   const [trendLoading, setTrendLoading] = useState(false)
 
+  // 워드클라우드 입력 데이터 구성
   const wordCloudItems = useMemo(() => {
     return keywordTrends
       .slice(0, 30)
@@ -227,6 +236,7 @@ function MainPage() {
       .filter((item) => item.text)
   }, [keywordTrends])
 
+  // 검색어 트렌드 + 구매 트렌드 로드
   useEffect(() => {
     let cancelled = false
     setTrendLoading(true)
@@ -259,6 +269,7 @@ function MainPage() {
   const [communityLoading, setCommunityLoading] = useState(false)
   const [communityError, setCommunityError] = useState('')
 
+  // 커뮤니티 목록 로드
   useEffect(() => {
     let cancelled = false
     setCommunityLoading(true)
@@ -283,6 +294,7 @@ function MainPage() {
     }
   }, [])
 
+  // 공지 여부/정렬 기준 헬퍼
   const getCommunitySortTime = (post) => {
     const dateValue = post?.createdAt || post?.updatedAt
     return dateValue ? new Date(dateValue).getTime() : 0
@@ -290,6 +302,7 @@ function MainPage() {
 
   const isNoticePost = (post) => Number(post?.isNotice) === 1
 
+  // 공지/일반 글 분리 및 최신 글 구성
   const { noticePosts, regularPosts } = useMemo(() => {
     const notices = communityPosts
       .filter((post) => isNoticePost(post))
@@ -305,6 +318,7 @@ function MainPage() {
       .slice(0, 5)
   }, [regularPosts])
 
+  // 좋아요 기준 인기 글 집계
   const topCommunityPosts = useMemo(() => {
     return [...regularPosts]
       .sort((a, b) => (b.communityGreat || 0) - (a.communityGreat || 0))
@@ -315,6 +329,7 @@ function MainPage() {
     return new Set(topCommunityPosts.map((post) => post.communityId))
   }, [topCommunityPosts])
 
+  // 공지+최신 글을 합쳐 중복 제거
   const mainCommunityPosts = useMemo(() => {
     const combined = [...noticePosts, ...latestCommunityPosts]
     const seen = new Set()
@@ -334,6 +349,7 @@ function MainPage() {
     navigate(`/community/${communityId}`)
   }
 
+  // 커뮤니티 분류 라벨/스타일 매핑
   const getCommunityKindLabel = (post) => {
     if (isNoticePost(post)) return '\uACF5\uC9C0'
     switch (post?.communityKind) {
@@ -348,6 +364,7 @@ function MainPage() {
     }
   }
 
+  // 커뮤니티 분류별 배지 스타일
   const getCommunityKindStyle = (post) => {
     if (isNoticePost(post)) return 'bg-orange-100 text-orange-700'
     switch (post?.communityKind) {
@@ -424,7 +441,7 @@ function MainPage() {
       {/* ===============================
          서울시 월간 대출랭킹
       =============================== */}
-      <section className="mb-32">
+      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
         <h2 className="text-3xl font-bold mb-6 text-gray-900">
           서울시 도서관 월간 대출랭킹
         </h2>
@@ -508,7 +525,7 @@ function MainPage() {
       {/* ===============================
          서점별 베스트셀러 TOP10
       =============================== */}
-      <section className="mb-32">
+      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
         <h2 className="text-3xl font-bold mb-6 text-gray-900">
           서점 별 베스트셀러 TOP10
         </h2>
@@ -625,7 +642,7 @@ function MainPage() {
       {/* ===============================
          커뮤니티 & 트렌드 (인기글 / 최신글)
       =============================== */}
-      <section className="mb-32">
+      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
         <h2 className="text-3xl font-bold mb-10 text-gray-900">
           커뮤니티 & 트렌드
         </h2>
@@ -644,7 +661,7 @@ function MainPage() {
               </button>
             </div>
 
-            <div className="relative h-[260px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 p-6 shadow-[0_12px_30px_-22px_rgba(15,23,42,0.45)]">
+            <div className="relative h-[260px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 p-6">
               <div className="pointer-events-none absolute -top-24 -right-16 h-48 w-48 rounded-full bg-emerald-100/50 blur-3xl" />
               <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full bg-sky-100/50 blur-3xl" />
               <ul className="relative space-y-3 text-gray-700 text-sm">

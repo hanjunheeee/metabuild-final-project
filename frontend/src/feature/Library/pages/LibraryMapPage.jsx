@@ -12,7 +12,7 @@ function LibraryMapPage() {
   const isbn = searchParams.get('isbn') || ''
   const title = decodeURIComponent(searchParams.get('title') || searchParams.get('query') || '')
   const fallbackCover = 'https://via.placeholder.com/70x100?text=No+Image'
-  const ALL_GU = '서울시전체'
+  const ALL_GU = '서울시 전체'
 
   const [guList, setGuList] = useState([])
   const [selectedGu, setSelectedGu] = useState('')
@@ -37,11 +37,13 @@ function LibraryMapPage() {
   const markerGroup = useRef(null)
   const guLayerMap = useRef({})
   const countsCacheRef = useRef({})
+  const loanStatusCacheRef = useRef({})
   const lastSearchRef = useRef({ isbn: '', gu: '' })
   const lastAllSearchRef = useRef({ gu: '' })
   const latestDataRef = useRef({ isbn: '', libraryData: [], selectedGu: '' })
   const lastIsbnRef = useRef('')
   const COUNTS_CACHE_TTL_MS = 10 * 60 * 1000
+  const LOAN_CACHE_TTL_MS = 10 * 60 * 1000
 
   const colorPalette = [
     '#8EC1DA',
@@ -114,6 +116,27 @@ function LibraryMapPage() {
         : `<div class="gu-name">${name}</div>`
       layer.setTooltipContent(label)
     })
+  }
+
+  const getCachedLoanStatus = (isbnValue, libCode) => {
+    const byIsbn = loanStatusCacheRef.current[isbnValue]
+    if (!byIsbn) return null
+    const entry = byIsbn[libCode]
+    if (!entry) return null
+    if (Date.now() - entry.timestamp > LOAN_CACHE_TTL_MS) {
+      return null
+    }
+    return entry.available
+  }
+
+  const setCachedLoanStatus = (isbnValue, libCode, available) => {
+    if (!loanStatusCacheRef.current[isbnValue]) {
+      loanStatusCacheRef.current[isbnValue] = {}
+    }
+    loanStatusCacheRef.current[isbnValue][libCode] = {
+      available,
+      timestamp: Date.now()
+    }
   }
 
   const clearMarkers = () => {
@@ -246,7 +269,7 @@ function LibraryMapPage() {
     setLoanMessage('')
 
     try {
-    const counts = {}
+      const counts = {}
       await Promise.all(
         currentLibraries.map(async (lib) => {
           const guName = (lib[LIB_KEYS.gu] || '').trim()
@@ -254,12 +277,18 @@ function LibraryMapPage() {
           if (!guName || !libCode) return
 
           let available = false
-          try {
-            const response = await checkLoan(libCode, currentIsbn)
-            const result = response?.response?.result || {}
-            available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
-          } catch (e) {
-            available = false
+          const cached = getCachedLoanStatus(currentIsbn, libCode)
+          if (cached !== null) {
+            available = cached
+          } else {
+            try {
+              const response = await checkLoan(libCode, currentIsbn)
+              const result = response?.response?.result || {}
+              available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
+            } catch (e) {
+              available = false
+            }
+            setCachedLoanStatus(currentIsbn, libCode, available)
           }
 
           if (available) {
@@ -347,12 +376,18 @@ function LibraryMapPage() {
           }
 
           let available = false
-          try {
-            const response = await checkLoan(libCode, currentIsbn)
-            const result = response?.response?.result || {}
-            available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
-          } catch (e) {
-            available = false
+          const cached = getCachedLoanStatus(currentIsbn, libCode)
+          if (cached !== null) {
+            available = cached
+          } else {
+            try {
+              const response = await checkLoan(libCode, currentIsbn)
+              const result = response?.response?.result || {}
+              available = result.loanAvailable === 'Y' || result.hasBook === 'Y'
+            } catch (e) {
+              available = false
+            }
+            setCachedLoanStatus(currentIsbn, libCode, available)
           }
 
           return {
@@ -711,6 +746,39 @@ function LibraryMapPage() {
     fetch('https://raw.githubusercontent.com/southkorea/seoul-maps/master/kostat/2013/json/seoul_municipalities_geo_simple.json')
       .then(res => res.json())
       .then(data => {
+        const maskRings = []
+        data?.features?.forEach((feature) => {
+          const geometry = feature?.geometry
+          if (!geometry) return
+          const addRing = (ring) => {
+            if (!Array.isArray(ring)) return
+            maskRings.push(ring.map(([lng, lat]) => [lat, lng]))
+          }
+          if (geometry.type === 'Polygon') {
+            addRing(geometry.coordinates?.[0])
+          } else if (geometry.type === 'MultiPolygon') {
+            geometry.coordinates?.forEach((polygon) => {
+              addRing(polygon?.[0])
+            })
+          }
+        })
+
+        if (maskRings.length > 0) {
+          const outerRing = [
+            [90, -180],
+            [90, 180],
+            [-90, 180],
+            [-90, -180]
+          ]
+          L.polygon([outerRing, ...maskRings], {
+            color: '#ffffff',
+            fillColor: '#ffffff',
+            fillOpacity: 1,
+            weight: 0,
+            interactive: false
+          }).addTo(map)
+        }
+
         const seoulLayer = L.geoJson(data, {
           style: (feature) => {
             const name = getGuName(feature?.properties)
@@ -757,7 +825,7 @@ function LibraryMapPage() {
   }, [])
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-80px)]">
       <div className="w-[320px] p-6 bg-white border-r border-gray-200 overflow-y-auto">
         <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3">
           <button
@@ -773,7 +841,7 @@ function LibraryMapPage() {
           </button>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-3">
           <div className="text-sm font-bold text-gray-800 mb-3">선택한 책</div>
 
           {(selectedBookTitle || title) && (
@@ -805,7 +873,7 @@ function LibraryMapPage() {
               }
               setShowSearch(!showSearch)
             }}
-            className="w-full mt-3 py-2 bg-gray-600 text-white rounded-xl"
+            className="w-full mt-3 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600"
           >
             {showSearch ? '검색 닫기' : '다른 책 검색하기'}
           </button>
@@ -880,7 +948,7 @@ function LibraryMapPage() {
               setMapMode('loan')
               handleCheckLoan()
             }}
-            className="w-full mt-2 h-11 bg-gray-900 text-white rounded-xl"
+            className="w-full mt-2 h-11 bg-blue-700 text-white rounded-xl hover:bg-blue-800"
           >
             {loading || countsLoading ? (
               <span className="inline-flex items-center justify-center gap-2">
