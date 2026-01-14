@@ -1,9 +1,11 @@
 ﻿import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import useBooks from '../hooks/useBooks'
-import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSummaryApi } from '../api/bookApi'
+import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSummaryApi, fetchBooks } from '../api/bookApi'
 import { logSearch, logBookAction } from '../api/analyticsApi'
 import Spinner from '../../../shared/components/icons/Spinner'
+import { getUserFromSession } from '@/shared/api/authApi'
+import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 
 // 도서 검색 결과 화면(요약/구매/대출 경로 제공)
 function SearchPage() {
@@ -17,6 +19,13 @@ function SearchPage() {
 
   const [summaries, setSummaries] = useState({})
   const [loadingSummaryIds, setLoadingSummaryIds] = useState({})
+  const currentUser = getUserFromSession()
+  const [bookmarkedIds, setBookmarkedIds] = useState(new Set())
+  const [bookmarkLoadingIds, setBookmarkLoadingIds] = useState(new Set())
+  const [relatedOpenIds, setRelatedOpenIds] = useState(new Set())
+  const [relatedBooks, setRelatedBooks] = useState({})
+  const [relatedLoadingIds, setRelatedLoadingIds] = useState(new Set())
+  const [relatedErrors, setRelatedErrors] = useState({})
 
   const decodeHtmlEntities = (value) => {
     if (!value || typeof value !== 'string') {
@@ -98,6 +107,70 @@ function SearchPage() {
     }
   }
 
+  const toggleRelatedBooks = async (book) => {
+    const bookId = book?.bookId
+    if (!bookId) return
+
+    setRelatedOpenIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(bookId)) {
+        next.delete(bookId)
+      } else {
+        next.add(bookId)
+      }
+      return next
+    })
+
+    if (relatedBooks[bookId] || relatedLoadingIds.has(bookId)) {
+      return
+    }
+
+    const terms = [book.author, book.title, book.publisher]
+      .map((value) => (typeof value === 'string' ? value.trim() : ''))
+      .filter((value) => value)
+    if (terms.length === 0) return
+
+    setRelatedLoadingIds((prev) => {
+      const next = new Set(prev)
+      next.add(bookId)
+      return next
+    })
+    setRelatedErrors((prev) => ({ ...prev, [bookId]: '' }))
+
+    try {
+      const results = await Promise.allSettled(
+        terms.map((term) => fetchBooks(term))
+      )
+      const merged = results.flatMap((result) => {
+        if (result.status !== 'fulfilled') return []
+        return Array.isArray(result.value) ? result.value : []
+      })
+      const unique = new Map()
+      merged.forEach((item) => {
+        if (!item?.bookId || item.bookId === bookId) return
+        if (!unique.has(item.bookId)) {
+          unique.set(item.bookId, item)
+        }
+      })
+      const filtered = Array.from(unique.values()).slice(0, 6)
+      setRelatedBooks((prev) => ({
+        ...prev,
+        [bookId]: filtered
+      }))
+    } catch (e) {
+      setRelatedErrors((prev) => ({
+        ...prev,
+        [bookId]: '비슷한 책을 불러오지 못했습니다.'
+      }))
+    } finally {
+      setRelatedLoadingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(bookId)
+        return next
+      })
+    }
+  }
+
   // 알라딘 커버 이미지 크기 보정
   const getCoverUrl = (url) => {
     if (!url) {
@@ -174,6 +247,63 @@ function SearchPage() {
     setVisibleCount(10)
   }, [initialKeyword])
 
+  useEffect(() => {
+    if (!currentUser?.userId) {
+      setBookmarkedIds(new Set())
+      return
+    }
+
+    let cancelled = false
+    fetchBookmarkedBookIds(currentUser.userId)
+      .then((ids) => {
+        if (cancelled) return
+        setBookmarkedIds(new Set(Array.isArray(ids) ? ids : []))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setBookmarkedIds(new Set())
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [currentUser?.userId])
+
+  const handleToggleBookmark = async (bookId) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
+    if (!bookId) return
+
+    setBookmarkLoadingIds((prev) => {
+      const next = new Set(prev)
+      next.add(bookId)
+      return next
+    })
+
+    try {
+      const result = await toggleBookmark(currentUser.userId, bookId)
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev)
+        if (result?.bookmarked) {
+          next.add(bookId)
+        } else {
+          next.delete(bookId)
+        }
+        return next
+      })
+    } catch (e) {
+      alert('즐겨찾기 처리에 실패했습니다.')
+    } finally {
+      setBookmarkLoadingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(bookId)
+        return next
+      })
+    }
+  }
+
   if (loading) {
     return <div className="p-10">로딩 중...</div>
   }
@@ -226,6 +356,12 @@ function SearchPage() {
             const minPrice = bookShops.length
               ? Math.min(...bookShops.map(shop => shop.price))
               : null
+            const isBookmarked = bookmarkedIds.has(book.bookId)
+            const isBookmarkLoading = bookmarkLoadingIds.has(book.bookId)
+            const isRelatedOpen = relatedOpenIds.has(book.bookId)
+            const relatedList = relatedBooks[book.bookId] || []
+            const isRelatedLoading = relatedLoadingIds.has(book.bookId)
+            const relatedError = relatedErrors[book.bookId]
 
             return (
               <div key={book.bookId}>
@@ -263,7 +399,7 @@ function SearchPage() {
                     출판사 {book.publisher}
                   </p>
                   <div
-                    className="bg-white border px-4 py-2 text-sm text-gray-700 cursor-pointer flex items-center gap-2"
+                    className="bg-white border px-4 py-3 text-sm text-gray-700 cursor-pointer"
                     onClick={() => fetchBookSummary(book.bookId)}
                     role="button"
                     tabIndex={0}
@@ -273,17 +409,43 @@ function SearchPage() {
                       }
                     }}
                   >
-                    {loadingSummaryIds[book.bookId] && (
-                      <Spinner className="w-4 h-4" />
-                    )}
-                    {loadingSummaryIds[book.bookId]
-                      ? 'AI 요약 생성 중...'
-                      : (summaries[book.bookId] || '클릭하면 AI 요약을 생성합니다')}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          AI 요약
+                        </span>
+                        
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        {loadingSummaryIds[book.bookId] && (
+                          <Spinner className="w-4 h-4" />
+                        )}
+                        {loadingSummaryIds[book.bookId] ? '생성 중' : '클릭해서 보기'}
+                      </div>
+                    </div>
+                    <div className="mt-2 rounded-md bg-emerald-50/60 px-3 py-2 text-gray-700 leading-relaxed">
+                      {loadingSummaryIds[book.bookId]
+                        ? 'AI가 책의 핵심을 정리하고 있어요...'
+                        : (summaries[book.bookId] || '핵심 요약을 보고 싶다면 여기를 눌러주세요.')}
+                    </div>
                   </div>
                 </div>
 
                 {/* 버튼 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-3 justify-center">
+                  <button
+                    type="button"
+                    className={`w-full py-2 text-sm flex items-center justify-center gap-2 cursor-pointer transition-opacity ${
+                      isBookmarked
+                        ? 'bg-yellow-400 text-white hover:bg-yellow-500'
+                        : 'bg-white border border-gray-300 text-gray-600 hover:border-yellow-400 hover:text-yellow-600'
+                    }`}
+                    onClick={() => handleToggleBookmark(book.bookId)}
+                    disabled={isBookmarkLoading}
+                    title={isBookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                  >
+                    {isBookmarked ? '즐겨찾기 해제' : '즐겨찾기'}
+                  </button>
                   <button
                     className="w-full py-2 bg-sub-bg text-white text-sm cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => goToLibrarySearch(book)}
@@ -307,6 +469,12 @@ function SearchPage() {
                     onClick={() => goToCommunityReviews(book)}
                   >
                     관련 커뮤니티 게시글
+                  </button>
+                  <button
+                    className="w-full py-2 bg-white border border-gray-300 text-sm text-gray-700 cursor-pointer hover:border-sub-bg hover:text-sub-bg transition-colors"
+                    onClick={() => toggleRelatedBooks(book)}
+                  >
+                    {isRelatedOpen ? '비슷한 책 접기' : '비슷한 책 더보기'}
                   </button>
                 </div>
               </div>
@@ -359,6 +527,60 @@ function SearchPage() {
                         </li>
                       ))}
                     </ul>
+                  )}
+                </div>
+              )}
+
+              {isRelatedOpen && (
+                <div className="mt-4 bg-white border border-gray-200 p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-gray-800">
+                      비슷한 책
+                    </h4>
+                    <button
+                      type="button"
+                      className="text-xs text-gray-500 hover:text-sub-bg"
+                      onClick={() =>
+                        navigate(`/searchbook?keyword=${encodeURIComponent(book.author || book.title || '')}`)
+                      }
+                    >
+                      전체 보기
+                    </button>
+                  </div>
+
+                  {isRelatedLoading && (
+                    <p className="text-sm text-gray-500">불러오는 중...</p>
+                  )}
+                  {!isRelatedLoading && relatedError && (
+                    <p className="text-sm text-red-500">{relatedError}</p>
+                  )}
+                  {!isRelatedLoading && !relatedError && relatedList.length === 0 && (
+                    <p className="text-sm text-gray-500">비슷한 책이 없습니다.</p>
+                  )}
+                  {!isRelatedLoading && !relatedError && relatedList.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                      {relatedList.map((item) => (
+                        <button
+                          key={item.bookId}
+                          className="text-left hover:opacity-90 transition-opacity"
+                          onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(item.title || '')}`)}
+                        >
+                          {item.imageUrl ? (
+                            <img
+                              src={getCoverUrl(item.imageUrl)}
+                              alt={item.title || 'cover'}
+                              className="w-full aspect-[3/4] object-cover rounded bg-gray-200"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full aspect-[3/4] bg-gray-200 rounded" />
+                          )}
+                          <p className="mt-2 text-xs text-gray-700 line-clamp-2">
+                            {item.title}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}

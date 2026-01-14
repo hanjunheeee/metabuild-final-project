@@ -10,6 +10,8 @@ import {
 import { fetchKeywordTrends, fetchPurchaseTrends } from '../api/analyticsApi'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
+import { getUserFromSession } from '@/shared/api/authApi'
+import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 
 // 키워드 트렌드 데이터를 워드클라우드로 렌더링
 function WordCloud({ words, onWordClick }) {
@@ -103,6 +105,9 @@ function MainPage() {
   =============================== */
   const [keyword, setKeyword] = useState('')
   const navigate = useNavigate()
+  const currentUser = getUserFromSession()
+  const [bookmarkedIds, setBookmarkedIds] = useState(new Set())
+  const [bookmarkLoadingIds, setBookmarkLoadingIds] = useState(new Set())
 
   // 검색어 입력 후 검색 결과 페이지로 이동
   const handleSearch = () => {
@@ -111,6 +116,63 @@ function MainPage() {
       return
     }
     navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
+  }
+
+  useEffect(() => {
+    if (!currentUser?.userId) {
+      setBookmarkedIds(new Set())
+      return
+    }
+
+    let cancelled = false
+    fetchBookmarkedBookIds(currentUser.userId)
+      .then((ids) => {
+        if (cancelled) return
+        setBookmarkedIds(new Set(Array.isArray(ids) ? ids : []))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setBookmarkedIds(new Set())
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [currentUser?.userId])
+
+  const handleToggleBookmark = async (bookId) => {
+    if (!currentUser) {
+      navigate('/login')
+      return
+    }
+    if (!bookId) return
+
+    setBookmarkLoadingIds((prev) => {
+      const next = new Set(prev)
+      next.add(bookId)
+      return next
+    })
+
+    try {
+      const result = await toggleBookmark(currentUser.userId, bookId)
+      setBookmarkedIds((prev) => {
+        const next = new Set(prev)
+        if (result?.bookmarked) {
+          next.add(bookId)
+        } else {
+          next.delete(bookId)
+        }
+        return next
+      })
+    } catch (e) {
+      alert('즐겨찾기 처리에 실패했습니다.')
+    } finally {
+      setBookmarkLoadingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(bookId)
+        return next
+      })
+    }
   }
 
   /* ===============================
@@ -494,6 +556,10 @@ function MainPage() {
                     ? 'bg-amber-700 text-white'
                     : 'bg-sky-200 text-black'
               const isTopRank = rank <= 3
+              const bookId = book?.bookId
+              const showBookmark = !!currentUser && !!bookId
+              const isBookmarked = showBookmark && bookmarkedIds.has(bookId)
+              const isBookmarkLoading = showBookmark && bookmarkLoadingIds.has(bookId)
 
               return (
                 <div
@@ -529,6 +595,32 @@ function MainPage() {
                     />
                   ) : (
                     <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
+                  )}
+                  {showBookmark && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleBookmark(bookId)
+                      }}
+                      disabled={isBookmarkLoading}
+                      className={`absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-all cursor-pointer ${
+                        isBookmarked
+                          ? 'bg-yellow-400 text-white hover:bg-yellow-500'
+                          : 'bg-white/90 text-gray-600 hover:text-yellow-600 border border-gray-200'
+                      }`}
+                      title={isBookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    >
+                      {isBookmarked ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      )}
+                    </button>
                   )}
                   <TwoLineTitle
                     text={book.title || ''}
@@ -656,6 +748,10 @@ function MainPage() {
                     ? 'bg-amber-700 text-white'
                     : 'bg-sky-200 text-black'
               const isTopRank = rank <= 3
+              const bookId = book?.bookId
+              const showBookmark = !!currentUser && !!bookId
+              const isBookmarked = showBookmark && bookmarkedIds.has(bookId)
+              const isBookmarkLoading = showBookmark && bookmarkLoadingIds.has(bookId)
 
               return (
                 <div
@@ -691,6 +787,32 @@ function MainPage() {
                     />
                   ) : (
                     <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
+                  )}
+                  {showBookmark && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleBookmark(bookId)
+                      }}
+                      disabled={isBookmarkLoading}
+                      className={`absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full transition-all cursor-pointer ${
+                        isBookmarked
+                          ? 'bg-yellow-400 text-white hover:bg-yellow-500'
+                          : 'bg-white/90 text-gray-600 hover:text-yellow-600 border border-gray-200'
+                      }`}
+                      title={isBookmarked ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                    >
+                      {isBookmarked ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      )}
+                    </button>
                   )}
                   <TwoLineTitle
                     text={book.title || ''}
@@ -835,9 +957,16 @@ function MainPage() {
               ) : (
                 <div className="space-y-2">
                   {trendBooks.map((book, idx) => (
-                    <button
+                    <div
                       key={book.bookId}
                       onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(book.text)}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          navigate(`/searchbook?keyword=${encodeURIComponent(book.text)}`)
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                       className="w-full flex items-center gap-3 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-left cursor-pointer"
                     >
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
@@ -860,7 +989,33 @@ function MainPage() {
                           {book.author}
                         </p>
                       </div>
-                    </button>
+                      {currentUser && book.bookId && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleBookmark(book.bookId)
+                          }}
+                          disabled={bookmarkLoadingIds.has(book.bookId)}
+                          className={`ml-2 flex h-8 w-8 items-center justify-center rounded-full transition-all cursor-pointer ${
+                            bookmarkedIds.has(book.bookId)
+                              ? 'bg-yellow-400 text-white hover:bg-yellow-500'
+                              : 'bg-white border border-gray-300 text-gray-500 hover:border-yellow-400 hover:text-yellow-600'
+                          }`}
+                          title={bookmarkedIds.has(book.bookId) ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                        >
+                          {bookmarkedIds.has(book.bookId) ? (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}

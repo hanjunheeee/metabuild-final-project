@@ -846,7 +846,7 @@ function LibraryMapPage() {
               setLoanMessage('')
               handleShowAllLibraries(ALL_GU)
             }}
-            className="w-full py-2 bg-gray-500 text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full py-2 bg-teal-700 text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
           >
             서울시 전체 도서관 위치
           </button>
