@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import useCommunityHelpers from './useCommunityHelpers'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { toggleFollow, checkFollowing } from '@/shared/api/followApi'
-import { fetchCommunities, deleteCommunity, fetchHotPosts, fetchLikedCommunityIds } from '../api/communityApi'
+import { fetchCommunities, deleteCommunity, fetchHotPosts, fetchLikedCommunityIds, fetchHallOfFame } from '../api/communityApi'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 
 // 페이지당 게시글 수
@@ -81,6 +81,8 @@ function useCommunityListPage() {
   const [hotPosts, setHotPosts] = useState([])
   const [hotPostIds, setHotPostIds] = useState(new Set())
 
+  const [hallOfFameUserIds, setHallOfFameUserIds] = useState(new Set())
+
   // 북마크한 책 ID 목록
   const [bookmarkedBookIds, setBookmarkedBookIds] = useState(new Set())
 
@@ -117,6 +119,21 @@ function useCommunityListPage() {
     loadHotPosts()
   }, [])
 
+  useEffect(() => {
+    const loadHallOfFame = async () => {
+      try {
+        const data = await fetchHallOfFame(10)
+        const ids = new Set()
+        ;(data?.topByFollowers || []).forEach(user => ids.add(user.userId))
+        ;(data?.topByLikes || []).forEach(user => ids.add(user.userId))
+        setHallOfFameUserIds(ids)
+      } catch (error) {
+        console.error('?ª…ì˜ˆ???„ë‹¹ ë¡œë”© ?¤íŒ¨:', error)
+      }
+    }
+    loadHallOfFame()
+  }, [])
+
   // 북마크한 책 ID 목록 가져오기
   useEffect(() => {
     const loadBookmarkedBookIds = async () => {
@@ -146,19 +163,35 @@ function useCommunityListPage() {
   }, [currentUser?.userId])
 
   // 공지글과 일반글 분리 (공지글은 최신 3개만)
+  const communitiesWithBadges = useMemo(() => {
+    if (!communities.length) return communities
+    return communities.map(post => ({
+      ...post,
+      isHallOfFame: hallOfFameUserIds.has(post.userId),
+    }))
+  }, [communities, hallOfFameUserIds])
+
+  const hotPostsWithBadges = useMemo(() => {
+    if (!hotPosts.length) return hotPosts
+    return hotPosts.map(post => ({
+      ...post,
+      isHallOfFame: hallOfFameUserIds.has(post.userId),
+    }))
+  }, [hotPosts, hallOfFameUserIds])
+
   const { noticePosts, regularPosts } = useMemo(() => {
-    const notices = communities
+    const notices = communitiesWithBadges
       .filter(post => post.isNotice === 1)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 3)
-    const regulars = communities.filter(post => post.isNotice !== 1)
+    const regulars = communitiesWithBadges.filter(post => post.isNotice !== 1)
     return { noticePosts: notices, regularPosts: regulars }
-  }, [communities])
+  }, [communitiesWithBadges])
 
   // 검색 및 정렬 적용
   const filteredCommunities = useMemo(() => {
     let result = kindFilter === 'NOTICE' 
-      ? communities.filter(post => post.isNotice === 1)
+      ? communitiesWithBadges.filter(post => post.isNotice === 1)
       : [...regularPosts]
 
     if (filterUserId && kindFilter !== 'NOTICE') {
@@ -198,7 +231,7 @@ function useCommunityListPage() {
     }
 
     return result
-  }, [communities, regularPosts, searchTerm, sortBy, kindFilter, filterUserId])
+  }, [communitiesWithBadges, regularPosts, searchTerm, sortBy, kindFilter, filterUserId])
 
   // 전체 페이지 수 계산
   const totalPages = Math.ceil(filteredCommunities.length / POSTS_PER_PAGE)
@@ -336,7 +369,7 @@ function useCommunityListPage() {
     totalPages,
     isFollowing,
     followLoading,
-    hotPosts,
+    hotPosts: hotPostsWithBadges,
     hotPostIds,
     bookmarkedBookIds,
     likedCommunityIds,

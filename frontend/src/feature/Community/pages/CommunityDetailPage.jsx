@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike } from '../api/communityApi'
+import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike, fetchHallOfFame } from '../api/communityApi'
 import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { checkBookmark, toggleBookmark } from '@/shared/api/bookmarkApi'
@@ -17,6 +17,7 @@ function CommunityDetailPage() {
   const [isLiking, setIsLiking] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [isBookmarking, setIsBookmarking] = useState(false)
+  const [isHallOfFameAuthor, setIsHallOfFameAuthor] = useState(false)
   
   const currentUser = getUserFromSession()
 
@@ -52,6 +53,22 @@ function CommunityDetailPage() {
     }
     loadPost()
   }, [id, currentUser?.userId])
+
+  useEffect(() => {
+    const loadHallOfFame = async () => {
+      if (!post?.userId) return
+      try {
+        const data = await fetchHallOfFame(10)
+        const ids = new Set()
+        ;(data?.topByFollowers || []).forEach(user => ids.add(user.userId))
+        ;(data?.topByLikes || []).forEach(user => ids.add(user.userId))
+        setIsHallOfFameAuthor(ids.has(post.userId))
+      } catch (err) {
+        console.error('?ª…ì˜ˆ???„ë‹¹ ì¡°íšŒ ?¤íŒ¨:', err)
+      }
+    }
+    loadHallOfFame()
+  }, [post?.userId])
 
   // 날짜 포맷
   const formatDate = (dateStr) => {
@@ -303,6 +320,9 @@ function CommunityDetailPage() {
                     className="text-sm font-medium text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
                   >
                     {post.authorNickname || '익명'}
+                    {isHallOfFameAuthor && (
+                      <span className="ml-1 text-amber-500 text-xs font-semibold">👑 명예</span>
+                    )}
                   </button>
                   <p className="text-xs text-gray-400">
                     {formatDate(post.createdAt)}
@@ -427,4 +447,3 @@ function CommunityDetailPage() {
 }
 
 export default CommunityDetailPage
-

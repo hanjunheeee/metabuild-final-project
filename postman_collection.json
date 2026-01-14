@@ -1,0 +1,512 @@
+﻿{
+  "info": {
+    "_postman_id": "",
+    "name": "metabuild-final-project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Keyword Trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/trends/keywords",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "trends", "keywords"]
+            }
+          }
+        },
+        {
+          "name": "Get Purchase Trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/trends/purchase",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "trends", "purchase"]
+            }
+          }
+        },
+        {
+          "name": "Get Library Trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/trends/library",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "trends", "library"]
+            }
+          }
+        },
+        {
+          "name": "Log Search",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keyword\": \"string\",\n  \"bookTitle\": \"string\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/log/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "log", "search"]
+            }
+          }
+        },
+        {
+          "name": "Log Book Action",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": 123,\n  \"actionType\": \"PURCHASE_VIEW\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/log/action",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "log", "action"]
+            }
+          }
+        },
+        {
+          "name": "Get Blocked Keywords",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/blocked-keywords",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "blocked-keywords"]
+            }
+          }
+        },
+        {
+          "name": "Add Blocked Keyword",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keyword\": \"string\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/blocked-keywords",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "blocked-keywords"]
+            }
+          }
+        },
+        {
+          "name": "Delete Blocked Keyword",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:7878/api/analytics/blocked-keywords/:keyword",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "analytics", "blocked-keywords", ":keyword"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Get Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books?query=",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books"],
+              "query": [{ "key": "query", "value": "", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Get Book By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get Book Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/:id/summary",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", ":id", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Book Shops",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/:id/shops?title=",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", ":id", "shops"],
+              "query": [{ "key": "title", "value": "", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Get Aladin Bestsellers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/bestsellers/aladin",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", "bestsellers", "aladin"]
+            }
+          }
+        },
+        {
+          "name": "Get Kyobo Bestsellers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/bestsellers/kyobo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", "bestsellers", "kyobo"]
+            }
+          }
+        },
+        {
+          "name": "Get YES24 Bestsellers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/bestsellers/yes24",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", "bestsellers", "yes24"]
+            }
+          }
+        },
+        {
+          "name": "Get Seoul Loan Top 10",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/books/loans/seoul",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", "loans", "seoul"]
+            }
+          }
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": 1,\n  \"isbn\": \"string\",\n  \"title\": \"string\",\n  \"author\": \"string\",\n  \"publisher\": \"string\",\n  \"publishedDate\": \"2024-01-01\",\n  \"summary\": \"string\",\n  \"imageUrl\": \"string\",\n  \"ages\": \"string\",\n  \"tag\": \"string\",\n  \"borrowedAmount\": 0\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/books",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookId\": 1,\n  \"isbn\": \"string\",\n  \"title\": \"string\",\n  \"author\": \"string\",\n  \"publisher\": \"string\",\n  \"publishedDate\": \"2024-01-01\",\n  \"summary\": \"string\",\n  \"imageUrl\": \"string\",\n  \"ages\": \"string\",\n  \"tag\": \"string\",\n  \"borrowedAmount\": 0\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/books/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:7878/api/books/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "books", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookmarks",
+      "item": [
+        {
+          "name": "Toggle Bookmark",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"bookId\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/bookmarks/toggle",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "bookmarks", "toggle"]
+            }
+          }
+        },
+        {
+          "name": "Check Bookmark",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/bookmarks/check?userId=1&bookId=2",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "bookmarks", "check"],
+              "query": [
+                { "key": "userId", "value": "1" },
+                { "key": "bookId", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Bookmarks By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/bookmarks/user/:userId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "bookmarks", "user", ":userId"]
+            }
+          }
+        },
+        {
+          "name": "Get Bookmarked Book Ids",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/bookmarks/user/:userId/book-ids",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "bookmarks", "user", ":userId", "book-ids"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Get Comments By Community",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/community/:communityId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", "community", ":communityId"]
+            }
+          }
+        },
+        {
+          "name": "Get Comments By Community Paged",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/community/:communityId/paged?page=0&size=5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", "community", ":communityId", "paged"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Comments By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/user/:userId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", "user", ":userId"]
+            }
+          }
+        },
+        {
+          "name": "Get Comment By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/:commentId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", ":commentId"]
+            }
+          }
+        },
+        {
+          "name": "Create Comment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"communityId\": 1,\n  \"userId\": 1,\n  \"content\": \"string\",\n  \"parentId\": null,\n  \"bookId\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/comments",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"content\": \"string\",\n  \"bookId\": null\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/comments/:commentId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", ":commentId"]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/:commentId?userId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", ":commentId"],
+              "query": [{ "key": "userId", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Toggle Comment Like",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:7878/api/comments/:commentId/like",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", ":commentId", "like"]
+            }
+          }
+        },
+        {
+          "name": "Get Liked Comment Ids",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/user/:userId/liked",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", "user", ":userId", "liked"]
+            }
+          }
+        },
+        {
+          "name": "Get Total Likes By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:7878/api/comments/user/:userId/total-likes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "7878",
+              "path": ["api", "comments", "user", ":userId", "total-likes"]
+            }
+          }
+        }
+      ]
+    },

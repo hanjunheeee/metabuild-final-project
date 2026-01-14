@@ -76,6 +76,9 @@ function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isH
           {/* 작성자 */}
           <span className="text-xs text-gray-500 flex-shrink-0 w-20 truncate text-center">
             {post.authorNickname || '익명'}
+            {post.isHallOfFame && (
+              <span className="ml-1 text-amber-500">👑</span>
+            )}
           </span>
           
           {/* 날짜 */}
@@ -151,4 +154,3 @@ function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isH
 }
 
 export default CommunityPostList
-
