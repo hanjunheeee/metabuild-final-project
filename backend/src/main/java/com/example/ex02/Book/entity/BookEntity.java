@@ -49,4 +49,7 @@ public class BookEntity {
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private AgeGroup ages;
+
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private BookDetailEntity bookDetail;
 }
