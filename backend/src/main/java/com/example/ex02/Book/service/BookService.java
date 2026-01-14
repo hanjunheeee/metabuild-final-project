@@ -123,11 +123,6 @@ public class BookService {
         dto.setSummary(book.getSummary());
         dto.setImageUrl(book.getImageUrl());
         dto.setAges(book.getAges() != null ? book.getAges().name() : null);
-
-        if (book.getBookDetail() != null) {
-            dto.setTag(book.getBookDetail().getTag());
-            dto.setBorrowedAmount(book.getBookDetail().getBorrowedAmount());
-        }
         return dto;
     }
 

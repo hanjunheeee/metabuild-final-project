@@ -1,6 +1,20 @@
 import ReplyItem from './ReplyItem'
 import BookInfoCard from '../BookInfoCard'
-import { isAdmin, getDisplayName, getDisplayPhoto, getAdminBadge } from '@/shared/utils/userDisplay'
+import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDisplay'
+
+// 칭호 레벨별 스타일
+const getTitleLevelStyle = (level) => {
+  switch (level) {
+    case 'GOLD':
+      return 'bg-amber-100 text-amber-700 border-amber-300'
+    case 'SILVER':
+      return 'bg-gray-200 text-gray-600 border-gray-400'
+    case 'BRONZE':
+      return 'bg-orange-100 text-orange-700 border-orange-300'
+    default:
+      return 'bg-gray-100 text-gray-600 border-gray-200'
+  }
+}
 
 /**
  * 개별 부모 댓글 컴포넌트
@@ -78,7 +92,7 @@ function CommentItem({
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-start gap-3">
             {/* 프로필 이미지 */}
-            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(comment) ? 'ring-2 ring-yellow-400' : 'bg-gray-200'}`}>
+            <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(comment) ? 'ring-2 ring-blue-400' : 'bg-gray-200'}`}>
               {getDisplayPhoto(comment) ? (
                 <img 
                   src={getDisplayPhoto(comment)} 
@@ -94,10 +108,7 @@ function CommentItem({
             {/* 닉네임 + 시간 */}
             <div className="flex flex-col">
               <div className="flex items-center gap-1 flex-wrap">
-                {getAdminBadge(comment) && (
-                  <span className="text-sm">{getAdminBadge(comment)}</span>
-                )}
-                <span className={`text-sm font-medium ${isAdmin(comment) ? 'text-yellow-600' : 'text-gray-800'}`}>
+                <span className={`text-sm font-medium ${isAdmin(comment) ? 'text-blue-600' : 'text-gray-800'}`}>
                   {getDisplayName(comment)}
                 </span>
                 {/* 칭호 표시 */}
@@ -106,7 +117,7 @@ function CommentItem({
                     {userTitles[comment.userId].map((title) => (
                       <span 
                         key={title.titleId}
-                        className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200"
+                        className={`px-1.5 py-0.5 text-[10px] font-medium border ${getTitleLevelStyle(title.titleLevel)}`}
                       >
                         {title.titleName}
                       </span>

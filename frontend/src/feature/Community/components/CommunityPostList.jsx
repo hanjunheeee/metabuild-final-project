@@ -1,5 +1,20 @@
 import { useState } from 'react'
 import BookInfoCard from './BookInfoCard'
+import { isAdmin, getDisplayName } from '@/shared/utils/userDisplay'
+
+// 칭호 레벨별 스타일
+const getTitleLevelStyle = (level) => {
+  switch (level) {
+    case 'GOLD':
+      return 'bg-amber-100 text-amber-700 border-amber-300'
+    case 'SILVER':
+      return 'bg-gray-200 text-gray-600 border-gray-400'
+    case 'BRONZE':
+      return 'bg-orange-100 text-orange-700 border-orange-300'
+    default:
+      return 'bg-main-bg/5 text-main-bg border-main-bg/30'
+  }
+}
 
 /**
  * 한 줄 형태의 게시글 목록 아이템 컴포넌트
@@ -15,6 +30,13 @@ import BookInfoCard from './BookInfoCard'
  */
 function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card', userTitles = {} }) {
   const [showBookInfo, setShowBookInfo] = useState(false)
+  
+  // 작성자 정보를 userDisplay 유틸에 맞는 형식으로 변환
+  const author = {
+    role: post.authorRole,
+    nickname: post.authorNickname,
+  }
+  const isAuthorAdmin = isAdmin(author)
   // 배지 색상 스타일
   const badgeStyles = {
     amber: 'bg-amber-500 text-white',
@@ -114,13 +136,16 @@ function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isH
           </div>
           
           {/* 작성자 */}
-          <div className="text-xs text-gray-500 flex-shrink-0 w-44 text-center flex items-center justify-center gap-1">
-            {userTitles?.[post.userId]?.length > 0 && (
-              <span className="text-[10px] text-main-bg font-medium px-1 py-0.5 border border-main-bg/30 bg-main-bg/5 rounded">
+          <div className={`text-xs flex-shrink-0 w-44 text-center flex items-center justify-center gap-1 ${
+            isAuthorAdmin ? 'text-blue-600' : 'text-gray-500'
+          }`}>
+            {/* 칭호: 관리자가 아닐 때만 표시 */}
+            {!isAuthorAdmin && userTitles?.[post.userId]?.length > 0 && (
+              <span className={`text-[10px] font-medium px-1 py-0.5 border rounded ${getTitleLevelStyle(userTitles[post.userId][0]?.titleLevel)}`}>
                 {userTitles[post.userId][0]?.titleName}
               </span>
             )}
-            <span className="truncate">{post.authorNickname || '익명'}</span>
+            <span className="truncate">{getDisplayName(author)}</span>
           </div>
           
           {/* 날짜 */}

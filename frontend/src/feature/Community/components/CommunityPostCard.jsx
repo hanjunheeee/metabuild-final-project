@@ -1,4 +1,19 @@
 import BookInfoCard from './BookInfoCard'
+import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDisplay'
+
+// 칭호 레벨별 스타일
+const getTitleLevelStyle = (level) => {
+  switch (level) {
+    case 'GOLD':
+      return 'bg-amber-100 text-amber-700 border-amber-300'
+    case 'SILVER':
+      return 'bg-gray-200 text-gray-600 border-gray-400'
+    case 'BRONZE':
+      return 'bg-orange-100 text-orange-700 border-orange-300'
+    default:
+      return 'bg-main-bg/5 text-main-bg border-main-bg/30'
+  }
+}
 
 /**
  * 커뮤니티 게시글 카드 컴포넌트 (인스타그램 스타일)
@@ -22,6 +37,14 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
   // 북마크 상태 확인
   const isBookmarked = bookmarkedBookIds && post.bookId && bookmarkedBookIds.has(post.bookId)
   const isLiked = likedCommunityIds && likedCommunityIds.has(post.communityId)
+  
+  // 작성자 정보를 userDisplay 유틸에 맞는 형식으로 변환
+  const author = {
+    role: post.authorRole,
+    nickname: post.authorNickname,
+    userPhoto: post.authorPhoto,
+  }
+  const isAuthorAdmin = isAdmin(author)
 
   // 북마크 버튼 클릭 핸들러
   const handleBookmark = (e) => {
@@ -67,17 +90,21 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onAuthorClick && onAuthorClick(post.userId, post.authorNickname)
+              if (!isAuthorAdmin) {
+                onAuthorClick && onAuthorClick(post.userId, post.authorNickname)
+              }
             }}
-            className="w-8 h-8 rounded-full bg-gray-200 
-                        flex items-center justify-center overflow-hidden
-                        hover:ring-2 hover:ring-main-bg transition-all cursor-pointer"
+            className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0
+                        flex items-center justify-center
+                        ${isAuthorAdmin 
+                          ? 'ring-2 ring-blue-400 cursor-default' 
+                          : 'bg-gray-200 hover:ring-2 hover:ring-main-bg transition-all cursor-pointer'}`}
           >
-            {post.authorPhoto ? (
-              <img src={`http://localhost:7878/uploads/profile/${post.authorPhoto}`} alt="" className="w-full h-full object-cover" />
+            {getDisplayPhoto(author) ? (
+              <img src={getDisplayPhoto(author)} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-main-bg text-white text-xs font-bold">
-                {(post.authorNickname || '?')[0].toUpperCase()}
+                {getDisplayName(author)[0].toUpperCase()}
               </div>
             )}
           </button>
@@ -85,13 +112,20 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
             <button 
               onClick={(e) => {
                 e.stopPropagation()
-                onAuthorClick && onAuthorClick(post.userId, post.authorNickname)
+                if (!isAuthorAdmin) {
+                  onAuthorClick && onAuthorClick(post.userId, post.authorNickname)
+                }
               }}
-              className="flex items-center gap-1 font-semibold text-sm text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
+              className={`flex items-center gap-1 font-semibold text-sm transition-colors ${
+                isAuthorAdmin 
+                  ? 'text-blue-600 cursor-default' 
+                  : 'text-gray-800 hover:text-main-bg cursor-pointer'
+              }`}
             >
-              <span>{post.authorNickname || '익명'}</span>
-              {userTitles?.[post.userId]?.length > 0 && (
-                <span className="text-[10px] text-main-bg font-medium px-1.5 py-0.5 border border-main-bg/30 bg-main-bg/5 rounded">
+              <span>{getDisplayName(author)}</span>
+              {/* 칭호: 관리자가 아닐 때만 표시 */}
+              {!isAuthorAdmin && userTitles?.[post.userId]?.length > 0 && (
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 border rounded ${getTitleLevelStyle(userTitles[post.userId][0]?.titleLevel)}`}>
                   {userTitles[post.userId][0]?.titleName}
                 </span>
               )}

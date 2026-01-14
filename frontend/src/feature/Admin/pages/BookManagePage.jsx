@@ -18,8 +18,12 @@ function BookManagePage() {
   const [showModal, setShowModal] = useState(false)
   const [editingBook, setEditingBook] = useState(null)
 
-  // 도서 목록 조회
+  // 도서 목록 조회 (2글자 이상일 때만)
   const loadBooks = useCallback(async () => {
+    if (searchQuery.length < 2) {
+      setAllBooks([])
+      return
+    }
     setLoading(true)
     try {
       const data = await fetchBooks(searchQuery)
@@ -132,17 +136,29 @@ function BookManagePage() {
 
       {/* 통계 */}
       <div className="mb-4 text-sm text-gray-600">
-        총 {filteredBooks.length}권의 도서
-        {agesFilter && <span className="ml-2 text-main-bg">({agesFilter} 필터 적용)</span>}
+        {searchQuery.length >= 2 ? (
+          <>
+            총 {filteredBooks.length}권의 도서
+            {agesFilter && <span className="ml-2 text-main-bg">({agesFilter} 필터 적용)</span>}
+          </>
+        ) : (
+          <span className="text-gray-400">도서명, 저자, ISBN으로 검색해주세요 (2글자 이상)</span>
+        )}
       </div>
 
       {/* 테이블 */}
       <div className="overflow-x-auto">
         {loading ? (
           <div className="py-10 text-center text-gray-500">로딩 중...</div>
+        ) : searchQuery.length < 2 ? (
+          <div className="py-16 text-center">
+            <div className="text-5xl mb-4">📚</div>
+            <p className="text-gray-500 mb-2">도서를 검색해주세요</p>
+            <p className="text-sm text-gray-400">2글자 이상 입력하면 검색 결과가 표시됩니다</p>
+          </div>
         ) : filteredBooks.length === 0 ? (
           <div className="py-10 text-center text-gray-500">
-            {allBooks.length === 0 ? '등록된 도서가 없습니다.' : '검색 결과가 없습니다.'}
+            검색 결과가 없습니다.
           </div>
         ) : (
           <table className="w-full text-sm">

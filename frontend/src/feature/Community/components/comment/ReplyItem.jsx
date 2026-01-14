@@ -1,5 +1,19 @@
 import BookInfoCard from '../BookInfoCard'
-import { isAdmin, getDisplayName, getDisplayPhoto, getAdminBadge } from '@/shared/utils/userDisplay'
+import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDisplay'
+
+// 칭호 레벨별 스타일
+const getTitleLevelStyle = (level) => {
+  switch (level) {
+    case 'GOLD':
+      return 'bg-amber-100 text-amber-700 border-amber-300'
+    case 'SILVER':
+      return 'bg-gray-200 text-gray-600 border-gray-400'
+    case 'BRONZE':
+      return 'bg-orange-100 text-orange-700 border-orange-300'
+    default:
+      return 'bg-gray-100 text-gray-600 border-gray-200'
+  }
+}
 
 /**
  * 개별 답글 컴포넌트
@@ -50,7 +64,7 @@ function ReplyItem({
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-3">
           {/* 프로필 이미지 */}
-          <div className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(reply) ? 'ring-2 ring-yellow-400' : 'bg-gray-200'}`}>
+          <div className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${isAdmin(reply) ? 'ring-2 ring-blue-400' : 'bg-gray-200'}`}>
             {getDisplayPhoto(reply) ? (
               <img 
                 src={getDisplayPhoto(reply)} 
@@ -66,25 +80,22 @@ function ReplyItem({
           {/* 닉네임 + 시간 */}
           <div className="flex flex-col">
             <div className="flex items-center gap-1 flex-wrap">
-              {getAdminBadge(reply) && (
-                <span className="text-sm">{getAdminBadge(reply)}</span>
-              )}
-              <span className={`text-sm font-medium ${isAdmin(reply) ? 'text-yellow-600' : 'text-gray-800'}`}>
+              <span className={`text-sm font-medium ${isAdmin(reply) ? 'text-blue-600' : 'text-gray-800'}`}>
                 {getDisplayName(reply)}
               </span>
-              {/* 칭호 표시 */}
-              {!isAdmin(reply) && userTitles?.[reply.userId]?.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {userTitles[reply.userId].map((title) => (
-                    <span 
-                      key={title.titleId}
-                      className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200"
-                    >
-                      {title.titleName}
-                    </span>
-                  ))}
-                </div>
-              )}
+                {/* 칭호 표시 */}
+                {!isAdmin(reply) && userTitles?.[reply.userId]?.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {userTitles[reply.userId].map((title) => (
+                      <span 
+                        key={title.titleId}
+                        className={`px-1.5 py-0.5 text-[10px] font-medium border ${getTitleLevelStyle(title.titleLevel)}`}
+                      >
+                        {title.titleName}
+                      </span>
+                    ))}
+                  </div>
+                )}
               {reply.updatedAt && (
                 <span className="text-xs text-gray-400">(수정됨)</span>
               )}

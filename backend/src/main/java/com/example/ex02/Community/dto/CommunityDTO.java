@@ -28,6 +28,7 @@ public class CommunityDTO {
     // 추가 정보 (목록 표시용)
     private String authorNickname;
     private String authorPhoto;
+    private String authorRole;  // ADMIN / USER
     private String bookTitle;
     private String bookAuthor;
     private String bookCoverUrl;
@@ -38,7 +39,7 @@ public class CommunityDTO {
     public CommunityDTO(Long communityId, Long userId, Long bookId, String contentJson, 
                         String thumbnailUrl, Integer communityGreat, LocalDate createdAt, 
                         LocalDate updatedAt, Integer isNotice, String communityKind,
-                        String authorNickname, String authorPhoto,
+                        String authorNickname, String authorPhoto, String authorRole,
                         String bookTitle, String bookAuthor, String bookCoverUrl, 
                         LocalDate bookPublishedDate, int commentCount) {
         this.communityId = communityId;
@@ -53,6 +54,7 @@ public class CommunityDTO {
         this.communityKind = communityKind;
         this.authorNickname = authorNickname;
         this.authorPhoto = authorPhoto;
+        this.authorRole = authorRole;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.bookCoverUrl = bookCoverUrl;
@@ -74,6 +76,7 @@ public class CommunityDTO {
                 .communityKind(entity.getCommunityKind())
                 .authorNickname(entity.getUser().getNickname())
                 .authorPhoto(entity.getUser().getUserPhoto())
+                .authorRole(entity.getUser().getRole())
                 .bookTitle(entity.getBook() != null ? entity.getBook().getTitle() : null)
                 .bookAuthor(entity.getBook() != null ? entity.getBook().getAuthor() : null)
                 .bookCoverUrl(entity.getBook() != null ? entity.getBook().getImageUrl() : null)

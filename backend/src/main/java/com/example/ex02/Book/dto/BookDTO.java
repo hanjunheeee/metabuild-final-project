@@ -21,7 +21,4 @@ public class BookDTO {
     private String summary;
     private String imageUrl;
     private String ages;  // 아동 / 청소년 / 성인
-    // BookDetail에서 가져오는 필드
-    private String tag;
-    private Integer borrowedAmount;
 }

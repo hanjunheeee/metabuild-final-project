@@ -5,6 +5,21 @@ import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { checkBookmark, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { CommentSection, BookInfoCard } from '../components'
+import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDisplay'
+
+// 칭호 레벨별 스타일
+const getTitleLevelStyle = (level) => {
+  switch (level) {
+    case 'GOLD':
+      return 'bg-amber-100 text-amber-700 border-amber-300'
+    case 'SILVER':
+      return 'bg-gray-200 text-gray-600 border-gray-400'
+    case 'BRONZE':
+      return 'bg-orange-100 text-orange-700 border-orange-300'
+    default:
+      return 'bg-main-bg/5 text-main-bg border-main-bg/30'
+  }
+}
 
 function CommunityDetailPage() {
   const { id } = useParams()
@@ -251,11 +266,19 @@ function CommunityDetailPage() {
   }
 
   const isAuthor = currentUser?.userId === post.userId
-  const isAdmin = currentUser?.role === 'ADMIN'
+  const isCurrentUserAdmin = currentUser?.role === 'ADMIN'
   // 수정 권한: 작성자이거나 관리자(공지사항의 경우)
-  const canEdit = isAuthor || (isAdmin && post.isNotice === 1)
+  const canEdit = isAuthor || (isCurrentUserAdmin && post.isNotice === 1)
   // 삭제 권한: 작성자이거나 관리자(모든 글)
-  const canDelete = isAuthor || isAdmin
+  const canDelete = isAuthor || isCurrentUserAdmin
+  
+  // 작성자 정보를 userDisplay 유틸에 맞는 형식으로 변환
+  const author = {
+    role: post.authorRole,
+    nickname: post.authorNickname,
+    userPhoto: post.authorPhoto,
+  }
+  const isAuthorAdmin = isAdmin(author)
 
   return (
     <div className="flex-1 py-8 px-4">
@@ -296,35 +319,41 @@ function CommunityDetailPage() {
             {/* 작성자 정보 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {/* 프로필 이미지 (클릭 가능) */}
+                {/* 프로필 이미지 (클릭 가능, 관리자는 클릭 불가) */}
                 <button
-                  onClick={handleAuthorClick}
-                  className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0
-                           hover:ring-2 hover:ring-main-bg transition-all cursor-pointer"
+                  onClick={isAuthorAdmin ? undefined : handleAuthorClick}
+                  className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 transition-all
+                           ${isAuthorAdmin 
+                             ? 'ring-2 ring-blue-400 cursor-default' 
+                             : 'bg-gray-200 hover:ring-2 hover:ring-main-bg cursor-pointer'}`}
                 >
-                  {post.authorPhoto ? (
+                  {getDisplayPhoto(author) ? (
                     <img 
-                      src={`http://localhost:7878/uploads/profile/${post.authorPhoto}`}
-                      alt={post.authorNickname}
+                      src={getDisplayPhoto(author)}
+                      alt={getDisplayName(author)}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-main-bg text-white font-bold">
-                      {(post.authorNickname || '?')[0].toUpperCase()}
+                      {getDisplayName(author)[0].toUpperCase()}
                     </div>
                   )}
                 </button>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <button
-                      onClick={handleAuthorClick}
-                      className="text-sm font-medium text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
+                      onClick={isAuthorAdmin ? undefined : handleAuthorClick}
+                      className={`text-sm font-medium transition-colors ${
+                        isAuthorAdmin 
+                          ? 'text-blue-600 cursor-default' 
+                          : 'text-gray-800 hover:text-main-bg cursor-pointer'
+                      }`}
                     >
-                      {post.authorNickname || '익명'}
+                      {getDisplayName(author)}
                     </button>
-                    {/* 칭호 표시 */}
-                    {authorTitles.length > 0 && (
-                      <span className="text-[10px] text-main-bg font-medium px-1.5 py-0.5 border border-main-bg/30 bg-main-bg/5 rounded">
+                    {/* 칭호 표시 (관리자가 아닐 때만) */}
+                    {!isAuthorAdmin && authorTitles.length > 0 && (
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 border rounded ${getTitleLevelStyle(authorTitles[0]?.titleLevel)}`}>
                         {authorTitles[0]?.titleName}
                       </span>
                     )}
