@@ -257,7 +257,7 @@ function SignupPage() {
                   ref={photo.fileInputRef}
                   id="userPhoto"
                   onChange={photo.handlePhotoChange}
-                  accept="image/*"
+                  accept="image/jpeg,image/png"
                 />
                 <PhotoSelectLabel htmlFor="userPhoto">
                   사진 선택
@@ -269,7 +269,7 @@ function SignupPage() {
                 )}
               </div>
             </div>
-            <p className="mt-2 text-xs text-gray-400">JPG, PNG, GIF (최대 5MB)</p>
+            <p className="mt-2 text-xs text-gray-400">JPG, JPEG, PNG (최대 5MB)</p>
           </div>
 
           {/* CAPTCHA */}

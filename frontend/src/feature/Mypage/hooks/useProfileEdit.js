@@ -45,15 +45,22 @@ function useProfileEdit() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // 이미지 파일 확인
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다.')
+    const allowedMimeTypes = new Set(['image/jpeg', 'image/png'])
+    const isAllowed =
+      (file.type && allowedMimeTypes.has(file.type)) ||
+      (!file.type && /\.(jpe?g|png)$/i.test(file.name || ''))
+
+    // JPG/JPEG/PNG만 허용 (GIF 등 제외)
+    if (!isAllowed) {
+      alert('JPG, JPEG, PNG 파일만 업로드 가능합니다.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
     // 5MB 제한
     if (file.size > 5 * 1024 * 1024) {
       alert('파일 크기는 5MB 이하여야 합니다.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 

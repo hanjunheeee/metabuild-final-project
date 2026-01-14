@@ -45,7 +45,12 @@ export function useSignupForm() {
     }
   )
 
-  const photo = usePhotoUpload({ maxSizeMB: 5 })
+  const photo = usePhotoUpload({
+    maxSizeMB: 5,
+    onError: (message) => {
+      alert(message)
+    },
+  })
 
   // === Refs ===
   const passwordRef = useRef(null)
