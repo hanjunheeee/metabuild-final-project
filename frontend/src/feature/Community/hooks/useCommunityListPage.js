@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import useCommunityHelpers from './useCommunityHelpers'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { toggleFollow, checkFollowing } from '@/shared/api/followApi'
-import { fetchCommunities, deleteCommunity, fetchHotPosts } from '../api/communityApi'
+import { fetchCommunities, deleteCommunity, fetchHotPosts, fetchLikedCommunityIds } from '../api/communityApi'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 
 // 페이지당 게시글 수
@@ -84,6 +84,9 @@ function useCommunityListPage() {
   // 북마크한 책 ID 목록
   const [bookmarkedBookIds, setBookmarkedBookIds] = useState(new Set())
 
+  // 사용자가 좋아요한 게시글 ID 목록
+  const [likedCommunityIds, setLikedCommunityIds] = useState(new Set())
+
   // 팔로우 상태 확인 (유저 필터 모드일 때)
   useEffect(() => {
     const checkFollowStatus = async () => {
@@ -126,6 +129,20 @@ function useCommunityListPage() {
       }
     }
     loadBookmarkedBookIds()
+  }, [currentUser?.userId])
+
+  // 사용자가 좋아요한 게시글 ID 목록 가져오기
+  useEffect(() => {
+    const loadLikedCommunityIds = async () => {
+      if (!currentUser?.userId) return
+      try {
+        const ids = await fetchLikedCommunityIds(currentUser.userId)
+        setLikedCommunityIds(new Set(ids || []))
+      } catch (error) {
+        console.error('좋아요 목록 로딩 실패:', error)
+      }
+    }
+    loadLikedCommunityIds()
   }, [currentUser?.userId])
 
   // 공지글과 일반글 분리 (공지글은 최신 3개만)
@@ -322,6 +339,7 @@ function useCommunityListPage() {
     hotPosts,
     hotPostIds,
     bookmarkedBookIds,
+    likedCommunityIds,
     
     // 필터 모드
     filterUserId,

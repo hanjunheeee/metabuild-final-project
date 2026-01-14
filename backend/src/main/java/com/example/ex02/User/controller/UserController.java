@@ -6,6 +6,7 @@ import com.example.ex02.User.dto.SignupRequestDTO;
 import com.example.ex02.User.dto.UserDTO;
 import com.example.ex02.User.service.EmailService;
 import com.example.ex02.User.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,18 +25,31 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupRequestDTO signupRequest) {
+    public ResponseEntity<?> signup(@RequestBody SignupRequestDTO signupRequest, HttpServletRequest request) {
         try {
+            String remoteIp = getClientIp(request);
             UserDTO user = userService.signup(
                 signupRequest.getEmail(),
                 signupRequest.getPassword(),
                 signupRequest.getNickname(),
-                signupRequest.getUserPhoto()
+                signupRequest.getUserPhoto(),
+                signupRequest.getCaptchaToken(),
+                remoteIp
             );
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        if (request == null) return null;
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            // 첫 번째 IP가 원본 클라이언트인 경우가 많음
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     // 로그인 (JWT 토큰 발급)

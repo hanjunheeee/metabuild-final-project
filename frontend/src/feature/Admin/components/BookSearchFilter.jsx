@@ -26,10 +26,11 @@ function BookSearchFilter({ onSearch, initialQuery = '' }) {
         {/* 검색어 입력 */}
         <input
           type="text"
-          placeholder="도서명, 저자, ISBN 검색..."
+          placeholder="도서명, 저자, ISBN 검색...(최대 30자)"
+          maxLength={30}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full md:w-80 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-main-bg"
+          className="w-full md:w-[32rem] px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-main-bg"
         />
 
         {/* 연령 필터 */}

@@ -15,14 +15,23 @@ export function usePhotoUpload({ maxSizeMB = 5, onError } = {}) {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // 이미지 파일만 허용
-      if (!file.type.startsWith('image/')) {
-        onError?.('이미지 파일만 업로드 가능합니다.')
+      const allowedMimeTypes = new Set(['image/jpeg', 'image/png'])
+      const isAllowed =
+        (file.type && allowedMimeTypes.has(file.type)) ||
+        (!file.type && /\.(jpe?g|png)$/i.test(file.name || ''))
+
+      // JPG/JPEG/PNG만 허용 (GIF 등 제외)
+      if (!isAllowed) {
+        onError?.('JPG, JPEG, PNG 파일만 업로드 가능합니다.')
+        // 같은 파일 재선택 가능하도록 초기화
+        if (e.target) e.target.value = ''
         return
       }
       // 파일 크기 제한
       if (file.size > maxSizeMB * 1024 * 1024) {
         onError?.(`파일 크기는 ${maxSizeMB}MB 이하여야 합니다.`)
+        // 같은 파일 재선택 가능하도록 초기화
+        if (e.target) e.target.value = ''
         return
       }
       setPhotoFile(file)

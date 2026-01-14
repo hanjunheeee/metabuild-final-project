@@ -49,9 +49,10 @@ function SearchFilterBar({
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder="제목, 내용, 책 이름으로 검색..."
+            placeholder="제목, 내용, 책 이름으로 검색...(최대 30자)"
             value={searchTerm}
             onChange={onSearchChange}
+            maxLength={30}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 
                      focus:outline-none focus:ring-2 focus:ring-main-bg focus:border-transparent
                      text-gray-700 placeholder-gray-400 text-sm"

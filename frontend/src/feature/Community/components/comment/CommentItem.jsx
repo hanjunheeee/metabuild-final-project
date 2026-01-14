@@ -106,9 +106,8 @@ function CommentItem({
                     {userTitles[comment.userId].map((title) => (
                       <span 
                         key={title.titleId}
-                        className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 rounded-full"
+                        className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200"
                       >
-                        <span className="mr-0.5">{title.titleIcon}</span>
                         {title.titleName}
                       </span>
                     ))}

@@ -80,10 +80,9 @@ function ProfilePage() {
                   {topTitles.map((title) => (
                     <span 
                       key={title.titleId} 
-                      className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 rounded-full"
+                      className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200"
                       title={`${title.titleName} (${title.titleType === 'LIKE' ? '댓글 좋아요' : '팔로워'} 달성)`}
                     >
-                      <span className="mr-1">{title.titleIcon}</span>
                       {title.titleName}
                     </span>
                   ))}
