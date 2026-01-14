@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
-import { fetchBooks } from '@/feature/Book/api/bookApi'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { searchBooks } from '@/feature/Book/api/bookApi'
 
 /**
  * 책 검색/선택 로직을 관리하는 커스텀 훅
+ * - Debounce 300ms 적용
+ * - 최소 2글자 이상 입력 시 검색
+ * - API 검색 방식 (대용량 데이터 최적화)
  * 
  * @returns {Object} 책 검색 관련 상태와 핸들러
  */
@@ -10,34 +13,56 @@ function useBookSearch() {
   const [selectedBook, setSelectedBook] = useState(null)
   const [bookSearchTerm, setBookSearchTerm] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
-  const [books, setBooks] = useState([])
+  const [filteredBooks, setFilteredBooks] = useState([])
   const [loading, setLoading] = useState(false)
   const searchRef = useRef(null)
+  const debounceRef = useRef(null)
 
-  // 책 목록 로드
-  useEffect(() => {
-    const loadBooks = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchBooks()
-        setBooks(data || [])
-      } catch (err) {
-        console.error('책 목록 로딩 실패:', err)
-        setBooks([])
-      } finally {
-        setLoading(false)
-      }
+  // Debounce된 검색 함수
+  const debouncedSearch = useCallback(async (query) => {
+    // 2글자 미만이면 검색하지 않음
+    if (query.trim().length < 2) {
+      setFilteredBooks([])
+      setLoading(false)
+      return
     }
-    loadBooks()
+
+    try {
+      setLoading(true)
+      const data = await searchBooks(query)
+      setFilteredBooks(data || [])
+    } catch (err) {
+      console.error('책 검색 실패:', err)
+      setFilteredBooks([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  // 검색어가 있을 때만 필터링
-  const filteredBooks = bookSearchTerm.trim().length > 0
-    ? books.filter(book =>
-        book.title?.toLowerCase().includes(bookSearchTerm.toLowerCase()) ||
-        book.author?.toLowerCase().includes(bookSearchTerm.toLowerCase())
-      )
-    : []
+  // 검색어 변경 시 Debounce 적용
+  useEffect(() => {
+    // 2글자 미만이면 즉시 빈 결과
+    if (bookSearchTerm.trim().length < 2) {
+      setFilteredBooks([])
+      return
+    }
+
+    // 이전 타이머 취소
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+
+    // 300ms 후 검색 실행
+    debounceRef.current = setTimeout(() => {
+      debouncedSearch(bookSearchTerm)
+    }, 300)
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [bookSearchTerm, debouncedSearch])
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {

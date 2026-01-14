@@ -109,7 +109,7 @@ function BookSearchModal({
             </svg>
           </div>
           <p className="mt-2 text-xs text-gray-400 text-center">
-            💡 첫 검색 시에는 검색이 지연될 수 있습니다
+            💡 2글자 이상 입력하면 검색됩니다
           </p>
 
           {/* 검색 결과 */}
@@ -121,9 +121,9 @@ function BookSearchModal({
               </div>
             ) : filteredBooks.length === 0 ? (
               <div className="p-6 text-center text-gray-400 text-sm">
-                {bookSearchTerm 
-                  ? `"${bookSearchTerm}"에 대한 검색 결과가 없습니다`
-                  : '검색어를 입력하세요'
+                {bookSearchTerm.trim().length < 2
+                  ? '2글자 이상 입력하세요'
+                  : `"${bookSearchTerm}"에 대한 검색 결과가 없습니다`
                 }
               </div>
             ) : (

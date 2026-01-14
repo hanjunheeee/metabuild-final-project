@@ -9,6 +9,15 @@ export const fetchBooks = (query = '') => {
   return fetch(url).then(res => res.json())
 }
 
+// 도서 검색 (검색어 필수, 최소 2글자)
+export const searchBooks = (query) => {
+  const trimmed = (query || '').trim()
+  if (trimmed.length < 2) {
+    return Promise.resolve([])
+  }
+  return fetch(`${BASE_URL}/api/books?query=${encodeURIComponent(trimmed)}`).then(res => res.json())
+}
+
 // 도서 상세 조회
 export const fetchBookById = (id) => {
   return fetch(`${BASE_URL}/api/books/${id}`).then(res => res.json())

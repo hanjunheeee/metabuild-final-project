@@ -25,11 +25,15 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    // 제목/ISBN/저자/출판사 검색(복수 키워드 지원)
+    // 제목/ISBN/저자/출판사 검색(복수 키워드 지원) - 최대 50개 제한
+    private static final int MAX_SEARCH_RESULTS = 50;
+
     public List<BookDTO> searchBooks(String query) {
         String trimmed = query == null ? "" : query.trim();
-        if (trimmed.isEmpty()) {
-            return getAllBooks();
+        
+        // 빈 검색어이거나 2글자 미만이면 빈 리스트 반환 (성능 최적화)
+        if (trimmed.length() < 2) {
+            return List.of();
         }
 
         List<String> tokens = Arrays.stream(trimmed.split("\\s+"))
@@ -38,7 +42,7 @@ public class BookService {
                 .map(String::toLowerCase)
                 .collect(Collectors.toList());
         if (tokens.isEmpty()) {
-            return getAllBooks();
+            return List.of();
         }
 
         String firstToken = tokens.get(0);
@@ -47,6 +51,7 @@ public class BookService {
                         firstToken, firstToken, firstToken, firstToken)
                 .stream()
                 .filter(book -> matchesAllTokens(book, tokens))
+                .limit(MAX_SEARCH_RESULTS)  // 최대 50개 제한
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

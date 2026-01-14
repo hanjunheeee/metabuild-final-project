@@ -16,7 +16,7 @@ function CommunityRankPage() {
     const loadRankings = async () => {
       try {
         setLoading(true)
-        const data = await fetchHallOfFame(10)
+        const data = await fetchHallOfFame(3)
         setFollowerRank(data.topByFollowers || [])
         setCommentLikeRank(data.topByLikes || [])
       } catch (err) {
@@ -157,7 +157,7 @@ function CommunityRankPage() {
               <div className="flex items-center gap-2">
                 <span className="text-lg">👥</span>
                 <div>
-                  <h2 className="text-base font-bold text-sub-bg">팔로워 TOP 10</h2>
+                  <h2 className="text-base font-bold text-sub-bg">팔로워 TOP 3</h2>
                   <p className="text-gray-400 text-xs">가장 많은 팔로워를 보유한 인기 유저</p>
                 </div>
               </div>
@@ -179,7 +179,7 @@ function CommunityRankPage() {
               <div className="flex items-center gap-2">
                 <span className="text-lg">❤️</span>
                 <div>
-                  <h2 className="text-base font-bold text-sub-bg">댓글 좋아요 TOP 10</h2>
+                  <h2 className="text-base font-bold text-sub-bg">댓글 좋아요 TOP 3</h2>
                   <p className="text-gray-400 text-xs">댓글로 가장 많은 공감을 받은 유저</p>
                 </div>
               </div>
