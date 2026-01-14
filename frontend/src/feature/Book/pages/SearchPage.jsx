@@ -198,11 +198,11 @@ function SearchPage() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             maxLength={20}
-            className="w-full h-16 pl-6 pr-16 text-lg rounded-full border border-gray-300"
+            className="w-full h-16 pl-6 pr-28 text-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-sub-bg focus:border-sub-bg"
           />
           <button
             type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-gray-900 text-white"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-7 py-3 bg-sub-bg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
           >
             검색
           </button>
@@ -212,8 +212,8 @@ function SearchPage() {
       {/* ===============================
          검색결과
       =============================== */}
-      <h2 className="text-2xl font-bold mb-10">
-        {initialKeyword} 검색결과
+      <h2 className="text-2xl font-extrabold mb-10 text-sub-bg">
+        "{initialKeyword}"<span className="text-gray-500 text-base ml-2">검색결과</span>
       </h2>
 
       {books.length === 0 ? (
@@ -233,7 +233,7 @@ function SearchPage() {
               {/* ===============================
                  도서 카드
               =============================== */}
-              <div className="grid grid-cols-12 gap-6 bg-gray-100 rounded-2xl p-6">
+              <div className="grid grid-cols-12 gap-6 bg-gray-50 border border-gray-200 p-6 shadow-sm">
 
                 {/* 표지 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col items-center">
@@ -263,7 +263,7 @@ function SearchPage() {
                     출판사 {book.publisher}
                   </p>
                   <div
-                    className="bg-white border rounded-lg px-4 py-2 text-sm text-gray-700 cursor-pointer flex items-center gap-2"
+                    className="bg-white border px-4 py-2 text-sm text-gray-700 cursor-pointer flex items-center gap-2"
                     onClick={() => fetchBookSummary(book.bookId)}
                     role="button"
                     tabIndex={0}
@@ -285,14 +285,14 @@ function SearchPage() {
                 {/* 버튼 */}
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-3 justify-center">
                   <button
-                    className="w-full py-2 rounded-lg bg-gray-900 text-white text-sm"
+                    className="w-full py-2 bg-sub-bg text-white text-sm cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => goToLibrarySearch(book)}
                   >
                     대출 가능 도서관
                   </button>
 
                   <button
-                    className="w-full py-2 rounded-lg bg-gray-800 text-white text-sm flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full py-2 bg-main-bg text-white text-sm flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => fetchBookShops(book)}
                     disabled={loadingBookId === book.bookId}
                   >
@@ -303,7 +303,7 @@ function SearchPage() {
                   </button>
 
                   <button
-                    className="w-full py-2 rounded-lg bg-gray-700 text-white text-sm"
+                    className="w-full py-2 bg-gray-500 text-white text-sm cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => goToCommunityReviews(book)}
                   >
                     관련 커뮤니티 게시글
@@ -315,9 +315,9 @@ function SearchPage() {
                  가격비교
               =============================== */}
               {openBookId === book.bookId && (
-                <div className="mt-4 bg-white border rounded-xl p-5">
+                <div className="mt-4 bg-white border border-gray-200 p-5">
 
-                  <h4 className="font-semibold mb-3">
+                  <h4 className="font-semibold mb-3 text-gray-800">
                     최저가 비교 (온라인서점)
                   </h4>
 
@@ -367,13 +367,13 @@ function SearchPage() {
             )
           })}
           {books.length > visibleCount && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-              <p className="text-sm text-slate-600 mb-3">
+            <div className="border border-gray-200 bg-gray-50 p-6 text-center">
+              <p className="text-sm text-gray-600 mb-3">
                 검색 결과가 많아 {visibleCount}개만 보여드렸습니다.
               </p>
               <button
                 type="button"
-                className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm"
+                className="px-4 py-2 bg-sub-bg text-white text-sm cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setVisibleCount(prev => prev + 20)}
               >
                 더보기

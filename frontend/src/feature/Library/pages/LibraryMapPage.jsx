@@ -36,6 +36,7 @@ function LibraryMapPage() {
   const mapInstance = useRef(null)
   const markerGroup = useRef(null)
   const guLayerMap = useRef({})
+  const seoulBoundsRef = useRef(null)
   const countsCacheRef = useRef({})
   const loanStatusCacheRef = useRef({})
   const lastSearchRef = useRef({ isbn: '', gu: '' })
@@ -262,6 +263,10 @@ function LibraryMapPage() {
         setLoanMessage('서울시 전체에서 대출 가능한 도서관이 없습니다.')
       }
       lastSearchRef.current = { isbn: currentIsbn, gu: ALL_GU }
+      // 서울 전체가 보이도록 지도 축소
+      if (mapInstance.current && seoulBoundsRef.current) {
+        mapInstance.current.fitBounds(seoulBoundsRef.current, { padding: [40, 40], animate: true })
+      }
       return
     }
 
@@ -307,6 +312,11 @@ function LibraryMapPage() {
       const total = Object.values(counts).reduce((sum, value) => sum + value, 0)
       if (total === 0) {
         setLoanMessage('서울시 전체에서 대출 가능한 도서관이 없습니다.')
+      }
+
+      // 서울 전체가 보이도록 지도 축소
+      if (mapInstance.current && seoulBoundsRef.current) {
+        mapInstance.current.fitBounds(seoulBoundsRef.current, { padding: [40, 40], animate: true })
       }
     } finally {
       setCountsLoading(false)
@@ -414,21 +424,21 @@ function LibraryMapPage() {
         })
 
         const tooltipContent = `
-          <div class="tooltip-content">
-            <div class="tooltip-title">${name}</div>
-            <div class="tooltip-address">${addressText}</div>
-            <div class="tooltip-status available">대출 가능</div>
+          <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
+            <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
+            <div style="font-size:12px;color:#4b5563;margin-bottom:6px;line-height:1.4;">${addressText}</div>
+            <div style="font-size:12px;font-weight:600;color:#059669;">대출 가능</div>
           </div>
         `
 
         const popupContent = `
-          <div class="tooltip-content">
-            <div class="tooltip-title">${name}</div>
-            <div class="tooltip-address-row">
-              <div class="tooltip-address">${addressText}</div>
-              <button type="button" class="copy-address-btn" data-address="${addressEscaped}">복사</button>
+          <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
+            <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
+            <div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;">
+              <div style="font-size:12px;color:#4b5563;margin-bottom:6px;line-height:1.4;flex:1;">${addressText}</div>
+              <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;padding:2px 6px;border-radius:6px;cursor:pointer;flex-shrink:0;">복사</button>
             </div>
-            <div class="tooltip-status available">대출 가능</div>
+            <div style="font-size:12px;font-weight:600;color:#059669;">대출 가능</div>
           </div>
         `
 
@@ -549,18 +559,18 @@ function LibraryMapPage() {
       })
 
       const tooltipContent = `
-        <div class="tooltip-content">
-          <div class="tooltip-title">${name}</div>
-          <div class="tooltip-address">${addressText}</div>
+        <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
+          <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
+          <div style="font-size:12px;color:#4b5563;line-height:1.4;">${addressText}</div>
         </div>
       `
 
       const popupContent = `
-        <div class="tooltip-content">
-          <div class="tooltip-title">${name}</div>
-          <div class="tooltip-address-row">
-            <div class="tooltip-address">${addressText}</div>
-            <button type="button" class="copy-address-btn" data-address="${addressEscaped}">복사</button>
+        <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
+          <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
+          <div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;">
+            <div style="font-size:12px;color:#4b5563;line-height:1.4;flex:1;">${addressText}</div>
+            <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;padding:2px 6px;border-radius:6px;cursor:pointer;flex-shrink:0;">복사</button>
           </div>
         </div>
       `
@@ -807,6 +817,7 @@ function LibraryMapPage() {
 
         const seoulBounds = seoulLayer.getBounds()
         if (seoulBounds && seoulBounds.isValid()) {
+          seoulBoundsRef.current = seoulBounds
           map.fitBounds(seoulBounds, { padding: [20, 20] })
           map.setMaxBounds(seoulBounds.pad(0.08))
           map.setMinZoom(map.getZoom())
@@ -826,8 +837,8 @@ function LibraryMapPage() {
 
   return (
     <div className="flex h-[calc(100vh-80px)]">
-      <div className="w-[320px] p-6 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3">
+      <div className="w-[320px] p-6 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+        <div className="mb-6 border border-gray-200 bg-white p-3">
           <button
             onClick={() => {
               setMapMode('all')
@@ -835,13 +846,13 @@ function LibraryMapPage() {
               setLoanMessage('')
               handleShowAllLibraries(ALL_GU)
             }}
-            className="w-full py-2 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700"
+            className="w-full py-2 bg-gray-500 text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
           >
             서울시 전체 도서관 위치
           </button>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="mb-6 border border-gray-200 bg-white p-3">
           <div className="text-sm font-bold text-gray-800 mb-3">선택한 책</div>
 
           {(selectedBookTitle || title) && (
@@ -850,13 +861,13 @@ function LibraryMapPage() {
                 <img
                   src={selectedBookImage || fallbackCover}
                   alt="book cover"
-                  className="w-[60px] h-[80px] rounded-lg border object-cover"
+                  className="w-[60px] h-[80px] border border-gray-200 object-cover"
                 />
                 <div className="text-sm text-gray-700 flex-1">{selectedBookTitle || title}</div>
                 <button
                   type="button"
                   onClick={handleClearSelectedBook}
-                  className="text-xs text-gray-500 border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
+                  className="text-xs text-gray-500 border border-gray-300 w-6 h-6 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
                   aria-label="선택한 책 지우기"
                 >
                   ×
@@ -873,7 +884,7 @@ function LibraryMapPage() {
               }
               setShowSearch(!showSearch)
             }}
-            className="w-full mt-3 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600"
+            className="w-full mt-3 py-2 bg-main-bg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
           >
             {showSearch ? '검색 닫기' : '다른 책 검색하기'}
           </button>
@@ -885,12 +896,12 @@ function LibraryMapPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="책제목 또는 ISBN을 입력"
                 maxLength={20}
-                className="w-full p-2 border rounded-lg text-sm"
+                className="w-full p-2 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-sub-bg focus:border-sub-bg"
               />
               <button
                 onClick={handleSearch}
                 disabled={searchLoading}
-                className="w-full mt-2 py-2 bg-gray-800 text-white rounded-lg"
+                className="w-full mt-2 py-2 bg-sub-bg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-70"
               >
                 {searchLoading ? '검색 중...' : '도서 검색하기'}
               </button>
@@ -904,19 +915,19 @@ function LibraryMapPage() {
                   {searchResults.map((book) => (
                     <div
                       key={`${book.isbn}-${book.title}`}
-                      className="p-2 border rounded-lg mb-2 flex gap-2 items-center"
+                      className="p-2 border border-gray-200 mb-2 flex gap-2 items-center bg-white"
                     >
                       <img
                         src={book.img || fallbackCover}
                         alt="book cover"
-                        className="w-[50px] h-[70px] object-cover rounded"
+                        className="w-[50px] h-[70px] object-cover"
                       />
-                      <div className="text-sm">
-                        <div className="font-bold">{book.title}</div>
+                      <div className="text-sm flex-1">
+                        <div className="font-bold text-gray-800">{book.title}</div>
                         <div className="text-xs text-gray-500">ISBN: {book.isbn}</div>
                         <button
                           onClick={() => handleSelectBook(book)}
-                          className="mt-2 w-full px-2 py-1 bg-pink-400 text-white rounded text-xs"
+                          className="mt-2 w-full px-2 py-1 bg-sub-bg text-white text-xs hover:opacity-90 transition-opacity cursor-pointer"
                         >
                           이 책으로 변경
                         </button>
@@ -929,12 +940,12 @@ function LibraryMapPage() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-3">
-          <label className="font-bold text-sm">지역(구) 선택</label>
+        <div className="border border-gray-200 bg-white p-3">
+          <label className="font-bold text-sm text-gray-800">지역(구) 선택</label>
           <select
             value={selectedGu}
             onChange={(e) => setSelectedGu(e.target.value)}
-            className="w-full h-11 px-3 border rounded-xl text-sm mt-2"
+            className="w-full h-11 px-3 border border-gray-300 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-sub-bg focus:border-sub-bg cursor-pointer"
           >
             <option value="">구 선택</option>
             {guList.map((gu) => (
@@ -949,7 +960,7 @@ function LibraryMapPage() {
               setMapMode('loan')
               handleCheckLoan()
             }}
-            className="w-full mt-2 h-11 bg-blue-700 text-white rounded-xl hover:bg-blue-800"
+            className="w-full mt-2 h-11 bg-sub-bg text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
           >
             {loading || countsLoading ? (
               <span className="inline-flex items-center justify-center gap-2">
@@ -970,99 +981,30 @@ function LibraryMapPage() {
         .custom-tooltip {
           pointer-events: auto !important;
           user-select: text !important;
-          background-color: white !important;
-          border: 1px solid #aaa !important;
-          border-radius: 8px !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+          background: #fff !important;
+          border: 1px solid #d1d5db !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
           padding: 12px !important;
           opacity: 1 !important;
-          white-space: normal !important;
           max-width: 320px !important;
-          width: 320px !important;
         }
-        .leaflet-tooltip-top.custom-tooltip::before {
-          display: none !important;
-        }
-        .custom-popup .leaflet-popup-content {
-          margin: 10px 12px !important;
-        }
-        .custom-popup .leaflet-popup-content-wrapper {
-          border-radius: 10px !important;
-        }
-        .custom-popup .leaflet-popup-tip {
-          background: #ffffff !important;
-        }
-        .tooltip-content {
-          width: 300px;
-          max-width: 320px;
-          white-space: normal;
-          word-break: keep-all;
-        }
-        .custom-popup .tooltip-content {
-          width: 300px;
-          max-width: 320px;
-        }
-        .tooltip-address-row {
-          display: flex;
-          gap: 8px;
-          align-items: flex-start;
-          justify-content: space-between;
-        }
-        .tooltip-title {
-          font-weight: 700;
-          margin-bottom: 4px;
-          color: #111827;
-        }
-        .tooltip-address {
-          font-size: 12px;
-          color: #4b5563;
-          margin-bottom: 6px;
-          line-height: 1.4;
-          flex: 1;
-        }
-        .copy-address-btn {
-          border: 1px solid #d1d5db;
-          background: #ffffff;
-          color: #374151;
-          font-size: 11px;
-          padding: 2px 6px;
-          border-radius: 6px;
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-        .copy-address-btn:disabled {
-          cursor: default;
-          opacity: 0.7;
-        }
-        .tooltip-status {
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .tooltip-status.available {
-          color: #059669;
-        }
+        .leaflet-tooltip-top.custom-tooltip::before { display: none !important; }
+        .custom-popup .leaflet-popup-content { margin: 10px 12px !important; }
+        .custom-popup .leaflet-popup-content-wrapper { border-radius: 4px !important; }
+        .custom-popup .leaflet-popup-tip { background: #fff !important; }
+        .copy-address-btn:disabled { cursor: default; opacity: 0.7; }
         .gu-label {
           background: transparent !important;
           border: none !important;
           box-shadow: none !important;
-          color: #1f2937 !important;
+          color: #374151 !important;
           font-weight: 600 !important;
           text-shadow: 0 1px 2px rgba(255,255,255,0.8);
           text-align: center;
         }
-        .gu-label .gu-name {
-          font-size: 12px;
-          display: block;
-        }
-        .gu-label .gu-count {
-          font-size: 14px;
-          line-height: 1.1;
-          display: block;
-          color: #2563eb;
-        }
-        .gu-label .gu-count.is-zero {
-          color: #dc2626;
-        }
+        .gu-label .gu-name { font-size: 12px; display: block; }
+        .gu-label .gu-count { font-size: 14px; line-height: 1.1; display: block; color: #1e40af; }
+        .gu-label .gu-count.is-zero { color: #dc2626; }
       `}</style>
     </div>
   )

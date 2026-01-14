@@ -72,7 +72,7 @@ function WordCloud({ words, onWordClick }) {
               key={`${w.text}-${w.x}-${w.y}`}
               textAnchor="middle"
               transform={`translate(${w.x}, ${w.y}) rotate(${w.rotate})`}
-              style={{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', fill: w.color, opacity: 0.85 }}
+              style={{ fontSize: `${w.size}px`, fontFamily: 'sans-serif', fill: w.color, opacity: 0.85, cursor: 'pointer' }}
               onClick={() => onWordClick?.(w.text)}
             >
               {w.text}
@@ -402,14 +402,15 @@ function MainPage() {
               w-full
               h-16
               pl-6
-              pr-16
+              pr-28
               text-lg
-              rounded-full
               border
               border-gray-300
+              bg-white
               focus:outline-none
               focus:ring-2
-              focus:ring-gray-900
+              focus:ring-sub-bg
+              focus:border-sub-bg
             "
           />
 
@@ -420,15 +421,18 @@ function MainPage() {
               right-2
               top-1/2
               -translate-y-1/2
-              w-12
-              h-12
-              rounded-full
-              bg-gray-900
+              px-7
+              py-3
+              bg-sub-bg
               text-white
+              text-sm
+              font-medium
               flex
               items-center
               justify-center
               hover:opacity-90
+              transition-opacity
+              cursor-pointer
             "
           >
             검색
@@ -439,8 +443,8 @@ function MainPage() {
       {/* ===============================
          서울시 월간 대출랭킹
       =============================== */}
-      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-3xl font-bold mb-6 text-gray-900">
+      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
+        <h2 className="text-2xl font-extrabold mb-6 text-sub-bg">
           서울시 도서관 월간 대출랭킹
         </h2>
 
@@ -458,14 +462,24 @@ function MainPage() {
               w-10
               h-10
               rounded-full
-              bg-gray-200
+              bg-white
+              border
+              border-gray-300
               flex
               items-center
               justify-center
               disabled:opacity-30
+              hover:bg-sub-bg
+              hover:text-white
+              hover:border-sub-bg
+              transition-all
+              cursor-pointer
+              shadow-sm
             "
           >
-            {'<'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
 
           {/* 카드 */}
@@ -484,7 +498,7 @@ function MainPage() {
               return (
                 <div
                   key={book.isbn13 || book.title || book.id}
-                  className="relative flex flex-col items-center cursor-pointer overflow-visible"
+                  className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
                   onClick={() =>
                     navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
                   }
@@ -518,7 +532,7 @@ function MainPage() {
                   )}
                   <TwoLineTitle
                     text={book.title || ''}
-                    className="text-sm text-gray-800 text-center leading-snug"
+                    className="text-sm text-gray-700 text-center leading-snug"
                   />
                 </div>
               )
@@ -537,14 +551,24 @@ function MainPage() {
               w-10
               h-10
               rounded-full
-              bg-gray-200
+              bg-white
+              border
+              border-gray-300
               flex
               items-center
               justify-center
               disabled:opacity-30
+              hover:bg-sub-bg
+              hover:text-white
+              hover:border-sub-bg
+              transition-all
+              cursor-pointer
+              shadow-sm
             "
           >
-            {'>'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </section>
@@ -552,45 +576,40 @@ function MainPage() {
       {/* ===============================
          서점별 베스트셀러 TOP10
       =============================== */}
-      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-3xl font-bold mb-6 text-gray-900">
+      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
+        <h2 className="text-2xl font-extrabold mb-6 text-sub-bg">
           서점 별 베스트셀러 TOP10
         </h2>
 
         {/* 서점 카테고리 */}
-        <div className="flex gap-3 mb-8">
+        <div className="flex gap-2 mb-8">
           {[
           { label: '교보문고', value: 'KYOBO' },
           { label: '알라딘', value: 'ALADIN' },
           { label: 'YES24', value: 'YES24' }
         ].map(provider => {
           const isActive = provider.value === bestSellerProvider
-          const baseColor =
-            provider.value === 'KYOBO'
-              ? 'bg-emerald-600 hover:bg-emerald-700'
-              : provider.value === 'YES24'
-                ? 'bg-blue-600 hover:bg-blue-700'
-                : 'bg-fuchsia-600 hover:bg-fuchsia-700'
           return (
             <button
               key={provider.value}
               onClick={() => { setBestPage(0); setBestSellerProvider(provider.value) }}
               className={`
-                px-5
+                px-4
                 py-2
-                rounded-full
-                text-white
+                rounded
                 text-sm
-                border-2
-                ${baseColor}
-                ${isActive ? 'border-black shadow-[0_0_0_2px_#000000]' : 'border-transparent'}
+                font-medium
+                transition-colors
+                cursor-pointer
+                ${isActive
+                  ? 'bg-sub-bg text-white'
+                  : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}
               `}
             >
               {provider.label}
             </button>
           )
         })}
-
         </div>
 
         {/* 슬라이더 */}
@@ -606,14 +625,24 @@ function MainPage() {
               w-10
               h-10
               rounded-full
-              bg-gray-200
+              bg-white
+              border
+              border-gray-300
               flex
               items-center
               justify-center
               disabled:opacity-30
+              hover:bg-sub-bg
+              hover:text-white
+              hover:border-sub-bg
+              transition-all
+              cursor-pointer
+              shadow-sm
             "
           >
-            {'<'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
 
           <div className="grid grid-cols-5 gap-6">
@@ -631,7 +660,7 @@ function MainPage() {
               return (
                 <div
                   key={book.isbn13 || book.title || book.id}
-                  className="relative flex flex-col items-center cursor-pointer overflow-visible"
+                  className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
                   onClick={() =>
                     navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
                   }
@@ -665,7 +694,7 @@ function MainPage() {
                   )}
                   <TwoLineTitle
                     text={book.title || ''}
-                    className="text-sm text-gray-800 text-center leading-snug"
+                    className="text-sm text-gray-700 text-center leading-snug"
                   />
                 </div>
               )
@@ -683,14 +712,24 @@ function MainPage() {
               w-10
               h-10
               rounded-full
-              bg-gray-200
+              bg-white
+              border
+              border-gray-300
               flex
               items-center
               justify-center
               disabled:opacity-30
+              hover:bg-sub-bg
+              hover:text-white
+              hover:border-sub-bg
+              transition-all
+              cursor-pointer
+              shadow-sm
             "
           >
-            {'>'}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
       </section>
@@ -698,8 +737,8 @@ function MainPage() {
       {/* ===============================
          커뮤니티 & 트렌드 (인기글 / 최신글)
       =============================== */}
-      <section className="mb-20 border border-slate-200 bg-white p-8 shadow-sm">
-        <h2 className="text-3xl font-bold mb-10 text-gray-900">
+      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
+        <h2 className="text-2xl font-extrabold mb-10 text-sub-bg">
           커뮤니티 & 트렌드
         </h2>
 
@@ -711,15 +750,13 @@ function MainPage() {
               <button
                 type="button"
                 onClick={() => navigate('/community')}
-                className="text-sm text-gray-500 hover:underline"
+                className="text-sm text-gray-500 hover:underline cursor-pointer"
               >
                 더보기
               </button>
             </div>
 
-            <div className="relative h-[260px] overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100/80 p-6">
-              <div className="pointer-events-none absolute -top-24 -right-16 h-48 w-48 rounded-full bg-emerald-100/50 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full bg-sky-100/50 blur-3xl" />
+            <div className="relative h-[260px] overflow-hidden rounded-lg border border-gray-200 bg-white p-6">
               <ul className="relative space-y-3 text-gray-700 text-sm">
                 {communityLoading && (
                   <li className="text-gray-500">로딩 중...</li>
@@ -733,21 +770,21 @@ function MainPage() {
                 {mainCommunityPosts.map((post) => {
                   const isPopular = popularCommunityIds.has(post.communityId)
                   const kindLabel = getCommunityKindLabel(post)
-                  const kindClass = getCommunityKindStyle(post)
+                  const kindStyle = getCommunityKindStyle(post)
 
                   return (
                     <li key={post.communityId}>
                       <button
                         type="button"
                         onClick={() => handleCommunityClick(post.communityId)}
-                        className="w-full text-left hover:underline line-clamp-1"
+                        className="w-full text-left hover:underline line-clamp-1 cursor-pointer"
                       >
                         {isPopular && (
-                          <span className="mr-1 inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                          <span className="mr-1 inline-flex items-center rounded bg-rose-100 px-1.5 py-0.5 text-xs font-medium text-rose-700 cursor-pointer">
                             HOT
                           </span>
                         )}
-                        <span className={`mr-1 inline-flex items-center rounded-full ${kindClass} px-2 py-0.5 text-xs font-semibold`}>
+                        <span className={`mr-1 inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium cursor-pointer ${kindStyle}`}>
                           [{kindLabel}]
                         </span>
                         {getPostTitle(post)}
@@ -762,7 +799,7 @@ function MainPage() {
           {/* 트렌드 - 워드클라우드 */}
           <div className="col-span-12 lg:col-span-4">
             <h3 className="text-xl font-semibold mb-4">검색어 트렌드</h3>
-            <div className="h-[260px] rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 p-4 overflow-hidden">
+            <div className="h-[260px] rounded-lg bg-white border border-gray-200 p-4 overflow-hidden">
               {trendLoading ? (
                 <div className="h-full flex items-center justify-center text-gray-500">
                   로딩 중...
@@ -786,7 +823,7 @@ function MainPage() {
           {/* 트렌드 도서 TOP3 */}
           <div className="col-span-12 lg:col-span-3">
             <h3 className="text-xl font-semibold mb-4">트렌드 도서 TOP 3</h3>
-            <div className="h-[260px] rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-200 p-4">
+            <div className="h-[260px] rounded-lg bg-white border border-gray-200 p-4">
               {trendLoading ? (
                 <div className="h-full flex items-center justify-center text-gray-500">
                   로딩 중...
@@ -801,10 +838,10 @@ function MainPage() {
                     <button
                       key={book.bookId}
                       onClick={() => navigate(`/searchbook?keyword=${encodeURIComponent(book.text)}`)}
-                      className="w-full flex items-center gap-3 p-2 rounded-lg bg-white/70 hover:bg-white transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-left cursor-pointer"
                     >
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                        idx === 0 ? 'bg-amber-500' : idx === 1 ? 'bg-gray-400' : 'bg-amber-700'
+                        idx === 0 ? 'bg-sub-bg' : idx === 1 ? 'bg-main-bg' : 'bg-main-bg'
                       }`}>
                         {idx + 1}
                       </span>
