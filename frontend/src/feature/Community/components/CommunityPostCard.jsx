@@ -90,6 +90,9 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
               className="block font-semibold text-sm text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
             >
               {post.authorNickname || '익명'}
+              {post.isHallOfFame && (
+                <span className="ml-1 text-amber-500 text-xs font-semibold">👑 명예</span>
+              )}
             </button>
             <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
           </div>
@@ -203,4 +206,3 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
 }
 
 export default CommunityPostCard
-
