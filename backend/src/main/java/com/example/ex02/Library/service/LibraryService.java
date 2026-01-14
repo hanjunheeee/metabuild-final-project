@@ -1,4 +1,4 @@
-package com.example.ex02.Library.service;
+﻿package com.example.ex02.Library.service;
 
 import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,13 +88,26 @@ public class LibraryService {
             return emptySearchResponse();
         }
 
+        List<String> tokens = Arrays.stream(normalized.split("\\s+"))
+                .map(String::trim)
+                .filter(token -> !token.isEmpty())
+                .map(String::toLowerCase)
+                .collect(Collectors.toList());
+        if (tokens.isEmpty()) {
+            return emptySearchResponse();
+        }
+
+        String firstToken = tokens.get(0);
         List<BookEntity> books = bookRepository
                 .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
-                        normalized,
-                        normalized,
-                        normalized,
-                        normalized
-                );
+                        firstToken,
+                        firstToken,
+                        firstToken,
+                        firstToken
+                )
+                .stream()
+                .filter(book -> matchesAllTokens(book, tokens))
+                .collect(Collectors.toList());
         JSONArray docs = new JSONArray();
 
         for (BookEntity book : books) {
@@ -217,6 +231,29 @@ public class LibraryService {
         return value == null ? "" : value;
     }
 
+    private boolean matchesAllTokens(BookEntity book, List<String> tokens) {
+        String title = safeLower(book.getTitle());
+        String author = safeLower(book.getAuthor());
+        String isbn = safeLower(book.getIsbn());
+        String publisher = safeLower(book.getPublisher());
+
+        for (String token : tokens) {
+            if (token.isEmpty()) continue;
+            boolean matches = title.contains(token)
+                    || author.contains(token)
+                    || isbn.contains(token)
+                    || publisher.contains(token);
+            if (!matches) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private String safeLower(String value) {
+        return value == null ? "" : value.toLowerCase();
+    }
+
     private String emptySearchResponse() {
         JSONObject response = new JSONObject();
         response.put("docs", new JSONArray());
@@ -236,3 +273,5 @@ public class LibraryService {
         return root.toString();
     }
 }
+
+

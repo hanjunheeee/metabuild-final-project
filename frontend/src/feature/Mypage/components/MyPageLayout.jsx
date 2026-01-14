@@ -9,7 +9,7 @@ function MyPageLayout() {
     { path: '/mypage', label: '프로필', end: true },
     { path: '/mypage/titles', label: '칭호 이력' },
     { path: '/mypage/posts', label: '내 게시글' },
-    { path: '/mypage/likes', label: '좋아요한 글' },
+    { path: '/mypage/likes', label: '좋아요한 게시글' },
     { path: '/mypage/bookmarks', label: '즐겨찾기 도서' },
     { path: '/mypage/following', label: '팔로잉/팔로워' },
   ]

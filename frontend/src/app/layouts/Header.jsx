@@ -54,13 +54,11 @@ function Header() {
                   </Link>
                 </li>
                 <li>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all cursor-pointer bg-transparent border-none"
-                  >
-                    로그아웃
-                  </button>
-                </li>
+                  <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                    도서 커뮤니티
+                  </Link>
+                </li>                
+
                 {user.role === 'ADMIN' ? (
                   <li>
                     <Link to="/admin" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
@@ -74,6 +72,14 @@ function Header() {
                     </Link>
                   </li>
                 )}
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all cursor-pointer bg-transparent border-none"
+                  >
+                    로그아웃
+                  </button>
+                </li>                
               </>
             ) : (
               // 비로그인 상태
@@ -84,22 +90,24 @@ function Header() {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/login" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    로그인
+                  <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                    도서커뮤니티
                   </Link>
                 </li>
+
                 <li>
                   <Link to="/signup" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
                     회원가입
                   </Link>
                 </li>
+                <li>
+                  <Link to="/login" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                    로그인
+                  </Link>
+                </li>                
               </>
             )}
-            <li>
-              <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                도서커뮤니티
-              </Link>
-            </li>
+            
           </ul>
         </nav>
       </div>

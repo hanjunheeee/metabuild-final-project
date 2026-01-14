@@ -884,6 +884,7 @@ function LibraryMapPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="책제목 또는 ISBN을 입력"
+                maxLength={20}
                 className="w-full p-2 border rounded-lg text-sm"
               />
               <button

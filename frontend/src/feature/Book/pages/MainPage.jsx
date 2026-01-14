@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import cloud from 'd3-cloud'
 import {
@@ -123,7 +123,7 @@ function MainPage() {
 
   const fallbackLoanRankingBooks = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    title: `???????????? ??? ${i + 1}`,
+    title: `대출 랭킹 도서 ${i + 1}`,
   }))
 
   const rankingBooks = loanRankingBooks.length ? loanRankingBooks : fallbackLoanRankingBooks
@@ -169,7 +169,7 @@ function MainPage() {
 
   const fallbackBestSellerBooks = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    title: `??? ????????TOP ${i + 1}`,
+    title: `베스트셀러 TOP ${i + 1}`,
   }))
 
   const bestSellerBooks = bestSellerMap[bestSellerProvider] || []
@@ -351,16 +351,16 @@ function MainPage() {
 
   // 커뮤니티 분류 라벨/스타일 매핑
   const getCommunityKindLabel = (post) => {
-    if (isNoticePost(post)) return '\uACF5\uC9C0'
+    if (isNoticePost(post)) return '공지'
     switch (post?.communityKind) {
       case 'QUESTION':
-        return '\uC9C8\uBB38'
+        return '질문'
       case 'REVIEW':
-        return '\uB9AC\uBDF0'
+        return '리뷰'
       case 'FREE':
-        return '\uC790\uC720'
+        return '자유'
       default:
-        return '\uC790\uC720'
+        return '자유'
     }
   }
 
@@ -378,9 +378,6 @@ function MainPage() {
         return 'bg-gray-100 text-gray-700'
     }
   }
-
-
-
 
   return (
     <div className="max-w-7xl mx-auto px-6">
@@ -400,6 +397,7 @@ function MainPage() {
             placeholder="도서명, 저자명 또는 ISBN으로 검색하세요"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
+            maxLength={20}
             className="
               w-full
               h-16
@@ -467,35 +465,64 @@ function MainPage() {
               disabled:opacity-30
             "
           >
-            ‹
+            {'<'}
           </button>
 
           {/* 카드 */}
           <div className="grid grid-cols-5 gap-6">
-            {visibleRankingBooks.map(book => (
-              <div
-                key={book.isbn13 || book.title || book.id}
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() =>
-                  navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
-                }
-              >
-                {book.cover ? (
-                  <img
-                    src={book.cover}
-                    alt={book.title || 'cover'}
-                    className="w-full aspect-[3/4] object-cover rounded-lg mb-3 bg-gray-200"
-                    loading="lazy"
+            {visibleRankingBooks.map((book, idx) => {
+              const rank = page * booksPerPage + idx + 1
+              const rankClass = rank === 1
+                ? 'bg-amber-500 text-white'
+                : rank === 2
+                  ? 'bg-slate-600 text-white'
+                  : rank === 3
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-sky-200 text-black'
+              const isTopRank = rank <= 3
+
+              return (
+                <div
+                  key={book.isbn13 || book.title || book.id}
+                  className="relative flex flex-col items-center cursor-pointer overflow-visible"
+                  onClick={() =>
+                    navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
+                  }
+                >
+                  <div
+                    className={`absolute -left-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${rankClass} ${
+                      isTopRank ? 'ring-2 ring-white shadow-[0_6px_12px_rgba(0,0,0,0.35)]' : ''
+                    }`}
+                  >
+                    {rank}위
+                    {isTopRank && (
+                      <span
+                        className={`absolute -right-1 -top-1 text-[14px] ${
+                          rank === 1 ? 'text-amber-300' : rank === 2 ? 'text-slate-200' : 'text-amber-600'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        ★
+                      </span>
+                    )}
+                  </div>
+                  {book.cover ? (
+                    <img
+                      src={book.cover}
+                      alt={book.title || 'cover'}
+                      className="w-full aspect-[3/4] object-cover rounded-lg mb-3 bg-gray-200"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
+                  )}
+                  <TwoLineTitle
+                    text={book.title || ''}
+                    className="text-sm text-gray-800 text-center leading-snug"
                   />
-                ) : (
-                  <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
-                )}
-                <TwoLineTitle
-                  text={book.title || ''}
-                  className="text-sm text-gray-800 text-center leading-snug"
-                />
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
 
           {/* 다음 */}
@@ -517,7 +544,7 @@ function MainPage() {
               disabled:opacity-30
             "
           >
-            ›
+            {'>'}
           </button>
         </div>
       </section>
@@ -533,8 +560,8 @@ function MainPage() {
         {/* 서점 카테고리 */}
         <div className="flex gap-3 mb-8">
           {[
-          { label: '\uAD50\uBCF4\uBB38\uACE0', value: 'KYOBO' },
-          { label: '\uC54C\uB77C\uB518', value: 'ALADIN' },
+          { label: '교보문고', value: 'KYOBO' },
+          { label: '알라딘', value: 'ALADIN' },
           { label: 'YES24', value: 'YES24' }
         ].map(provider => {
           const isActive = provider.value === bestSellerProvider
@@ -586,34 +613,63 @@ function MainPage() {
               disabled:opacity-30
             "
           >
-            ‹
+            {'<'}
           </button>
 
           <div className="grid grid-cols-5 gap-6">
-            {visibleBestSellerBooks.map(book => (
-              <div
-                key={book.isbn13 || book.title || book.id}
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() =>
-                  navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
-                }
-              >
-                {book.cover ? (
-                  <img
-                    src={book.cover}
-                    alt={book.title || 'cover'}
-                    className="w-full aspect-[3/4] object-cover rounded-lg mb-3 bg-gray-200"
-                    loading="lazy"
+            {visibleBestSellerBooks.map((book, idx) => {
+              const rank = bestPage * bestBooksPerPage + idx + 1
+              const rankClass = rank === 1
+                ? 'bg-amber-500 text-white'
+                : rank === 2
+                  ? 'bg-slate-600 text-white'
+                  : rank === 3
+                    ? 'bg-amber-700 text-white'
+                    : 'bg-sky-200 text-black'
+              const isTopRank = rank <= 3
+
+              return (
+                <div
+                  key={book.isbn13 || book.title || book.id}
+                  className="relative flex flex-col items-center cursor-pointer overflow-visible"
+                  onClick={() =>
+                    navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
+                  }
+                >
+                  <div
+                    className={`absolute -left-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${rankClass} ${
+                      isTopRank ? 'ring-2 ring-white shadow-[0_6px_12px_rgba(0,0,0,0.35)]' : ''
+                    }`}
+                  >
+                    {rank}위
+                    {isTopRank && (
+                      <span
+                        className={`absolute -right-1 -top-1 text-[14px] ${
+                          rank === 1 ? 'text-amber-300' : rank === 2 ? 'text-slate-200' : 'text-amber-600'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        ★
+                      </span>
+                    )}
+                  </div>
+                  {book.cover ? (
+                    <img
+                      src={book.cover}
+                      alt={book.title || 'cover'}
+                      className="w-full aspect-[3/4] object-cover rounded-lg mb-3 bg-gray-200"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
+                  )}
+                  <TwoLineTitle
+                    text={book.title || ''}
+                    className="text-sm text-gray-800 text-center leading-snug"
                   />
-                ) : (
-                  <div className="w-full aspect-[3/4] bg-gray-300 rounded-lg mb-3" />
-                )}
-                <TwoLineTitle
-                  text={book.title || ''}
-                  className="text-sm text-gray-800 text-center leading-snug"
-                />
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
 
           <button
@@ -634,7 +690,7 @@ function MainPage() {
               disabled:opacity-30
             "
           >
-            ›
+            {'>'}
           </button>
         </div>
       </section>
@@ -674,7 +730,7 @@ function MainPage() {
                 {!communityLoading && !communityError && mainCommunityPosts.length === 0 && (
                   <li className="text-gray-500">커뮤니티 게시글이 없습니다</li>
                 )}
-                                                {mainCommunityPosts.map((post) => {
+                {mainCommunityPosts.map((post) => {
                   const isPopular = popularCommunityIds.has(post.communityId)
                   const kindLabel = getCommunityKindLabel(post)
                   const kindClass = getCommunityKindStyle(post)
@@ -699,7 +755,7 @@ function MainPage() {
                     </li>
                   )
                 })}
-</ul>
+              </ul>
             </div>
           </div>
 
