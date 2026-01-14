@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import BookInfoCard from './BookInfoCard'
+
 /**
  * 한 줄 형태의 게시글 목록 아이템 컴포넌트
  * 공지, 자유, 질문 게시글에서 사용
@@ -10,7 +13,8 @@
  * @param {boolean} isHot - true이면 HOT 표시
  * @param {string} variant - 'card' (배경색 카드) | 'table' (테이블 행)
  */
-function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card' }) {
+function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card', userTitles = {} }) {
+  const [showBookInfo, setShowBookInfo] = useState(false)
   // 배지 색상 스타일
   const badgeStyles = {
     amber: 'bg-amber-500 text-white',
@@ -61,25 +65,63 @@ function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isH
           )}
           
           {/* 제목 */}
-          <h2 className="text-sm text-gray-800 truncate flex-1 hover:text-main-bg">
-            {getPostTitle(post)}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <h2 className="text-sm text-gray-800 truncate hover:text-main-bg">
+              {(() => {
+                const title = getPostTitle(post)
+                return title.length > 30 ? title.slice(0, 30) + '...' : title
+              })()}
+            </h2>
             {post.bookTitle && (
-              <span className="text-xs text-gray-400 ml-1.5">
-                📖 {post.bookTitle.length > 15 ? post.bookTitle.slice(0, 15) + '...' : post.bookTitle}
-              </span>
+              <div 
+                className="relative flex-shrink-0"
+                onMouseEnter={() => setShowBookInfo(true)}
+                onMouseLeave={() => setShowBookInfo(false)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="text-xs text-gray-400 cursor-help">
+                  📖 {post.bookTitle.length > 15 ? post.bookTitle.slice(0, 15) + '...' : post.bookTitle}
+                </span>
+                {showBookInfo && (
+                  <div className="absolute left-0 top-full mt-1 z-50 w-72 shadow-lg rounded-lg overflow-hidden bg-white border border-gray-200">
+                    {post.bookId && post.bookCoverUrl ? (
+                      <BookInfoCard
+                        book={{
+                          bookId: post.bookId,
+                          title: post.bookTitle,
+                          author: post.bookAuthor,
+                          coverUrl: post.bookCoverUrl,
+                          publishedDate: post.bookPublishedDate,
+                        }}
+                        size="sm"
+                        showBookmark={false}
+                        disableNavigation={true}
+                      />
+                    ) : (
+                      <div className="p-4 text-center text-gray-500 text-sm">
+                        <p className="mb-1">📖</p>
+                        <p className="font-medium">{post.bookTitle}</p>
+                        <p className="text-xs text-gray-400 mt-1">정보가 없는 책입니다</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             {post.commentCount > 0 && (
-              <span className="text-xs text-main-bg ml-1">({post.commentCount})</span>
+              <span className="text-xs text-main-bg flex-shrink-0">({post.commentCount})</span>
             )}
-          </h2>
+          </div>
           
           {/* 작성자 */}
-          <span className="text-xs text-gray-500 flex-shrink-0 w-20 truncate text-center">
-            {post.authorNickname || '익명'}
-            {post.isHallOfFame && (
-              <span className="ml-1 text-amber-500">👑</span>
+          <div className="text-xs text-gray-500 flex-shrink-0 w-44 text-center flex items-center justify-center gap-1">
+            {userTitles?.[post.userId]?.length > 0 && (
+              <span className="text-[10px] text-main-bg font-medium px-1 py-0.5 border border-main-bg/30 bg-main-bg/5 rounded">
+                {userTitles[post.userId][0]?.titleName}
+              </span>
             )}
-          </span>
+            <span className="truncate">{post.authorNickname || '익명'}</span>
+          </div>
           
           {/* 날짜 */}
           <span className="text-xs text-gray-400 flex-shrink-0 w-20 text-center whitespace-nowrap">

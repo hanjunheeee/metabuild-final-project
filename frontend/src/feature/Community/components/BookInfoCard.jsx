@@ -38,7 +38,7 @@ function BookInfoCard({
       container: 'p-2',
       cover: 'w-12 h-16',
       coverIcon: 'w-5 h-5',
-      title: 'text-xs font-medium line-clamp-1',
+      title: 'text-xs font-medium',
       author: 'text-xs',
       date: 'text-xs',
       bookmarkBtn: 'w-6 h-6',

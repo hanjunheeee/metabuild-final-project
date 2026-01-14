@@ -18,7 +18,7 @@ import BookInfoCard from './BookInfoCard'
  * @param {Set} bookmarkedBookIds - 북마크한 책 ID Set
  * @param {Set} likedCommunityIds - 사용자가 좋아요한 게시글 ID Set
  */
-function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreviewContent, getPostImages, currentUserId, onDelete, onAuthorClick, preferBookInfo = false, isHot = false, onBookmark, bookmarkedBookIds, likedCommunityIds }) {
+function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreviewContent, getPostImages, currentUserId, onDelete, onAuthorClick, preferBookInfo = false, isHot = false, onBookmark, bookmarkedBookIds, likedCommunityIds, userTitles = {} }) {
   // 북마크 상태 확인
   const isBookmarked = bookmarkedBookIds && post.bookId && bookmarkedBookIds.has(post.bookId)
   const isLiked = likedCommunityIds && likedCommunityIds.has(post.communityId)
@@ -87,11 +87,13 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
                 e.stopPropagation()
                 onAuthorClick && onAuthorClick(post.userId, post.authorNickname)
               }}
-              className="block font-semibold text-sm text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
+              className="flex items-center gap-1 font-semibold text-sm text-gray-800 hover:text-main-bg transition-colors cursor-pointer"
             >
-              {post.authorNickname || '익명'}
-              {post.isHallOfFame && (
-                <span className="ml-1 text-amber-500 text-xs font-semibold">👑 명예</span>
+              <span>{post.authorNickname || '익명'}</span>
+              {userTitles?.[post.userId]?.length > 0 && (
+                <span className="text-[10px] text-main-bg font-medium px-1.5 py-0.5 border border-main-bg/30 bg-main-bg/5 rounded">
+                  {userTitles[post.userId][0]?.titleName}
+                </span>
               )}
             </button>
             <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
@@ -154,8 +156,11 @@ function CommunityPostCard({ post, onClick, formatDate, getPostTitle, getPreview
         </div>
 
         {/* 제목 */}
-        <h2 className="flex-shrink-0 text-base font-bold text-gray-800 mb-2 line-clamp-1">
-          {getPostTitle(post)}
+        <h2 className="flex-shrink-0 text-xl font-bold text-gray-800 mb-2 line-clamp-1">
+          {(() => {
+            const title = getPostTitle(post)
+            return title.length > 30 ? title.slice(0, 30) + '...' : title
+          })()}
         </h2>
 
         {/* 미리보기 (썸네일도 없고 책 정보도 없을 때만 표시) */}

@@ -37,9 +37,21 @@ function useCommunityListPage() {
     loadCommunities()
   }, [loadCommunities])
 
+  // HOT 게시글 로드 함수
+  const loadHotPosts = useCallback(async () => {
+    try {
+      const data = await fetchHotPosts(4)
+      setHotPosts(data)
+      setHotPostIds(new Set(data.map(post => post.communityId)))
+    } catch (error) {
+      console.error('HOT 게시글 로딩 실패:', error)
+    }
+  }, [])
+
   const refetch = useCallback(() => {
     loadCommunities()
-  }, [loadCommunities])
+    loadHotPosts()
+  }, [loadCommunities, loadHotPosts])
 
   // === 기존 로직 ===
   const helpers = useCommunityHelpers()
@@ -89,6 +101,9 @@ function useCommunityListPage() {
   // 사용자가 좋아요한 게시글 ID 목록
   const [likedCommunityIds, setLikedCommunityIds] = useState(new Set())
 
+  // 게시글 작성자들의 칭호 (userId -> titles[])
+  const [userTitles, setUserTitles] = useState({})
+
   // 팔로우 상태 확인 (유저 필터 모드일 때)
   useEffect(() => {
     const checkFollowStatus = async () => {
@@ -107,17 +122,8 @@ function useCommunityListPage() {
 
   // HOT 게시글 가져오기
   useEffect(() => {
-    const loadHotPosts = async () => {
-      try {
-        const data = await fetchHotPosts(4)
-        setHotPosts(data)
-        setHotPostIds(new Set(data.map(post => post.communityId)))
-      } catch (error) {
-        console.error('HOT 게시글 로딩 실패:', error)
-      }
-    }
     loadHotPosts()
-  }, [])
+  }, [loadHotPosts])
 
   useEffect(() => {
     const loadHallOfFame = async () => {
@@ -161,6 +167,35 @@ function useCommunityListPage() {
     }
     loadLikedCommunityIds()
   }, [currentUser?.userId])
+
+  // 게시글 작성자들의 칭호 가져오기
+  useEffect(() => {
+    const loadUserTitles = async () => {
+      if (!communities.length) return
+
+      // 모든 고유 userId 수집
+      const allUserIds = new Set(communities.map(post => post.userId))
+      const newUserIds = [...allUserIds].filter(id => !userTitles[id])
+      if (newUserIds.length === 0) return
+
+      const titlesMap = { ...userTitles }
+      await Promise.all(
+        newUserIds.map(async (userId) => {
+          try {
+            const res = await fetch(`http://localhost:7878/api/titles/user/${userId}/top`)
+            const data = await res.json()
+            titlesMap[userId] = data || []
+          } catch (err) {
+            console.error(`칭호 조회 실패 (userId: ${userId}):`, err)
+            titlesMap[userId] = []
+          }
+        })
+      )
+      setUserTitles(titlesMap)
+    }
+
+    loadUserTitles()
+  }, [communities])
 
   // 공지글과 일반글 분리 (공지글은 최신 3개만)
   const communitiesWithBadges = useMemo(() => {
@@ -373,6 +408,7 @@ function useCommunityListPage() {
     hotPostIds,
     bookmarkedBookIds,
     likedCommunityIds,
+    userTitles,
     
     // 필터 모드
     filterUserId,

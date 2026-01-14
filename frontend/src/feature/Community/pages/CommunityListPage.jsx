@@ -22,6 +22,7 @@ function CommunityListPage() {
     hotPostIds,
     bookmarkedBookIds,
     likedCommunityIds,
+    userTitles,
 
     // 필터 모드
     filterUserId,
@@ -107,14 +108,14 @@ function CommunityListPage() {
               </button>
             </div>
           ) : (
-            <div className="flex items-start justify-between gap-4">
-              <div className="text-center flex-1">
+            <div className="relative">
+              <div className="text-center">
                 <h1 className="text-2xl font-extrabold text-sub-bg mb-2">커뮤니티</h1>
                 <p className="text-gray-400 text-sm">독서 경험을 나누고, 다른 독자들의 이야기를 만나보세요.</p>
               </div>
               <button
                 onClick={() => navigate('/community/rank')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 
+                className="absolute right-0 bottom-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 
                          text-white text-sm font-medium hover:from-amber-600 hover:to-orange-600 
                          transition-all cursor-pointer whitespace-nowrap"
               >
@@ -197,6 +198,7 @@ function CommunityListPage() {
                     onBookmark={handleBookmark}
                     bookmarkedBookIds={bookmarkedBookIds}
                     likedCommunityIds={likedCommunityIds}
+                    userTitles={userTitles}
                   />
                 </div>
               ))}
@@ -261,6 +263,7 @@ function CommunityListPage() {
                     onBookmark={handleBookmark}
                     bookmarkedBookIds={bookmarkedBookIds}
                     likedCommunityIds={likedCommunityIds}
+                    userTitles={userTitles}
                   />
                 </div>
               ))}
@@ -277,8 +280,8 @@ function CommunityListPage() {
               <div className="flex items-center gap-3 bg-gray-50 border-b border-gray-200 py-2 px-2 text-xs text-gray-500 font-medium">
                 <span className="w-12">분류</span>
                 <span className="flex-1">제목</span>
-                <span className="w-20 text-center">길이</span>
-                <span className="w-20 text-center">작성자</span>
+                <span className="w-44 text-center">작성자</span>
+                <span className="w-20 text-center">날짜</span>
                 <span className="w-10 text-center">추천</span>
               </div>
               <div>
@@ -292,6 +295,7 @@ function CommunityListPage() {
                     badge={getBadgeConfig(post)}
                     isHot={kindFilter === 'ALL' && hotPostIds.has(post.communityId)}
                     variant="table"
+                    userTitles={userTitles}
                   />
                 ))}
               </div>
