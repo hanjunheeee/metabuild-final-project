@@ -30,7 +30,7 @@ public class BookEntity {
     @Column(length = 200)
     private String title;
 
-    @Column(length = 100)
+    @Column(length = 200)
     private String author;
 
     @Column(length = 100)
