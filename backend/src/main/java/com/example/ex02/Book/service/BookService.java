@@ -42,10 +42,16 @@ public class BookService {
         }
 
         String firstToken = tokens.get(0);
-        return bookRepository
+        String normalized = trimmed.replaceAll("\\s+", "");
+
+        List<BookEntity> initial = bookRepository
                 .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
-                        firstToken, firstToken, firstToken, firstToken)
-                .stream()
+                        firstToken, firstToken, firstToken, firstToken);
+        List<BookEntity> normalizedMatches = normalized.isEmpty()
+                ? java.util.Collections.emptyList()
+                : bookRepository.findByNormalizedKeyword(normalized.toLowerCase());
+
+        return mergeCandidates(initial, normalizedMatches).stream()
                 .filter(book -> matchesAllTokens(book, tokens))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -131,13 +137,23 @@ public class BookService {
         String author = safeLower(book.getAuthor());
         String isbn = safeLower(book.getIsbn());
         String publisher = safeLower(book.getPublisher());
+        String titleNoSpace = removeSpaces(title);
+        String authorNoSpace = removeSpaces(author);
+        String isbnNoSpace = removeSpaces(isbn);
+        String publisherNoSpace = removeSpaces(publisher);
 
         for (String token : tokens) {
             if (token.isEmpty()) continue;
+            String tokenNoSpace = removeSpaces(token);
             boolean matches = title.contains(token)
                     || author.contains(token)
                     || isbn.contains(token)
-                    || publisher.contains(token);
+                    || publisher.contains(token)
+                    || (!tokenNoSpace.isEmpty()
+                        && (titleNoSpace.contains(tokenNoSpace)
+                            || authorNoSpace.contains(tokenNoSpace)
+                            || isbnNoSpace.contains(tokenNoSpace)
+                            || publisherNoSpace.contains(tokenNoSpace)));
             if (!matches) {
                 return false;
             }
@@ -147,6 +163,28 @@ public class BookService {
 
     private String safeLower(String value) {
         return value == null ? "" : value.toLowerCase();
+    }
+
+    private String removeSpaces(String value) {
+        return value == null ? "" : value.replaceAll("\\s+", "");
+    }
+
+    private List<BookEntity> mergeCandidates(List<BookEntity> primary, List<BookEntity> secondary) {
+        if (secondary == null || secondary.isEmpty()) {
+            return primary;
+        }
+        java.util.LinkedHashMap<Long, BookEntity> merged = new java.util.LinkedHashMap<>();
+        for (BookEntity book : primary) {
+            if (book.getBookId() != null) {
+                merged.put(book.getBookId(), book);
+            }
+        }
+        for (BookEntity book : secondary) {
+            if (book.getBookId() != null) {
+                merged.putIfAbsent(book.getBookId(), book);
+            }
+        }
+        return new java.util.ArrayList<>(merged.values());
     }
 }
 

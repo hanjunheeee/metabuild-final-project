@@ -118,6 +118,14 @@ function MainPage() {
     navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
   }
 
+  const formatDisplayTitle = (title) => {
+    if (!title) return ''
+    return title
+      .replace(/[-:]/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  }
+
   useEffect(() => {
     if (!currentUser?.userId) {
       setBookmarkedIds(new Set())
@@ -547,6 +555,7 @@ function MainPage() {
           {/* 카드 */}
           <div className="grid grid-cols-5 gap-6">
             {visibleRankingBooks.map((book, idx) => {
+              const displayTitle = formatDisplayTitle(book.title || '')
               const rank = page * booksPerPage + idx + 1
               const rankClass = rank === 1
                 ? 'bg-amber-500 text-white'
@@ -565,9 +574,10 @@ function MainPage() {
                 <div
                   key={book.isbn13 || book.title || book.id}
                   className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
-                  onClick={() =>
-                    navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
-                  }
+                  onClick={() => {
+                    const keywordValue = book.isbn13 || displayTitle || book.title || ''
+                    navigate(`/searchbook?keyword=${encodeURIComponent(keywordValue)}`)
+                  }}
                 >
                   <div
                     className={`absolute -left-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${rankClass} ${
@@ -623,7 +633,7 @@ function MainPage() {
                     </button>
                   )}
                   <TwoLineTitle
-                    text={book.title || ''}
+                    text={displayTitle}
                     className="text-sm text-gray-700 text-center leading-snug"
                   />
                 </div>
@@ -739,6 +749,7 @@ function MainPage() {
 
           <div className="grid grid-cols-5 gap-6">
             {visibleBestSellerBooks.map((book, idx) => {
+              const displayTitle = formatDisplayTitle(book.title || '')
               const rank = bestPage * bestBooksPerPage + idx + 1
               const rankClass = rank === 1
                 ? 'bg-amber-500 text-white'
@@ -757,9 +768,10 @@ function MainPage() {
                 <div
                   key={book.isbn13 || book.title || book.id}
                   className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
-                  onClick={() =>
-                    navigate(`/searchbook?keyword=${encodeURIComponent(book.title)}`)
-                  }
+                  onClick={() => {
+                    const keywordValue = book.isbn13 || displayTitle || book.title || ''
+                    navigate(`/searchbook?keyword=${encodeURIComponent(keywordValue)}`)
+                  }}
                 >
                   <div
                     className={`absolute -left-2 -top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${rankClass} ${
@@ -815,7 +827,7 @@ function MainPage() {
                     </button>
                   )}
                   <TwoLineTitle
-                    text={book.title || ''}
+                    text={displayTitle}
                     className="text-sm text-gray-700 text-center leading-snug"
                   />
                 </div>
