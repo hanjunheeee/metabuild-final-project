@@ -584,9 +584,9 @@ function MainPage() {
         {/* 서점 카테고리 */}
         <div className="flex gap-2 mb-8">
           {[
-          { label: '교보문고', value: 'KYOBO' },
-          { label: '알라딘', value: 'ALADIN' },
-          { label: 'YES24', value: 'YES24' }
+          { label: '교보문고', value: 'KYOBO', color: 'bg-emerald-600 hover:bg-emerald-700' },
+          { label: '알라딘', value: 'ALADIN', color: 'bg-fuchsia-600 hover:bg-fuchsia-700' },
+          { label: 'YES24', value: 'YES24', color: 'bg-blue-600 hover:bg-blue-700' }
         ].map(provider => {
           const isActive = provider.value === bestSellerProvider
           return (
@@ -602,7 +602,7 @@ function MainPage() {
                 transition-colors
                 cursor-pointer
                 ${isActive
-                  ? 'bg-sub-bg text-white'
+                  ? `${provider.color} text-white`
                   : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'}
               `}
             >
@@ -737,8 +737,8 @@ function MainPage() {
       {/* ===============================
          커뮤니티 & 트렌드 (인기글 / 최신글)
       =============================== */}
-      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
-        <h2 className="text-2xl font-extrabold mb-10 text-sub-bg">
+      <section className="mb-10 border border-gray-200 bg-gray-50 p-8">
+        <h2 className="text-2xl font-extrabold mb-5 text-sub-bg">
           커뮤니티 & 트렌드
         </h2>
 
