@@ -22,6 +22,20 @@ function TrendManagePage() {
   const [trendPage, setTrendPage] = useState(1)
   const [blockedPage, setBlockedPage] = useState(1)
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  }
+
   // Alert/Confirm 모달 훅
   const { alertModal, showAlert, closeAlert, confirmModal, showConfirm, closeConfirm } = useModals()
 
@@ -67,7 +81,7 @@ function TrendManagePage() {
             // 로컬 상태 업데이트
             setTrends(prev => prev.filter(t => t.keyword !== keyword))
             setBlockedKeywords(prev => [
-              { keyword, blockedAt: new Date().toISOString().split('T')[0] },
+              { keyword, blockedAt: new Date().toISOString() },
               ...prev
             ])
             showAlert('차단 완료', `"${keyword}" 키워드가 차단되었습니다.`, 'success')
@@ -133,7 +147,7 @@ function TrendManagePage() {
       
       if (result.success) {
         setBlockedKeywords(prev => [
-          { keyword, blockedAt: new Date().toISOString().split('T')[0] },
+          { keyword, blockedAt: new Date().toISOString() },
           ...prev
         ])
         setTrends(prev => prev.filter(t => t.keyword !== keyword))
@@ -358,7 +372,7 @@ function TrendManagePage() {
                       <span className="text-sm font-medium text-gray-800">{blocked.keyword}</span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="text-sm text-gray-500">{blocked.blockedAt || '-'}</span>
+                      <span className="text-sm text-gray-500">{formatDateTime(blocked.blockedAt)}</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button

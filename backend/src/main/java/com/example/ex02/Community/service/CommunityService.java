@@ -17,7 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -212,7 +212,7 @@ public class CommunityService {
     // 주간 HOT 게시글 조회 (최근 7일 내 작성, 좋아요 순)
     // 주간 HOT 게시글 조회
     public List<CommunityDTO> getWeeklyHotPosts(int limit) {
-        LocalDate startDate = LocalDate.now().minusDays(7);
+        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
         List<CommunityEntity> entities = communityRepository.findWeeklyHotPosts(startDate);
         
         return entities.stream()

@@ -136,7 +136,7 @@ public class SearchTrendController {
                 .map(b -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("keyword", b.getKeyword());
-                    map.put("blockedAt", b.getCreatedAt() != null ? b.getCreatedAt().toLocalDate().toString() : null);
+                    map.put("blockedAt", b.getCreatedAt() != null ? b.getCreatedAt().toString() : null);
                     return map;
                 })
                 .toList();
