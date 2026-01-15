@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -21,12 +23,22 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:3001"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
             // 세션 사용 안 함 (JWT 방식)
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // === 챗봇 전용 공개 API (가장 먼저 선언) ===
+                .requestMatchers("/api/chat").permitAll()
+
                 // === 공개 API ===
                 .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/analytics/log/search", "/api/analytics/log/action").permitAll()
@@ -39,28 +51,28 @@ public class SecurityConfig {
                 .requestMatchers("/api/files/**").permitAll()
                 // 업로드된 파일 접근
                 .requestMatchers("/uploads/**").permitAll()
-                
+
                 // 모든 GET 요청은 공개 (조회는 누구나 가능)
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                
+
                 // Swagger, H2, Actuator
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
-                
+
                 // === 인증 필요 API ===
                 // POST, PUT, PATCH, DELETE는 인증 필요 (생성, 수정, 삭제)
                 .requestMatchers(HttpMethod.POST, "/api/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/**").authenticated()
                 .requestMatchers(HttpMethod.PATCH, "/api/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/**").authenticated()
-                
+
                 // 나머지 요청
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             // JWT 필터 추가
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 }

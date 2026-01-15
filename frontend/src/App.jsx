@@ -4,6 +4,8 @@ import { publicRoutes } from './app/routes'
 import PrivateRoute from './app/routes/PrivateRoute'
 import CommunityWritePage from '@/feature/Community/pages/CommunityWritePage'
 
+import ChatBot from './ai/components/ChatBot'
+
 // 마이페이지 컴포넌트
 import MyPageLayout from '@/feature/Mypage/components/MyPageLayout'
 import ProfilePage from '@/feature/Mypage/pages/ProfilePage'
@@ -71,7 +73,13 @@ function App() {
 
   const routing = useRoutes(routes)
 
-  return routing
+  // 핵심 수정 부분: routing 결과와 ChatBot을 함께 반환합니다.
+    return (
+      <>
+        {routing}
+        <ChatBot />
+      </>
+    )
 }
 
 export default App
