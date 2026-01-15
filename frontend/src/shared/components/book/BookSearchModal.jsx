@@ -25,14 +25,18 @@ function BookSearchModal({
     loading: bookLoading,
     handleSearchChange,
     handleFocus,
+    startSelecting,
     handleBookSelect,
   } = useBookSearch()
 
   // 책 선택 시 처리
   const handleSelect = (book) => {
+    console.log('[BookSearchModal] handleSelect 호출:', book.title)
+    console.log('[BookSearchModal] 현재 filteredBooks 길이:', filteredBooks.length)
     handleBookSelect(book)
     onSelect(book)
     onClose()
+    console.log('[BookSearchModal] handleSelect 완료')
   }
 
   // 모달 외부 클릭 시 닫기
@@ -87,8 +91,15 @@ function BookSearchModal({
               type="text"
               placeholder="책 제목 또는 저자로 검색..."
               value={bookSearchTerm}
-              onChange={handleSearchChange}
-              onFocus={handleFocus}
+              onChange={(e) => {
+                console.log('[Input] onChange:', e.target.value)
+                handleSearchChange(e)
+              }}
+              onFocus={() => {
+                console.log('[Input] onFocus')
+                handleFocus()
+              }}
+              onBlur={() => console.log('[Input] onBlur')}
               autoFocus
               className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200
                        focus:outline-none focus:ring-2 focus:ring-main-bg focus:border-transparent
@@ -131,7 +142,14 @@ function BookSearchModal({
                 <button
                   key={book.bookId}
                   type="button"
-                  onClick={() => handleSelect(book)}
+                  onMouseDown={(e) => {
+                    console.log('[BookSearchModal] onMouseDown 시작:', book.title)
+                    e.preventDefault()
+                    e.stopPropagation()
+                    startSelecting() // 즉시 선택 플래그 설정 (blur/onChange보다 먼저!)
+                    handleSelect(book)
+                    console.log('[BookSearchModal] onMouseDown 완료')
+                  }}
                   className="w-full p-4 text-left hover:bg-blue-50 transition-colors
                            border-b border-gray-100 last:border-b-0 cursor-pointer"
                 >

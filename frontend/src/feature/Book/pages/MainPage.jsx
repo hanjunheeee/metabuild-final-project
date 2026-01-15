@@ -12,6 +12,8 @@ import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import useCommunityHelpers from '@/feature/Community/hooks/useCommunityHelpers'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
+import { AlertModal } from '@/shared/components'
+import { useAlertModal } from '@/shared/hooks'
 
 // 키워드 트렌드 데이터를 워드클라우드로 렌더링
 function WordCloud({ words, onWordClick }) {
@@ -108,11 +110,12 @@ function MainPage() {
   const currentUser = getUserFromSession()
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set())
   const [bookmarkLoadingIds, setBookmarkLoadingIds] = useState(new Set())
+  const { alertModal, showAlert, closeAlert } = useAlertModal()
 
   // 검색어 입력 후 검색 결과 페이지로 이동
   const handleSearch = () => {
     if (!keyword.trim()) {
-      alert('검색어를 입력해주세요')
+      showAlert('알림', '검색어를 입력해주세요', 'warning')
       return
     }
     navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
@@ -1045,6 +1048,15 @@ function MainPage() {
           </div>
         </div>
       </section>
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </div>
   )
 }

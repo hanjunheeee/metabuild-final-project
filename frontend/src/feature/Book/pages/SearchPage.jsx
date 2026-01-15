@@ -6,6 +6,8 @@ import { logSearch, logBookAction } from '../api/analyticsApi'
 import Spinner from '../../../shared/components/icons/Spinner'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
+import { AlertModal } from '@/shared/components'
+import { useAlertModal } from '@/shared/hooks'
 
 // 도서 검색 결과 화면(요약/구매/대출 경로 제공)
 function SearchPage() {
@@ -26,6 +28,7 @@ function SearchPage() {
   const [relatedBooks, setRelatedBooks] = useState({})
   const [relatedLoadingIds, setRelatedLoadingIds] = useState(new Set())
   const [relatedErrors, setRelatedErrors] = useState({})
+  const { alertModal, showAlert, closeAlert } = useAlertModal()
 
   const decodeHtmlEntities = (value) => {
     if (!value || typeof value !== 'string') {
@@ -235,7 +238,7 @@ function SearchPage() {
   // 검색어 변경 시 URL 갱신
   const handleSearch = () => {
     if (!keyword.trim()) {
-      alert('검색어를 입력해주세요')
+      showAlert('알림', '검색어를 입력해주세요', 'warning')
       return
     }
     navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
@@ -294,7 +297,7 @@ function SearchPage() {
         return next
       })
     } catch (e) {
-      alert('즐겨찾기 처리에 실패했습니다.')
+      showAlert('오류', '즐겨찾기 처리에 실패했습니다.', 'error')
     } finally {
       setBookmarkLoadingIds((prev) => {
         const next = new Set(prev)
@@ -604,6 +607,15 @@ function SearchPage() {
           )}
         </div>
       )}
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
     </div>
   )
 }

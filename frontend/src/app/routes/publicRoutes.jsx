@@ -15,6 +15,7 @@ import LibraryMapPage from '@/feature/Library/pages/LibraryMapPage'
 const publicRoutes = [
   { path: '/', element: <MainPage /> },
   { path: '/login', element: <LoginPage /> },
+  { path: '/admin/login', element: <LoginPage isAdmin /> },
   { path: '/signup', element: <SignupPage /> },
   { path: '/forgot-password', element: <ForgotPasswordPage /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
