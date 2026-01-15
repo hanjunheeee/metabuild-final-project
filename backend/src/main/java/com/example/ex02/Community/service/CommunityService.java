@@ -7,6 +7,7 @@ import com.example.ex02.Community.dto.CommunityDTO;
 import com.example.ex02.Community.entity.CommunityEntity;
 import com.example.ex02.Community.entity.CommunityLikeEntity;
 import com.example.ex02.Community.repository.CommentRepository;
+import com.example.ex02.Community.repository.CommentLikeRepository;
 import com.example.ex02.Community.repository.CommunityLikeRepository;
 import com.example.ex02.Community.repository.CommunityRepository;
 import com.example.ex02.User.entity.UserEntity;
@@ -28,6 +29,7 @@ public class CommunityService {
 
     private final CommunityRepository communityRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final CommunityLikeRepository communityLikeRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
@@ -109,10 +111,14 @@ public class CommunityService {
         // 1. 해당 게시글의 모든 좋아요 삭제
         communityLikeRepository.deleteByCommunity_CommunityId(communityId);
         
-        // 2. 해당 게시글의 모든 댓글 삭제
+        // 2. 해당 게시글의 모든 댓글 좋아요 삭제 (댓글에 연결된 좋아요)
+        commentRepository.findByCommunity_CommunityIdOrderByCreatedAtDesc(communityId)
+            .forEach(comment -> commentLikeRepository.deleteByComment_CommentId(comment.getCommentId()));
+        
+        // 3. 해당 게시글의 모든 댓글 삭제
         commentRepository.deleteByCommunity_CommunityId(communityId);
         
-        // 3. 게시글 삭제
+        // 4. 게시글 삭제
         communityRepository.delete(entity);
     }
 

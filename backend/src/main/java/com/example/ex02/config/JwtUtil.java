@@ -46,6 +46,11 @@ public class JwtUtil {
         return getClaims(token).get("userId", Long.class);
     }
 
+    // 토큰에서 role 추출
+    public String getRoleFromToken(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
     // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 import { deletePostByAdmin } from '../api/adminCommunityApi'
+import { AlertModal, ConfirmModal } from '@/shared/components'
+import { useModals } from '@/shared/hooks'
 import SearchFilterBar from '@/feature/Community/components/SearchFilterBar'
 import Pagination from '@/shared/components/navigation/Pagination'
 
@@ -20,6 +22,9 @@ function PostManagePage() {
   const [sortBy, setSortBy] = useState('latest')
   const [kindFilter, setKindFilter] = useState('ALL')
 
+  // Alert/Confirm 모달 훅
+  const { alertModal, showAlert, closeAlert, confirmModal, showConfirm, closeConfirm } = useModals()
+
   // 게시글 목록 조회
   const loadPosts = useCallback(async () => {
     setLoading(true)
@@ -28,7 +33,7 @@ function PostManagePage() {
       setPosts(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('Failed to load posts:', e)
-      alert('게시글 목록을 불러오는데 실패했습니다.')
+      showAlert('로딩 실패', '게시글 목록을 불러오는데 실패했습니다.', 'error')
     } finally {
       setLoading(false)
     }
@@ -109,19 +114,24 @@ function PostManagePage() {
     navigate(`/community/${communityId}`)
   }
 
-  const handleDelete = async (post) => {
+  const handleDelete = (post) => {
     const title = getPostTitle(post)
-    if (!confirm(`"${title}" 게시글을 삭제하시겠습니까?`)) {
-      return
-    }
-    try {
-      await deletePostByAdmin(post.communityId)
-      alert('게시글이 삭제되었습니다.')
-      loadPosts()
-    } catch (e) {
-      console.error('Failed to delete post:', e)
-      alert('삭제에 실패했습니다.')
-    }
+    showConfirm(
+      '게시글 삭제',
+      `"${title}" 게시글을 삭제하시겠습니까?`,
+      async () => {
+        try {
+          await deletePostByAdmin(post.communityId)
+          showAlert('삭제 완료', '게시글이 삭제되었습니다.', 'success')
+          loadPosts()
+        } catch (e) {
+          console.error('Failed to delete post:', e)
+          showAlert('삭제 실패', '삭제에 실패했습니다.', 'error')
+        }
+        closeConfirm()
+      },
+      'danger'
+    )
   }
 
   // 종류 라벨
@@ -240,6 +250,27 @@ function PostManagePage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
+
+      {/* Confirm 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onCancel={closeConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        confirmText="삭제"
+        cancelText="취소"
+        type={confirmModal.type}
+      />
     </div>
   )
 }

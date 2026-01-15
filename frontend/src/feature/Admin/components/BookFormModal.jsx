@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { AlertModal } from '@/shared/components'
 
 /**
  * 도서 추가/수정 모달
@@ -19,6 +20,22 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
     ages: ''
   })
   const [saving, setSaving] = useState(false)
+  
+  // Alert 모달 상태
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'error'
+  })
+
+  const showAlert = (title, message, type = 'error') => {
+    setAlertModal({ isOpen: true, title, message, type })
+  }
+
+  const closeAlert = () => {
+    setAlertModal(prev => ({ ...prev, isOpen: false }))
+  }
 
   // 수정 모드일 때 폼 데이터 초기화
   useEffect(() => {
@@ -73,14 +90,14 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
 
     for (const field of requiredFields) {
       if (!formData[field.name]?.trim()) {
-        alert(`${field.label}은(는) 필수 항목입니다.`)
+        showAlert('입력 오류', `${field.label}은(는) 필수 항목입니다.`)
         return
       }
     }
 
     // ISBN 형식 검증 (숫자 13자리)
     if (formData.isbn.length !== 13) {
-      alert('ISBN은 13자리 숫자여야 합니다.')
+      showAlert('입력 오류', 'ISBN은 13자리 숫자여야 합니다.')
       return
     }
 
@@ -95,6 +112,7 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
   if (!isOpen) return null
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
@@ -112,6 +130,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
+                maxLength={30}
+                placeholder="도서 이름 입력...(최대 30자)"
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                 required
               />
@@ -127,6 +147,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                   name="author"
                   value={formData.author}
                   onChange={handleInputChange}
+                  maxLength={30}
+                  placeholder="저자 이름 입력...(최대 30자)"
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                   required
                 />
@@ -140,6 +162,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                   name="publisher"
                   value={formData.publisher}
                   onChange={handleInputChange}
+                  maxLength={30}
+                  placeholder="출판사 이름 입력...(최대 30자)"
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                   required
                 />
@@ -242,6 +266,16 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
         </div>
       </div>
     </div>
+
+    {/* Alert 모달 */}
+    <AlertModal
+      isOpen={alertModal.isOpen}
+      title={alertModal.title}
+      message={alertModal.message}
+      type={alertModal.type}
+      onClose={closeAlert}
+    />
+    </>
   )
 }
 

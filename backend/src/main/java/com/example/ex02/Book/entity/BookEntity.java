@@ -43,7 +43,7 @@ public class BookEntity {
     @Column(columnDefinition = "CLOB")
     private String summary;
 
-    @Column(name = "image_url", length = 100)
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
 
     @Enumerated(EnumType.STRING)

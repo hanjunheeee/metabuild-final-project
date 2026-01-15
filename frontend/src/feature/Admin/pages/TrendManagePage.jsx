@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Spinner } from '@/shared/components/icons'
+import { AlertModal, ConfirmModal } from '@/shared/components'
+import { useModals } from '@/shared/hooks'
 import Pagination from '@/shared/components/navigation/Pagination'
 import { 
   fetchKeywordTrends, 
@@ -19,6 +21,9 @@ function TrendManagePage() {
   const [activeTab, setActiveTab] = useState('trends') // 'trends' | 'blocked'
   const [trendPage, setTrendPage] = useState(1)
   const [blockedPage, setBlockedPage] = useState(1)
+
+  // Alert/Confirm 모달 훅
+  const { alertModal, showAlert, closeAlert, confirmModal, showConfirm, closeConfirm } = useModals()
 
   // 데이터 로드
   const loadData = useCallback(async () => {
@@ -50,64 +55,76 @@ function TrendManagePage() {
   }, [loadData])
 
   // 키워드 차단
-  const handleBlockKeyword = async (keyword) => {
-    if (!confirm(`"${keyword}" 키워드를 차단하시겠습니까?\n차단된 키워드는 트렌드에 표시되지 않습니다.`)) return
-
-    try {
-      const result = await blockKeyword(keyword)
-      
-      if (result.success) {
-        // 로컬 상태 업데이트
-        setTrends(prev => prev.filter(t => t.keyword !== keyword))
-        setBlockedKeywords(prev => [
-          { keyword, blockedAt: new Date().toISOString().split('T')[0] },
-          ...prev
-        ])
-        alert(`"${keyword}" 키워드가 차단되었습니다.`)
-      } else {
-        alert(result.message || '키워드 차단에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Failed to block keyword:', error)
-      alert('키워드 차단에 실패했습니다.')
-    }
+  const handleBlockKeyword = (keyword) => {
+    showConfirm(
+      '키워드 차단',
+      `"${keyword}" 키워드를 차단하시겠습니까?\n차단된 키워드는 트렌드에 표시되지 않습니다.`,
+      async () => {
+        try {
+          const result = await blockKeyword(keyword)
+          
+          if (result.success) {
+            // 로컬 상태 업데이트
+            setTrends(prev => prev.filter(t => t.keyword !== keyword))
+            setBlockedKeywords(prev => [
+              { keyword, blockedAt: new Date().toISOString().split('T')[0] },
+              ...prev
+            ])
+            showAlert('차단 완료', `"${keyword}" 키워드가 차단되었습니다.`, 'success')
+          } else {
+            showAlert('차단 실패', result.message || '키워드 차단에 실패했습니다.', 'error')
+          }
+        } catch (error) {
+          console.error('Failed to block keyword:', error)
+          showAlert('차단 실패', '키워드 차단에 실패했습니다.', 'error')
+        }
+        closeConfirm()
+      },
+      'danger'
+    )
   }
 
   // 키워드 차단 해제
-  const handleUnblockKeyword = async (keyword) => {
-    if (!confirm(`"${keyword}" 키워드의 차단을 해제하시겠습니까?`)) return
-
-    try {
-      const result = await unblockKeyword(keyword)
-      
-      if (result.success) {
-        setBlockedKeywords(prev => prev.filter(b => b.keyword !== keyword))
-        // 트렌드 목록 새로고침
-        const trendsData = await fetchKeywordTrends()
-        setTrends(trendsData.map(t => ({
-          keyword: t.text,
-          count: t.value
-        })))
-        alert(`"${keyword}" 키워드 차단이 해제되었습니다.`)
-      } else {
-        alert(result.message || '차단 해제에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Failed to unblock keyword:', error)
-      alert('차단 해제에 실패했습니다.')
-    }
+  const handleUnblockKeyword = (keyword) => {
+    showConfirm(
+      '차단 해제',
+      `"${keyword}" 키워드의 차단을 해제하시겠습니까?`,
+      async () => {
+        try {
+          const result = await unblockKeyword(keyword)
+          
+          if (result.success) {
+            setBlockedKeywords(prev => prev.filter(b => b.keyword !== keyword))
+            // 트렌드 목록 새로고침
+            const trendsData = await fetchKeywordTrends()
+            setTrends(trendsData.map(t => ({
+              keyword: t.text,
+              count: t.value
+            })))
+            showAlert('해제 완료', `"${keyword}" 키워드 차단이 해제되었습니다.`, 'success')
+          } else {
+            showAlert('해제 실패', result.message || '차단 해제에 실패했습니다.', 'error')
+          }
+        } catch (error) {
+          console.error('Failed to unblock keyword:', error)
+          showAlert('해제 실패', '차단 해제에 실패했습니다.', 'error')
+        }
+        closeConfirm()
+      },
+      'info'
+    )
   }
 
   // 새 키워드 차단 추가
   const handleAddBlockKeyword = async () => {
     const keyword = newBlockKeyword.trim()
     if (!keyword) {
-      alert('차단할 키워드를 입력해주세요.')
+      showAlert('입력 오류', '차단할 키워드를 입력해주세요.')
       return
     }
 
     if (blockedKeywords.some(b => b.keyword === keyword)) {
-      alert('이미 차단된 키워드입니다.')
+      showAlert('중복 오류', '이미 차단된 키워드입니다.', 'warning')
       return
     }
 
@@ -383,6 +400,27 @@ function TrendManagePage() {
           </div>
         </div>
       </div>
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={closeAlert}
+      />
+
+      {/* Confirm 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onCancel={closeConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        confirmText="확인"
+        cancelText="취소"
+        type={confirmModal.type}
+      />
     </div>
   )
 }

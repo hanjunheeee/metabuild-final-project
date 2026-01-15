@@ -270,6 +270,7 @@ function SignupPage() {
               </div>
             </div>
             <p className="mt-2 text-xs text-gray-400">JPG, JPEG, PNG (최대 5MB)</p>
+            <ValidationMessage message={photo.photoError} isValid={false} />
           </div>
 
           {/* CAPTCHA */}

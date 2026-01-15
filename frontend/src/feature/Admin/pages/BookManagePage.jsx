@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { fetchBooks, createBook, updateBook, deleteBook } from '../api/adminBookApi'
+import { AlertModal, ConfirmModal } from '@/shared/components'
+import { useModals } from '@/shared/hooks'
 import Pagination from '@/shared/components/navigation/Pagination'
 import BookFormModal from '../components/BookFormModal'
 import BookSearchFilter from '../components/BookSearchFilter'
@@ -17,6 +19,9 @@ function BookManagePage() {
   // 모달 상태
   const [showModal, setShowModal] = useState(false)
   const [editingBook, setEditingBook] = useState(null)
+
+  // Alert/Confirm 모달 훅
+  const { alertModal, showAlert, closeAlert, confirmModal, showConfirm, closeConfirm } = useModals()
 
   // 도서 목록 조회 (2글자 이상일 때만)
   const loadBooks = useCallback(async () => {
@@ -91,32 +96,44 @@ function BookManagePage() {
     try {
       if (editingBook) {
         await updateBook(editingBook.bookId, formData)
-        alert('도서가 수정되었습니다.')
+        showAlert('수정 완료', '도서가 수정되었습니다.', 'success')
       } else {
         await createBook(formData)
-        alert('도서가 추가되었습니다.')
+        showAlert('추가 완료', '도서가 추가되었습니다.', 'success')
       }
       closeModal()
       loadBooks()
     } catch (e) {
       console.error('Failed to save book:', e)
-      alert('저장에 실패했습니다.')
+      // 에러 타입별 처리
+      if (e.message === 'ISBN_DUPLICATE') {
+        showAlert('중복 오류', '이미 등록된 ISBN입니다. 다른 ISBN을 입력해주세요.', 'error')
+      } else if (e.message === 'AUTH_ERROR') {
+        showAlert('권한 오류', '도서를 저장할 권한이 없습니다. 다시 로그인해주세요.', 'error')
+      } else {
+        showAlert('저장 실패', e.message || '도서 저장에 실패했습니다.', 'error')
+      }
     }
   }
 
   // 삭제
-  const handleDelete = async (book) => {
-    if (!confirm(`"${book.title}" 도서를 삭제하시겠습니까?`)) {
-      return
-    }
-    try {
-      await deleteBook(book.bookId)
-      alert('도서가 삭제되었습니다.')
-      loadBooks()
-    } catch (e) {
-      console.error('Failed to delete book:', e)
-      alert('삭제에 실패했습니다. 연관된 데이터가 있을 수 있습니다.')
-    }
+  const handleDelete = (book) => {
+    showConfirm(
+      '도서 삭제',
+      `"${book.title}" 도서를 삭제하시겠습니까?`,
+      async () => {
+        try {
+          await deleteBook(book.bookId)
+          showAlert('삭제 완료', '도서가 삭제되었습니다.', 'success')
+          loadBooks()
+        } catch (e) {
+          console.error('Failed to delete book:', e)
+          showAlert('삭제 실패', '삭제에 실패했습니다. 연관된 데이터가 있을 수 있습니다.', 'error')
+        }
+        closeConfirm()
+      },
+      'danger'
+    )
   }
 
   return (
@@ -241,6 +258,27 @@ function BookManagePage() {
         book={editingBook}
         onClose={closeModal}
         onSubmit={handleModalSubmit}
+      />
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
+
+      {/* Confirm 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onCancel={closeConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        confirmText="삭제"
+        cancelText="취소"
+        type={confirmModal.type}
       />
     </div>
   )

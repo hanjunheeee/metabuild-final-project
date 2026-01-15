@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import useBookSearch from '@/feature/Community/hooks/useBookSearch'
 import useRichTextEditor from '@/feature/Community/hooks/useRichTextEditor'
 import { Spinner } from '@/shared/components/icons'
+import { ConfirmModal } from '@/shared/components/modal'
 
 // 게시판 종류 옵션
 const COMMUNITY_KINDS = [
@@ -32,6 +33,9 @@ function CommunityForm({
   const [communityKind, setCommunityKind] = useState('FREE')
   const [error, setError] = useState('')
   const errorRef = useRef(null)
+
+  // Confirm 모달 상태
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   // 에러 메시지로 스크롤
   const scrollToError = useCallback(() => {
@@ -149,12 +153,16 @@ function CommunityForm({
   const handleCancel = () => {
     const content = getTextContent()
     if (title || content) {
-      if (window.confirm('작성 중인 내용이 있습니다. 정말 나가시겠습니까?')) {
-        onCancel()
-      }
+      setShowConfirmModal(true)
     } else {
       onCancel()
     }
+  }
+
+  // 취소 확인
+  const handleConfirmCancel = () => {
+    setShowConfirmModal(false)
+    onCancel()
   }
 
   return (
@@ -493,6 +501,18 @@ function CommunityForm({
           {isSubmitting ? '처리 중...' : mode === 'edit' ? '수정하기' : '등록하기'}
         </button>
       </div>
+
+      {/* 취소 확인 모달 */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title="작성 취소"
+        message="작성 중인 내용이 있습니다.\n정말 나가시겠습니까?"
+        type="warning"
+        confirmText="나가기"
+        cancelText="계속 작성"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </form>
   )
 }
