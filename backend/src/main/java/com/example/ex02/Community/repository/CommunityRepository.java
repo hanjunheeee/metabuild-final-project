@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -21,5 +21,5 @@ public interface CommunityRepository extends JpaRepository<CommunityEntity, Long
            "WHERE c.createdAt >= :startDate " +
            "AND (c.isNotice IS NULL OR c.isNotice = 0) " +
            "ORDER BY c.communityGreat DESC, c.createdAt DESC")
-    List<CommunityEntity> findWeeklyHotPosts(@Param("startDate") LocalDate startDate);
+    List<CommunityEntity> findWeeklyHotPosts(@Param("startDate") LocalDateTime startDate);
 }

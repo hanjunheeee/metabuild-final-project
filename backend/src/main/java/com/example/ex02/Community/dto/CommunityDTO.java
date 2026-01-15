@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -20,8 +21,8 @@ public class CommunityDTO {
     private String contentJson;
     private String thumbnailUrl;
     private Integer communityGreat;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Integer isNotice;  // 0: 일반글, 1: 공지글
     private String communityKind;  // QUESTION, FREE, REVIEW
 
@@ -37,8 +38,8 @@ public class CommunityDTO {
 
     @Builder
     public CommunityDTO(Long communityId, Long userId, Long bookId, String contentJson, 
-                        String thumbnailUrl, Integer communityGreat, LocalDate createdAt, 
-                        LocalDate updatedAt, Integer isNotice, String communityKind,
+                        String thumbnailUrl, Integer communityGreat, LocalDateTime createdAt, 
+                        LocalDateTime updatedAt, Integer isNotice, String communityKind,
                         String authorNickname, String authorPhoto, String authorRole,
                         String bookTitle, String bookAuthor, String bookCoverUrl, 
                         LocalDate bookPublishedDate, int commentCount) {
