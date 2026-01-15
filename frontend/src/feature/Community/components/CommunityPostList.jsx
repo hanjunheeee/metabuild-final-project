@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import BookInfoCard from './BookInfoCard'
-import { isAdmin, getDisplayName } from '@/shared/utils/userDisplay'
+import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDisplay'
 
 // 칭호 레벨별 스타일
 const getTitleLevelStyle = (level) => {
@@ -28,8 +28,39 @@ const getTitleLevelStyle = (level) => {
  * @param {boolean} isHot - true이면 HOT 표시
  * @param {string} variant - 'card' (배경색 카드) | 'table' (테이블 행)
  */
-function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isHot = false, variant = 'card', userTitles = {} }) {
+function CommunityPostList({
+  post,
+  onClick,
+  formatDate,
+  getPostTitle,
+  badge,
+  isHot = false,
+  variant = 'card',
+  userTitles = {},
+  onAuthorClick,
+  selectedAuthor,
+  selectedAuthorPostId,
+  onCloseAuthorPanel,
+  onToggleAuthorFollow,
+  authorFollowing,
+  authorFollowLoading,
+  currentUser,
+  onViewAuthorPosts,
+}) {
   const [showBookInfo, setShowBookInfo] = useState(false)
+  const authorPanelOpen = selectedAuthorPostId === post.communityId
+  const authorPanelRef = useRef(null)
+  const authorButtonRef = useRef(null)
+  useEffect(() => {
+    if (!authorPanelOpen) return
+    const handleOutsideClick = (event) => {
+      if (authorPanelRef.current?.contains(event.target)) return
+      if (authorButtonRef.current?.contains(event.target)) return
+      onCloseAuthorPanel && onCloseAuthorPanel()
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [authorPanelOpen, onCloseAuthorPanel])
   
   // 작성자 정보를 userDisplay 유틸에 맞는 형식으로 변환
   const author = {
@@ -136,16 +167,98 @@ function CommunityPostList({ post, onClick, formatDate, getPostTitle, badge, isH
           </div>
           
           {/* 작성자 */}
-          <div className={`text-xs flex-shrink-0 w-44 text-center flex items-center justify-center gap-1 ${
+          <div className={`relative text-xs flex-shrink-0 w-44 text-left flex items-center justify-start gap-1 pl-8 ${
             isAuthorAdmin ? 'text-blue-600' : 'text-gray-500'
           }`}>
-            {/* 칭호: 관리자가 아닐 때만 표시 */}
             {!isAuthorAdmin && userTitles?.[post.userId]?.length > 0 && (
               <span className={`text-[10px] font-medium px-1 py-0.5 border rounded ${getTitleLevelStyle(userTitles[post.userId][0]?.titleLevel)}`}>
                 {userTitles[post.userId][0]?.titleName}
               </span>
             )}
-            <span className="truncate">{getDisplayName(author)}</span>
+            {onAuthorClick ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (authorPanelOpen) {
+                    onCloseAuthorPanel && onCloseAuthorPanel()
+                  } else {
+                    onAuthorClick(
+                      post.communityId,
+                      post.userId,
+                      getDisplayName(author),
+                      post.authorPhoto,
+                      post.authorRole
+                    )
+                  }
+                }}
+                className="truncate hover:underline cursor-pointer"
+                ref={authorButtonRef}
+              >
+                {getDisplayName(author)}
+              </button>
+            ) : (
+              <span className="truncate">{getDisplayName(author)}</span>
+            )}
+            {authorPanelOpen && selectedAuthor && (
+              <div
+                ref={authorPanelRef}
+                className="absolute left-full top-1/2 ml-3 w-64 -translate-y-1/2 rounded-lg border border-gray-200 bg-white p-3 shadow-lg z-30"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={onCloseAuthorPanel}
+                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                  aria-label="닫기"
+                >
+                  ×
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 overflow-hidden rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-600">
+                    {getDisplayPhoto(selectedAuthor) ? (
+                      <img
+                        src={getDisplayPhoto(selectedAuthor)}
+                        alt={selectedAuthor.nickname || '사용자'}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      (selectedAuthor.nickname || 'U')[0]
+                    )}
+                  </div>
+                  <div className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <span>{selectedAuthor.nickname || '사용자'}</span>
+                    {isAdmin(selectedAuthor) && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-600">
+                        관리자
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-col gap-2">
+                  {!isAdmin(selectedAuthor) && currentUser?.userId !== selectedAuthor.userId && (
+                    <button
+                      type="button"
+                      onClick={onToggleAuthorFollow}
+                      disabled={authorFollowLoading}
+                      className="w-full rounded-md border border-main-bg bg-main-bg px-3 py-2 text-xs font-medium text-white hover:bg-sub-bg transition-colors disabled:opacity-70 disabled:cursor-default"
+                    >
+                      {authorFollowLoading ? '처리 중...' : (authorFollowing ? '언팔로잉' : '팔로잉')}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onViewAuthorPosts && onViewAuthorPosts(selectedAuthor.userId, selectedAuthor.nickname)
+                      onCloseAuthorPanel && onCloseAuthorPanel()
+                    }}
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    작성자 게시물 보기
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* 날짜 */}
