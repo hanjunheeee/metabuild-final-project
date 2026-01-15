@@ -106,5 +106,26 @@ public class UserTitleController {
             ));
         }
     }
+
+    /**
+     * 칭호 없는 모든 회원에게 "신간회원" 칭호 부여 (관리자용 마이그레이션)
+     * POST /api/titles/migrate/welcome
+     */
+    @PostMapping("/migrate/welcome")
+    public ResponseEntity<Map<String, Object>> migrateWelcomeTitles() {
+        try {
+            int awardedCount = userTitleService.awardWelcomeTitleToAllUsersWithoutTitle();
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", awardedCount + "명에게 신간회원 칭호를 부여했습니다.",
+                    "awardedCount", awardedCount
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        }
+    }
 }
 

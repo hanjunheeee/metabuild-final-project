@@ -32,6 +32,10 @@ public class UserTitleService {
     // 칭호 정의
     // ========================================
     
+    // 신규 회원 기본 칭호
+    private static final String WELCOME_TITLE_NAME = "신간회원";
+    private static final String WELCOME_TITLE_ICON = "🌱";
+    
     // 댓글 좋아요 기반 칭호
     private static final int LIKE_BRONZE_THRESHOLD = 100;
     private static final int LIKE_SILVER_THRESHOLD = 1000;
@@ -69,6 +73,58 @@ public class UserTitleService {
     // ========================================
     // 칭호 확인 및 부여
     // ========================================
+
+    /**
+     * 신규 회원 기본 칭호 부여 (회원가입 시 호출)
+     */
+    @Transactional
+    public UserTitleDTO awardWelcomeTitle(Long userId) {
+        // 이미 WELCOME 칭호가 있으면 부여하지 않음
+        if (userTitleRepository.existsByUser_UserIdAndTitleTypeAndTitleLevel(
+                userId, TitleType.WELCOME, TitleLevel.NEWBIE)) {
+            log.info("이미 신간회원 칭호 보유: userId={}", userId);
+            return null;
+        }
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        UserTitleEntity title = UserTitleEntity.builder()
+                .user(user)
+                .titleType(TitleType.WELCOME)
+                .titleLevel(TitleLevel.NEWBIE)
+                .titleName(WELCOME_TITLE_NAME)
+                .titleIcon(WELCOME_TITLE_ICON)
+                .build();
+
+        UserTitleEntity saved = userTitleRepository.save(title);
+        log.info("신간회원 칭호 부여: userId={}", userId);
+
+        return convertToDTO(saved);
+    }
+
+    /**
+     * 칭호가 없는 모든 사용자에게 신간회원 칭호 부여 (마이그레이션용)
+     */
+    @Transactional
+    public int awardWelcomeTitleToAllUsersWithoutTitle() {
+        List<UserEntity> allUsers = userRepository.findAll();
+        int awardedCount = 0;
+
+        for (UserEntity user : allUsers) {
+            // 해당 사용자의 칭호가 하나도 없으면 신간회원 부여
+            List<UserTitleEntity> existingTitles = userTitleRepository.findByUser_UserIdOrderByAchievedAtDesc(user.getUserId());
+            if (existingTitles.isEmpty()) {
+                UserTitleDTO awarded = awardWelcomeTitle(user.getUserId());
+                if (awarded != null) {
+                    awardedCount++;
+                }
+            }
+        }
+
+        log.info("총 {}명에게 신간회원 칭호 부여 완료", awardedCount);
+        return awardedCount;
+    }
 
     /**
      * 댓글 좋아요 수 기반 칭호 확인 및 부여

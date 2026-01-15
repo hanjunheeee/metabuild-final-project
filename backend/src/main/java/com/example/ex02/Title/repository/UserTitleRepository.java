@@ -27,9 +27,10 @@ public interface UserTitleRepository extends JpaRepository<UserTitleEntity, Long
     @Query("SELECT t FROM UserTitleEntity t WHERE t.user.userId = :userId AND t.titleType = :titleType ORDER BY t.titleLevel DESC")
     List<UserTitleEntity> findTopTitleByUserAndType(@Param("userId") Long userId, @Param("titleType") TitleType titleType);
 
-    // 특정 사용자의 최고 레벨 칭호들 조회 (타입별 최고 1개씩)
+    // 특정 사용자의 최고 레벨 칭호들 조회 (타입별 최고 1개씩, 레벨 높은 순 → 최근 획득 순)
     @Query("SELECT t FROM UserTitleEntity t WHERE t.user.userId = :userId AND t.titleLevel = " +
-           "(SELECT MAX(t2.titleLevel) FROM UserTitleEntity t2 WHERE t2.user.userId = :userId AND t2.titleType = t.titleType)")
+           "(SELECT MAX(t2.titleLevel) FROM UserTitleEntity t2 WHERE t2.user.userId = :userId AND t2.titleType = t.titleType) " +
+           "ORDER BY t.titleLevel DESC, t.achievedAt DESC")
     List<UserTitleEntity> findTopTitlesByUser(@Param("userId") Long userId);
 }
 

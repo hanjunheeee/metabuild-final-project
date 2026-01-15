@@ -1,5 +1,6 @@
 package com.example.ex02.User.service;
 
+import com.example.ex02.Title.service.UserTitleService;
 import com.example.ex02.User.dto.LoginResponseDTO;
 import com.example.ex02.User.dto.UserDTO;
 import com.example.ex02.User.entity.UserEntity;
@@ -7,6 +8,7 @@ import com.example.ex02.User.repository.UserRepository;
 import com.example.ex02.config.JwtUtil;
 import com.example.ex02.security.TurnstileVerificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,11 +18,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final TurnstileVerificationService turnstileVerificationService;
+    private final UserTitleService userTitleService;
 
     // 전체 사용자 조회
     public List<UserDTO> getAllUsers() {
@@ -105,6 +109,15 @@ public class UserService {
         user.setUserPhoto(userPhoto);
 
         UserEntity savedUser = userRepository.save(user);
+        
+        // 신규 회원에게 "신간회원" 기본 칭호 부여
+        try {
+            userTitleService.awardWelcomeTitle(savedUser.getUserId());
+            log.info("신규 회원 {} 에게 신간회원 칭호 부여 완료", savedUser.getUserId());
+        } catch (Exception e) {
+            log.warn("신간회원 칭호 부여 실패: {}", e.getMessage());
+        }
+        
         return convertToDTO(savedUser);
     }
 

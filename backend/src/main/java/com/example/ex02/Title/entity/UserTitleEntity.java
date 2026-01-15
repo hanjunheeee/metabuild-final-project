@@ -18,11 +18,13 @@ import java.time.LocalDateTime;
 public class UserTitleEntity {
 
     public enum TitleType {
+        WELCOME,    // 신규 회원 기본 칭호
         LIKE,       // 댓글 좋아요 기반
         FOLLOWER    // 팔로워 기반
     }
 
     public enum TitleLevel {
+        NEWBIE(0),   // 🌱 신규 회원
         BRONZE(1),   // 🥉
         SILVER(2),   // 🥈
         GOLD(3);     // 🥇

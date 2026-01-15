@@ -6,11 +6,13 @@ import { isAdmin, getDisplayName, getDisplayPhoto } from '@/shared/utils/userDis
 const getTitleLevelStyle = (level) => {
   switch (level) {
     case 'GOLD':
-      return 'bg-amber-100 text-amber-700 border-amber-300'
+      return 'bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-400 text-amber-900 border-amber-400 shadow-sm'
     case 'SILVER':
       return 'bg-gray-200 text-gray-600 border-gray-400'
     case 'BRONZE':
       return 'bg-orange-100 text-orange-700 border-orange-300'
+    case 'NEWBIE':
+      return 'bg-green-100 text-green-700 border-green-300'
     default:
       return 'bg-main-bg/5 text-main-bg border-main-bg/30'
   }
@@ -170,7 +172,12 @@ function CommunityPostList({
           <div className={`relative text-xs flex-shrink-0 w-44 text-left flex items-center justify-start gap-1 pl-8 ${
             isAuthorAdmin ? 'text-blue-600' : 'text-gray-500'
           }`}>
-            {!isAuthorAdmin && userTitles?.[post.userId]?.length > 0 && (
+            {/* 관리자일 때는 "관리자" 칭호, 일반 사용자는 보유 칭호 표시 */}
+            {isAuthorAdmin ? (
+              <span className="text-[10px] font-semibold px-1 py-0.5 border rounded border-blue-200 bg-blue-50 text-blue-600">
+                관리자
+              </span>
+            ) : userTitles?.[post.userId]?.length > 0 && (
               <span className={`text-[10px] font-medium px-1 py-0.5 border rounded ${getTitleLevelStyle(userTitles[post.userId][0]?.titleLevel)}`}>
                 {userTitles[post.userId][0]?.titleName}
               </span>

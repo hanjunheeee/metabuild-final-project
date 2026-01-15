@@ -506,7 +506,7 @@ function CommunityForm({
       <ConfirmModal
         isOpen={showConfirmModal}
         title="작성 취소"
-        message="작성 중인 내용이 있습니다.\n정말 나가시겠습니까?"
+        message="작성 중인 내용이 있습니다. 정말 나가시겠습니까?"
         type="warning"
         confirmText="나가기"
         cancelText="계속 작성"
