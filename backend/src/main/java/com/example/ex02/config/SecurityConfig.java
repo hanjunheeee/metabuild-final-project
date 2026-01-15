@@ -14,6 +14,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import org.springframework.web.cors.CorsConfiguration;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +31,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -45,7 +47,11 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // === 챗봇 전용 공개 API (가장 먼저 선언) ===
+                .requestMatchers("/api/chat").permitAll()
+
                 // === 공개 API ===
+                .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/analytics/log/search", "/api/analytics/log/action").permitAll()
                 // 인증 관련 (로그인, 회원가입, 이메일 확인, 비밀번호 재설정 등)
                 .requestMatchers("/api/users/login", "/api/users/signup", "/api/users/check-email").permitAll()
@@ -56,20 +62,24 @@ public class SecurityConfig {
                 .requestMatchers("/api/files/**").permitAll()
                 // 업로드된 파일 접근
                 .requestMatchers("/uploads/**").permitAll()
-                
+
                 // Swagger, H2, Actuator, Error
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
                 .requestMatchers("/error").permitAll()
-                
+
                 // === 도서 API (GET은 공개, 나머지는 인증 필요) ===
                 .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/books/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/books/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/books/**").authenticated()
-                
+
                 // 모든 GET 요청은 공개 (조회는 누구나 가능)
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+                
+                // Swagger, H2, Actuator
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
                 
                 // === 인증 필요 API ===
                 // POST, PUT, PATCH, DELETE는 인증 필요 (생성, 수정, 삭제)
