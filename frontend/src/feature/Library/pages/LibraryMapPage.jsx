@@ -414,6 +414,7 @@ function LibraryMapPage() {
         const address = lib[LIB_KEYS.address] || lib[LIB_KEYS.addressFallback] || ''
         const addressText = address || '주소 정보 없음'
         const addressEscaped = addressText.replace(/"/g, '&quot;')
+        const nameEscaped = name.replace(/"/g, '&quot;')
 
         const marker = L.circleMarker([lat, lng], {
           radius: 7,
@@ -423,29 +424,26 @@ function LibraryMapPage() {
           fillOpacity: 0.9
         })
 
-        const tooltipContent = `
-          <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
-            <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
-            <div style="font-size:12px;color:#4b5563;margin-bottom:6px;line-height:1.4;">${addressText}</div>
-            <div style="font-size:12px;font-weight:600;color:#059669;">대출 가능</div>
-          </div>
-        `
-
         const popupContent = `
-          <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
-            <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
-            <div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;">
-              <div style="font-size:12px;color:#4b5563;margin-bottom:6px;line-height:1.4;flex:1;">${addressText}</div>
-              <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;padding:2px 6px;border-radius:6px;cursor:pointer;flex-shrink:0;">복사</button>
+            <div style="width:300px;max-width:320px;white-space:normal;word-break:keep-all;">
+              <div style="font-weight:700;margin-bottom:4px;color:#111827;font-size:15px;line-height:1.3;">${name}</div>
+              <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;">
+                <div style="font-size:14px;color:#4b5563;margin-bottom:6px;line-height:1.4;flex:1;">${addressText}</div>
+                <div style="display:flex;flex-direction:row;gap:8px;flex-shrink:0;">
+                  <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:13px;padding:4px 10px;border-radius:8px;cursor:pointer;">복사</button>
+                  <button type="button" class="directions-btn" data-lat="${lat}" data-lng="${lng}" data-name="${nameEscaped}" data-address="${addressEscaped}" style="border:1px solid #2563eb;background:#2563eb;color:#fff;font-size:13px;padding:4px 10px;border-radius:8px;cursor:pointer;">길찾기</button>
+                </div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#059669;">대출 가능</div>
             </div>
-            <div style="font-size:12px;font-weight:600;color:#059669;">대출 가능</div>
-          </div>
         `
+        const tooltipContent = popupContent
 
         marker.bindTooltip(tooltipContent, {
           direction: 'top',
           className: 'custom-tooltip',
-          opacity: 1
+          opacity: 1,
+          offset: [0, -18]
         })
 
         marker.bindPopup(popupContent, {
@@ -461,6 +459,7 @@ function LibraryMapPage() {
           const copyButton = popupNode.querySelector('.copy-address-btn')
           if (!copyButton) return
           const textToCopy = copyButton.getAttribute('data-address') || ''
+          const directionsButton = popupNode.querySelector('.directions-btn')
 
           const handleCopy = (copyEvent) => {
             copyEvent.preventDefault()
@@ -480,6 +479,26 @@ function LibraryMapPage() {
           event.popup.once('remove', () => {
             copyButton.removeEventListener('click', handleCopy)
           })
+
+          if (directionsButton) {
+            const destLat = parseFloat(directionsButton.getAttribute('data-lat'))
+            const destLng = parseFloat(directionsButton.getAttribute('data-lng'))
+            const destName = directionsButton.getAttribute('data-address') || directionsButton.getAttribute('data-name') || '목적지'
+            const handleDirections = (directionsEvent) => {
+              directionsEvent.preventDefault()
+              if (Number.isNaN(destLat) || Number.isNaN(destLng)) return
+              const x = (destLng * 20037508.34) / 180
+              const y = (Math.log(Math.tan((90 + destLat) * Math.PI / 360)) / (Math.PI / 180)) * (20037508.34 / 180)
+              const zoom = 10
+              const url = `https://map.naver.com/p/directions/-/${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI/-/transit?c=${zoom},${x},${y},0,dh`
+              window.open(url, '_blank', 'noopener')
+            }
+
+            directionsButton.addEventListener('click', handleDirections)
+            event.popup.once('remove', () => {
+              directionsButton.removeEventListener('click', handleDirections)
+            })
+          }
         })
 
         marker.addTo(group)
@@ -549,6 +568,7 @@ function LibraryMapPage() {
       const address = lib[LIB_KEYS.address] || lib[LIB_KEYS.addressFallback] || ''
       const addressText = address || '주소 정보 없음'
       const addressEscaped = addressText.replace(/"/g, '&quot;')
+      const nameEscaped = name.replace(/"/g, '&quot;')
 
       const marker = L.circleMarker([lat, lng], {
         radius: 6,
@@ -558,27 +578,25 @@ function LibraryMapPage() {
         fillOpacity: 0.9
       })
 
-      const tooltipContent = `
-        <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
-          <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
-          <div style="font-size:12px;color:#4b5563;line-height:1.4;">${addressText}</div>
-        </div>
-      `
-
       const popupContent = `
-        <div style="width:280px;max-width:300px;white-space:normal;word-break:keep-all;">
-          <div style="font-weight:700;margin-bottom:4px;color:#111827;">${name}</div>
-          <div style="display:flex;gap:8px;align-items:flex-start;justify-content:space-between;">
-            <div style="font-size:12px;color:#4b5563;line-height:1.4;flex:1;">${addressText}</div>
-            <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;padding:2px 6px;border-radius:6px;cursor:pointer;flex-shrink:0;">복사</button>
+        <div style="width:300px;max-width:320px;white-space:normal;word-break:keep-all;">
+          <div style="font-weight:700;margin-bottom:4px;color:#111827;font-size:15px;line-height:1.3;">${name}</div>
+          <div style="display:flex;gap:10px;align-items:flex-start;justify-content:space-between;">
+            <div style="font-size:14px;color:#4b5563;line-height:1.4;flex:1;">${addressText}</div>
+            <div style="display:flex;flex-direction:row;gap:8px;flex-shrink:0;">
+              <button type="button" class="copy-address-btn" data-address="${addressEscaped}" style="border:1px solid #d1d5db;background:#fff;color:#374151;font-size:13px;padding:4px 10px;border-radius:8px;cursor:pointer;">복사</button>
+              <button type="button" class="directions-btn" data-lat="${lat}" data-lng="${lng}" data-name="${nameEscaped}" data-address="${addressEscaped}" style="border:1px solid #2563eb;background:#2563eb;color:#fff;font-size:13px;padding:4px 10px;border-radius:8px;cursor:pointer;">길찾기</button>
+            </div>
           </div>
         </div>
       `
+      const tooltipContent = popupContent
 
       marker.bindTooltip(tooltipContent, {
         direction: 'top',
         className: 'custom-tooltip',
-        opacity: 1
+        opacity: 1,
+        offset: [0, -18]
       })
 
       marker.bindPopup(popupContent, {
@@ -594,6 +612,7 @@ function LibraryMapPage() {
         const copyButton = popupNode.querySelector('.copy-address-btn')
         if (!copyButton) return
         const textToCopy = copyButton.getAttribute('data-address') || ''
+        const directionsButton = popupNode.querySelector('.directions-btn')
 
         const handleCopy = (copyEvent) => {
           copyEvent.preventDefault()
@@ -613,6 +632,26 @@ function LibraryMapPage() {
         event.popup.once('remove', () => {
           copyButton.removeEventListener('click', handleCopy)
         })
+
+        if (directionsButton) {
+          const destLat = parseFloat(directionsButton.getAttribute('data-lat'))
+          const destLng = parseFloat(directionsButton.getAttribute('data-lng'))
+          const destName = directionsButton.getAttribute('data-address') || directionsButton.getAttribute('data-name') || '목적지'
+          const handleDirections = (directionsEvent) => {
+            directionsEvent.preventDefault()
+            if (Number.isNaN(destLat) || Number.isNaN(destLng)) return
+            const x = (destLng * 20037508.34) / 180
+            const y = (Math.log(Math.tan((90 + destLat) * Math.PI / 360)) / (Math.PI / 180)) * (20037508.34 / 180)
+            const zoom = 10
+            const url = `https://map.naver.com/p/directions/-/${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI/-/transit?c=${zoom},${x},${y},0,dh`
+            window.open(url, '_blank', 'noopener')
+          }
+
+          directionsButton.addEventListener('click', handleDirections)
+          event.popup.once('remove', () => {
+            directionsButton.removeEventListener('click', handleDirections)
+          })
+        }
       })
 
       marker.addTo(group)
@@ -984,7 +1023,7 @@ function LibraryMapPage() {
           background: #fff !important;
           border: 1px solid #d1d5db !important;
           box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-          padding: 12px !important;
+          padding: 10px 12px !important;
           opacity: 1 !important;
           max-width: 320px !important;
         }

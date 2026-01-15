@@ -53,7 +53,7 @@ function WordCloud({ words, onWordClick }) {
       .words(words.map((w, idx) => ({
         text: w.text,
         value: w.value || 1,
-        size: 10 + ((w.value || 1) / maxValue) * 12,
+        size: 14 + ((w.value || 1) / maxValue) * 18,
         rotate: idx % 5 === 0 ? 90 : 0,
         color: palette[idx % palette.length]
       })))
@@ -297,7 +297,7 @@ function MainPage() {
   // 워드클라우드 입력 데이터 구성
   const wordCloudItems = useMemo(() => {
     return keywordTrends
-      .slice(0, 30)
+      .slice(0, 10)
       .map((trend, idx) => ({
         text: trend.text || '',
         value: typeof trend.value === 'number' ? trend.value : 1,
@@ -454,7 +454,17 @@ function MainPage() {
       {/* ===============================
          메인 검색바
       =============================== */}
-      <div className="mt-16 mb-24 flex justify-center">
+      <div className="mt-12 mb-8 text-center">
+        <p className="text-base text-gray-600">
+          한 곳에서{' '}
+          <span className="font-semibold text-emerald-700">책 검색</span>,{' '}
+          <span className="font-semibold text-sky-700">도서관 대출 정보</span>,{' '}
+          <span className="font-semibold text-amber-700">베스트셀러</span>,{' '}
+          <span className="font-semibold text-rose-700">트렌드</span>를 확인하세요!
+        </p>
+      </div>
+
+      <div className="mb-12 flex justify-center">
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -513,7 +523,7 @@ function MainPage() {
       {/* ===============================
          서울시 월간 대출랭킹
       =============================== */}
-      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
+      <section className="mb-12 border border-gray-200 bg-gray-50 p-8">
         <h2 className="text-2xl font-extrabold mb-6 text-sub-bg">
           서울시 도서관 월간 대출랭킹
         </h2>
@@ -678,7 +688,7 @@ function MainPage() {
       {/* ===============================
          서점별 베스트셀러 TOP10
       =============================== */}
-      <section className="mb-20 border border-gray-200 bg-gray-50 p-8">
+      <section className="mb-12 border border-gray-200 bg-gray-50 p-8">
         <h2 className="text-2xl font-extrabold mb-6 text-sub-bg">
           서점 별 베스트셀러 TOP10
         </h2>
@@ -871,7 +881,7 @@ function MainPage() {
       {/* ===============================
          커뮤니티 & 트렌드 (인기글 / 최신글)
       =============================== */}
-      <section className="mb-10 border border-gray-200 bg-gray-50 p-8">
+      <section className="mb-12 border border-gray-200 bg-gray-50 p-8">
         <h2 className="text-2xl font-extrabold mb-5 text-sub-bg">
           커뮤니티 & 트렌드
         </h2>
