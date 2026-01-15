@@ -14,8 +14,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import org.springframework.web.cors.CorsConfiguration;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -51,7 +49,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/chat").permitAll()
 
                 // === 공개 API ===
-                .requestMatchers("/api/books/**").permitAll()
                 .requestMatchers("/api/analytics/log/search", "/api/analytics/log/action").permitAll()
                 // 인증 관련 (로그인, 회원가입, 이메일 확인, 비밀번호 재설정 등)
                 .requestMatchers("/api/users/login", "/api/users/signup", "/api/users/check-email").permitAll()
@@ -76,10 +73,6 @@ public class SecurityConfig {
 
                 // 모든 GET 요청은 공개 (조회는 누구나 가능)
                 .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-                
-                // Swagger, H2, Actuator
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/h2-console/**", "/actuator/**").permitAll()
                 
                 // === 인증 필요 API ===
                 // POST, PUT, PATCH, DELETE는 인증 필요 (생성, 수정, 삭제)
