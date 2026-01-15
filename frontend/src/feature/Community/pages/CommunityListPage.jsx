@@ -1,11 +1,18 @@
 ﻿import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import useCommunityListPage from '../hooks/useCommunityListPage'
 import { CommunityPostCard, CommunityPostList, SearchFilterBar, EmptyState } from '../components'
 import { Pagination } from '@/shared/components'
 import { Spinner } from '@/shared/components/icons'
+import { checkFollowing, toggleFollow } from '@/shared/api/followApi'
+import { isAdmin } from '@/shared/utils/userDisplay'
 
 function CommunityListPage() {
   const navigate = useNavigate()
+  const [selectedAuthor, setSelectedAuthor] = useState(null)
+  const [selectedAuthorPostId, setSelectedAuthorPostId] = useState(null)
+  const [authorFollowing, setAuthorFollowing] = useState(false)
+  const [authorFollowLoading, setAuthorFollowLoading] = useState(false)
   const {
     // 상태
     loading,
@@ -54,6 +61,52 @@ function CommunityListPage() {
     getPostImages,
     getBadgeConfig,
   } = useCommunityListPage()
+
+  const openAuthorPanel = async (postId, userId, userName, userPhoto, userRole) => {
+    const author = { userId, nickname: userName, userPhoto, role: userRole }
+    setSelectedAuthor(author)
+    setSelectedAuthorPostId(postId)
+
+    if (!currentUser?.userId || currentUser.userId === userId || isAdmin(author)) {
+      setAuthorFollowing(false)
+      return
+    }
+
+    try {
+      const result = await checkFollowing(currentUser.userId, userId)
+      setAuthorFollowing(!!result?.isFollowing)
+    } catch (error) {
+      console.error('??? ?? ?? ??:', error)
+      setAuthorFollowing(false)
+    }
+  }
+
+  const closeAuthorPanel = () => {
+    setSelectedAuthor(null)
+    setSelectedAuthorPostId(null)
+  }
+
+  const handleAuthorFollowToggle = async () => {
+    if (!selectedAuthor) return
+    if (!currentUser?.userId) {
+      alert('???? ?????.')
+      navigate('/login')
+      return
+    }
+    if (currentUser.userId === selectedAuthor.userId) return
+
+    setAuthorFollowLoading(true)
+    try {
+      const result = await toggleFollow(currentUser.userId, selectedAuthor.userId)
+      if (result.success) {
+        setAuthorFollowing(result.isFollowing)
+      }
+    } catch (error) {
+      console.error('??? ?? ??:', error)
+    } finally {
+      setAuthorFollowLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -168,6 +221,15 @@ function CommunityListPage() {
                 formatDate={formatDate}
                 getPostTitle={getPostTitle}
                 badge={{ text: '공지', color: 'amber' }}
+                onAuthorClick={openAuthorPanel}
+                selectedAuthor={selectedAuthor}
+                selectedAuthorPostId={selectedAuthorPostId}
+                onCloseAuthorPanel={closeAuthorPanel}
+                onToggleAuthorFollow={handleAuthorFollowToggle}
+                authorFollowing={authorFollowing}
+                authorFollowLoading={authorFollowLoading}
+                currentUser={currentUser}
+                onViewAuthorPosts={handleAuthorClick}
               />
             ))}
           </div>
@@ -235,6 +297,15 @@ function CommunityListPage() {
                   formatDate={formatDate}
                   getPostTitle={getPostTitle}
                   badge={getBadgeConfig(post, true)}
+                  onAuthorClick={openAuthorPanel}
+                  selectedAuthor={selectedAuthor}
+                  selectedAuthorPostId={selectedAuthorPostId}
+                  onCloseAuthorPanel={closeAuthorPanel}
+                  onToggleAuthorFollow={handleAuthorFollowToggle}
+                  authorFollowing={authorFollowing}
+                  authorFollowLoading={authorFollowLoading}
+                  currentUser={currentUser}
+                  onViewAuthorPosts={handleAuthorClick}
                 />
               ))}
             </div>
@@ -296,6 +367,15 @@ function CommunityListPage() {
                     isHot={kindFilter === 'ALL' && hotPostIds.has(post.communityId)}
                     variant="table"
                     userTitles={userTitles}
+                    onAuthorClick={openAuthorPanel}
+                    selectedAuthor={selectedAuthor}
+                    selectedAuthorPostId={selectedAuthorPostId}
+                    onCloseAuthorPanel={closeAuthorPanel}
+                    onToggleAuthorFollow={handleAuthorFollowToggle}
+                    authorFollowing={authorFollowing}
+                    authorFollowLoading={authorFollowLoading}
+                    currentUser={currentUser}
+                    onViewAuthorPosts={handleAuthorClick}
                   />
                 ))}
               </div>

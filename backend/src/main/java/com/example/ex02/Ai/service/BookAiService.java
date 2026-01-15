@@ -50,9 +50,25 @@ public class BookAiService {
     public String askAi(String prompt) {
         RestTemplate restTemplate = new RestTemplate();
 
+        String normalizedPrompt = normalizeText(prompt);
+        List<String> tokens = Arrays.stream(normalizedPrompt.split("\\s+"))
+                .filter(token -> !token.isBlank())
+                .toList();
+
         // 키워드 필터링 (간단한 RAG 구현)
         List<Map<String, String>> filteredBooks = bookData.stream()
-                .filter(b -> b.get("title").contains(prompt) || b.get("summary").contains(prompt))
+                .filter(b -> {
+                    String title = normalizeText(b.get("title"));
+                    String summary = normalizeText(b.get("summary"));
+                    String author = normalizeText(b.get("author"));
+                    if (title.contains(normalizedPrompt)
+                            || summary.contains(normalizedPrompt)
+                            || author.contains(normalizedPrompt)) {
+                        return true;
+                    }
+                    return tokens.stream().anyMatch(token ->
+                            title.contains(token) || summary.contains(token) || author.contains(token));
+                })
                 .limit(5)
                 .collect(Collectors.toList());
 
@@ -101,4 +117,14 @@ public class BookAiService {
             return "추천 도서를 가져오는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
         }
     }
+
+    private String normalizeText(String text) {
+        if (text == null) return "";
+        return text
+                .toLowerCase(java.util.Locale.ROOT)
+                .replaceAll("[\\p{Punct}]+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
 }
+

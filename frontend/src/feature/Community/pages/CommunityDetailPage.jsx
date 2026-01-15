@@ -353,7 +353,7 @@ function CommunityDetailPage() {
                     </button>
                     {/* 칭호 표시 (관리자가 아닐 때만) */}
                     {!isAuthorAdmin && authorTitles.length > 0 && (
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 border rounded ${getTitleLevelStyle(authorTitles[0]?.titleLevel)}`}>
+                      <span className={`relative -top-0.5 text-[10px] font-medium px-1.5 py-0.5 border rounded ${getTitleLevelStyle(authorTitles[0]?.titleLevel)}`}>
                         {authorTitles[0]?.titleName}
                       </span>
                     )}
