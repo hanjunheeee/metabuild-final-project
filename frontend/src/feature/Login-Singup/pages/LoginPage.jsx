@@ -70,9 +70,9 @@ function LoginPage({ isAdmin = false }) {
           <InputField
             id="email"
             name="email"
-            label="이메일"
-            type="email"
-            placeholder="이메일을 입력해 주세요."
+            label={isAdmin ? '아이디' : '이메일'}
+            type={isAdmin ? 'text' : 'email'}
+            placeholder={isAdmin ? '관리자 아이디를 입력해 주세요.' : '이메일을 입력해 주세요.'}
             required
           />
 

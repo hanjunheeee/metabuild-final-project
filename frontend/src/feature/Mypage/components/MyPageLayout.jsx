@@ -17,18 +17,17 @@ function MyPageLayout() {
   return (
     <div className="flex-1 py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* 상단 헤더 */}
-        <div className="mb-6 text-left">
-          <h1 className="text-2xl font-extrabold text-sub-bg mb-1">마이페이지</h1>
-          <p className="text-gray-400 text-sm">
-            {user?.nickname || '사용자'}님, 환영합니다.
-          </p>
-        </div>
-
         <div className="flex gap-6">
           {/* 좌측 사이드바 */}
           <aside className="w-48 flex-shrink-0">
             <nav className="bg-white border border-gray-200 shadow-sm sticky top-8">
+              {/* 사이드바 헤더 */}
+              <div className="px-4 py-4 border-b border-gray-200">
+                <h1 className="text-xl font-extrabold text-sub-bg">마이페이지</h1>
+                <p className="text-gray-400 text-xs mt-1">
+                  {user?.nickname || '사용자'}님, 환영합니다.
+                </p>
+              </div>
               <ul>
                 {menuItems.map((item, index) => (
                   <li key={item.path}>

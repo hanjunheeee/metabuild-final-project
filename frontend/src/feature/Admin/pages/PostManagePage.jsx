@@ -220,7 +220,7 @@ function PostManagePage() {
                     <span className="line-clamp-1">{getPostTitle(post)}</span>
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-center">{post.authorNickname || '-'}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded ${getKindStyle(post)}`}>
                       {getKindLabel(post)}
                     </span>
