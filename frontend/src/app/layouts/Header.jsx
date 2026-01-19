@@ -16,9 +16,9 @@ function Header() {
     
     checkUser()
     
-    // storage 이벤트 감지 (다른 탭에서 로그인/로그아웃 시)
+    // storage 이벤트 감지 (다른 탭 로그인/로그아웃 반영)
     window.addEventListener('storage', checkUser)
-    // 커스텀 이벤트 감지 (같은 탭에서 로그인/로그아웃 시)
+    // 커스텀 이벤트 감지 (같은 탭 로그인/로그아웃 반영)
     window.addEventListener('authChange', checkUser)
     
     return () => {
@@ -37,79 +37,79 @@ function Header() {
   return (
     <header className="bg-gray-50 px-8 border-b border-main-bg">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <Link to="/" className="no-underline flex items-center gap-3">
-          <img src={logo} alt="로고" className="w-[100px] h-[100px]" />
-          <h1 className="text-2xl font-extrabold text-sub-bg">
-            빌릴수e서울
-          </h1>
-        </Link>
-        <nav>
-          <ul style={{ display: 'flex', listStyle: 'none', gap: '32px', alignItems: 'center' }}>
-            {user ? (
-              // 로그인 상태
-              <>
-                <li>
-                  <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    도서 대출 지도
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    도서 커뮤니티
-                  </Link>
-                </li>                
-
-                {user.role === 'ADMIN' ? (
+          <Link to="/" className="no-underline flex items-center gap-3">
+            <img src={logo} alt="로고" className="w-[100px] h-[100px]" />
+            <h1 className="text-2xl font-extrabold text-sub-bg">
+              빌릴수e서울
+            </h1>
+          </Link>
+          <nav>
+            <ul style={{ display: 'flex', listStyle: 'none', gap: '32px', alignItems: 'center' }}>
+              {user ? (
+                // 로그인 상태
+                <>
                   <li>
-                    <Link to="/admin" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                      관리자페이지
+                    <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      도서관 지도
                     </Link>
                   </li>
-                ) : (
                   <li>
-                    <Link to="/mypage" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                      마이페이지
+                    <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      도서 커뮤니티
+                    </Link>
+                  </li>                
+
+                  {user.role === 'ADMIN' ? (
+                    <li>
+                      <Link to="/admin" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                        관리자페이지
+                      </Link>
+                    </li>
+                  ) : (
+                    <li>
+                      <Link to="/mypage" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                        마이페이지
+                      </Link>
+                    </li>
+                  )}
+                  <li>
+                    <button
+                      onClick={handleLogout}
+                      className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all cursor-pointer bg-transparent border-none"
+                    >
+                      로그아웃
+                    </button>
+                  </li>                
+                </>
+              ) : (
+                // 비로그인 상태
+                <>
+                  <li>
+                    <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      도서관 지도
                     </Link>
                   </li>
-                )}
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all cursor-pointer bg-transparent border-none"
-                  >
-                    로그아웃
-                  </button>
-                </li>                
-              </>
-            ) : (
-              // 비로그인 상태
-              <>
-                 <li>
-                  <Link to="/library/map" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    도서 대출 지도
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    도서커뮤니티
-                  </Link>
-                </li>
+                  <li>
+                    <Link to="/community" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      도서 커뮤니티
+                    </Link>
+                  </li>
 
-                <li>
-                  <Link to="/signup" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    회원가입
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
-                    로그인
-                  </Link>
-                </li>                
-              </>
-            )}
-            
-          </ul>
-        </nav>
+                  <li>
+                    <Link to="/signup" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      회원가입
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/login" className="text-gray-600 font-medium px-4 py-2 rounded hover:text-main-bg transition-all">
+                      로그인
+                    </Link>
+                  </li>                
+                </>
+              )}
+              
+            </ul>
+          </nav>
       </div>
     </header>
   )
