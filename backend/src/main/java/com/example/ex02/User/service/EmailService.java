@@ -117,7 +117,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("[빌릴수 e 서울] 이메일 인증 코드");
         message.setText(
-            "안녕하세요, MetaBuild입니다.\n\n" +
+            "안녕하세요, 빌릴수 e 서울입니다.\n\n" +
             "회원가입을 위한 이메일 인증 코드입니다.\n\n" +
             "인증 코드: " + code + "\n\n" +
             "이 코드는 5분간 유효합니다.\n\n" +
@@ -133,7 +133,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("[빌릴수 e 서울] 비밀번호 재설정");
         message.setText(
-            "안녕하세요, MetaBuild입니다.\n\n" +
+            "안녕하세요, 빌릴수 e 서울입니다.\n\n" +
             "비밀번호 재설정을 요청하셨습니다.\n\n" +
             "아래 링크를 클릭하여 새 비밀번호를 설정해주세요:\n\n" +
             resetLink + "\n\n" +
