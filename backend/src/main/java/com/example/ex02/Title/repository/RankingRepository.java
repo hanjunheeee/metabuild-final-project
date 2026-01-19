@@ -16,14 +16,14 @@ public interface RankingRepository extends JpaRepository<UserEntity, Long> {
      * 각 유저가 받은 댓글 좋아요 총합 기준 내림차순 정렬
      */
     @Query(value = """
-        SELECT u.user_id, u.nickname, u.user_photo, NVL(SUM(c.like_count), 0) as total_likes
+        SELECT u.user_id, u.nickname, u.user_photo, IFNULL(SUM(c.like_count), 0) as total_likes
         FROM users u
         LEFT JOIN comments c ON u.user_id = c.user_id
         WHERE u.role = 'USER' AND u.is_active = 'Y'
         GROUP BY u.user_id, u.nickname, u.user_photo
-        HAVING NVL(SUM(c.like_count), 0) > 0
+        HAVING IFNULL(SUM(c.like_count), 0) > 0
         ORDER BY total_likes DESC
-        FETCH FIRST :limit ROWS ONLY
+        LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findTopUsersByCommentLikes(@Param("limit") int limit);
 
@@ -39,7 +39,7 @@ public interface RankingRepository extends JpaRepository<UserEntity, Long> {
         GROUP BY u.user_id, u.nickname, u.user_photo
         HAVING COUNT(f.follow_id) > 0
         ORDER BY follower_count DESC
-        FETCH FIRST :limit ROWS ONLY
+        LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findTopUsersByFollowers(@Param("limit") int limit);
 }
