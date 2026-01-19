@@ -1,5 +1,38 @@
 import { forwardRef } from 'react'
 
+// 아이콘 컴포넌트들
+export function EmailIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+export function LockIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  )
+}
+
+export function UserIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  )
+}
+
+export function KeyIcon({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+    </svg>
+  )
+}
+
 // 기본 텍스트 입력창
 export const TextInput = forwardRef(function TextInput({ 
   id, 
@@ -10,21 +43,29 @@ export const TextInput = forwardRef(function TextInput({
   maxLength, 
   onChange, 
   disabled,
-  className = ''
+  className = '',
+  icon: Icon
 }, ref) {
   return (
-    <input
-      ref={ref}
-      id={id}
-      name={name}
-      type={type}
-      placeholder={placeholder}
-      required={required}
-      maxLength={maxLength}
-      onChange={onChange}
-      disabled={disabled}
-      className={`flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg disabled:bg-gray-100 ${className}`}
-    />
+    <div className="relative flex-1">
+      {Icon && (
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <Icon className="w-5 h-5" />
+        </div>
+      )}
+      <input
+        ref={ref}
+        id={id}
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        maxLength={maxLength}
+        onChange={onChange}
+        disabled={disabled}
+        className={`w-full ${Icon ? 'pl-10' : 'px-4'} pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg disabled:bg-gray-100 ${className}`}
+      />
+    </div>
   )
 })
 
@@ -37,15 +78,20 @@ export function VerificationCodeInput({ value, onChange, disabled }) {
   }
 
   return (
-    <input
-      type="text"
-      value={value}
-      onChange={handleChange}
-      placeholder="인증번호 6자리"
-      maxLength={6}
-      disabled={disabled}
-      className="flex-1 px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg disabled:bg-gray-100"
-    />
+    <div className="relative flex-1">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <KeyIcon className="w-5 h-5" />
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder="인증번호 6자리"
+        maxLength={6}
+        disabled={disabled}
+        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sub-bg disabled:bg-gray-100"
+      />
+    </div>
   )
 }
 

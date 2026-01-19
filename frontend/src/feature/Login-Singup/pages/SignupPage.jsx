@@ -14,7 +14,11 @@ import {
   InputLabel,
   ValidationMessage,
   InfoMessage,
-  TurnstileCaptcha
+  TurnstileCaptcha,
+  EmailIcon,
+  LockIcon,
+  UserIcon,
+  KeyIcon
 } from '../components'
 import { useSignupForm } from '../hooks'
 
@@ -110,27 +114,26 @@ function SignupPage() {
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center py-8 px-4">
+    <div className="flex-1 flex items-center justify-center py-2 px-4">
       {/* 회원가입 카드 */}
-      <div className="w-full max-w-xl border border-main-bg p-8 shadow-sm">
+      <div className="w-full max-w-xl border border-main-bg p-5 shadow-sm">
         {/* 타이틀 */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-sub-bg mb-2">회원가입</h1>
+        <div className="text-center mb-3">
+          <h1 className="text-2xl font-extrabold text-sub-bg mb-1">회원가입</h1>
           <p className="text-gray-400 text-sm">새 계정을 만들어주세요</p>
         </div>
 
         {/* 에러 메시지 */}
         {submitError && (
-          <div ref={errorRef} className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm">
+          <div ref={errorRef} className="mb-3 p-2 bg-red-50 border border-red-200 text-red-600 text-sm">
             {submitError}
           </div>
         )}
 
         {/* 회원가입 폼 */}
-        <form onSubmit={handleSignup} className="space-y-5">
+        <form onSubmit={handleSignup} className="space-y-2">
           {/* 이메일 */}
           <div>
-            <InputLabel htmlFor="email">이메일</InputLabel>
             {/* 이메일 입력 + 중복확인 버튼 */}
             <div className="flex gap-2">
               <TextInput
@@ -142,6 +145,7 @@ function SignupPage() {
                 maxLength={100}
                 required
                 onChange={handleEmailChange}
+                icon={EmailIcon}
               />
               <PrimaryButton onClick={emailCheck.check} disabled={emailCheck.isChecking}>
                 {emailCheck.isChecking ? '확인 중...' : '중복 확인'}
@@ -162,8 +166,7 @@ function SignupPage() {
 
             {/* 인증 코드 입력창 */}
             {showVerificationInput && (
-              <div className="mt-3">
-                <InputLabel>인증 코드</InputLabel>
+              <div className="mt-2">
                 <div className="flex gap-2">
                   <VerificationCodeInput
                     value={verificationCode}
@@ -192,14 +195,14 @@ function SignupPage() {
             ref={passwordRef}
             id="password"
             name="password"
-            label="비밀번호"
-            placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+            placeholder="비밀번호 (영문, 숫자, 특수문자 포함 8자 이상)"
             maxLength={20}
             required
             onChange={() => {
               clearFieldError('password')
               setSubmitError('')
             }}
+            icon={LockIcon}
           />
           <ValidationMessage message={fieldErrors.password} isValid={false} />
 
@@ -208,27 +211,26 @@ function SignupPage() {
             ref={passwordConfirmRef}
             id="passwordConfirm"
             name="passwordConfirm"
-            label="비밀번호 확인"
-            placeholder="비밀번호를 다시 입력해 주세요."
+            placeholder="비밀번호 확인"
             maxLength={20}
             required
             onChange={() => {
               clearFieldError('passwordConfirm')
               setSubmitError('')
             }}
+            icon={KeyIcon}
           />
           <ValidationMessage message={fieldErrors.passwordConfirm} isValid={false} />
 
           {/* 닉네임 */}
           <div>
-            <InputLabel htmlFor="nickname">닉네임</InputLabel>
             <div className="flex gap-2">
               <TextInput
                 ref={nicknameCheck.inputRef}
                 id="nickname"
                 name="nickname"
                 type="text"
-                placeholder="닉네임을 입력해 주세요."
+                placeholder="닉네임 (최대 6자)"
                 maxLength={6}
                 required
                 onChange={(e) => {
@@ -236,6 +238,7 @@ function SignupPage() {
                   clearFieldError('nickname')
                   setSubmitError('')
                 }}
+                icon={UserIcon}
               />
               <SecondaryButton onClick={nicknameCheck.check} disabled={nicknameCheck.isChecking}>
                 {nicknameCheck.isChecking ? '확인 중...' : '닉네임 중복확인'}
@@ -245,55 +248,54 @@ function SignupPage() {
             <ValidationMessage message={fieldErrors.nickname} isValid={false} />
           </div>
 
-          {/* 프로필 사진 */}
-          <div>
-            <InputLabel optional>프로필 사진</InputLabel>
-            <div className="flex items-center gap-4">
-              {/* 미리보기 */}
+          {/* 프로필 사진 + CAPTCHA 같은 줄 */}
+          <div className="flex gap-4 items-center pt-1">
+            {/* 프로필 사진 */}
+            <div className="flex items-center gap-3">
               <PhotoPreview photoPreview={photo.photoPreview} />
-              {/* 버튼들 */}
-              <div className="flex flex-row gap-2 items-center">
-                <HiddenFileInput
-                  ref={photo.fileInputRef}
-                  id="userPhoto"
-                  onChange={photo.handlePhotoChange}
-                  accept="image/jpeg,image/png"
-                />
-                <PhotoSelectLabel htmlFor="userPhoto">
-                  사진 선택
-                </PhotoSelectLabel>
-                {photo.photoPreview && (
-                  <DeleteButton onClick={photo.handlePhotoRemove}>
-                    삭제
-                  </DeleteButton>
-                )}
+              <div className="flex flex-col gap-1">
+                <div className="flex gap-2 items-center">
+                  <HiddenFileInput
+                    ref={photo.fileInputRef}
+                    id="userPhoto"
+                    onChange={photo.handlePhotoChange}
+                    accept="image/jpeg,image/png"
+                  />
+                  <PhotoSelectLabel htmlFor="userPhoto">
+                    사진 선택
+                  </PhotoSelectLabel>
+                  {photo.photoPreview && (
+                    <DeleteButton onClick={photo.handlePhotoRemove}>
+                      삭제
+                    </DeleteButton>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400">JPG, PNG (최대 5MB)</p>
               </div>
+              <ValidationMessage message={photo.photoError} isValid={false} />
             </div>
-            <p className="mt-2 text-xs text-gray-400">JPG, JPEG, PNG (최대 5MB)</p>
-            <ValidationMessage message={photo.photoError} isValid={false} />
-          </div>
 
-          {/* CAPTCHA */}
-          {isCaptchaEnabled && (
-            <div className="pt-2">
-              <InputLabel>CAPTCHA 인증</InputLabel>
-              <TurnstileCaptcha
-                siteKey={turnstileSiteKey}
-                onVerify={(token) => {
-                  setCaptchaToken(token)
-                  clearFieldError('captcha')
-                  setSubmitError('')
-                }}
-                onExpire={() => {
-                  setCaptchaToken('')
-                }}
-                onError={() => {
-                  setCaptchaToken('')
-                }}
-              />
-              <ValidationMessage message={fieldErrors.captcha} isValid={false} />
-            </div>
-          )}
+            {/* CAPTCHA */}
+            {isCaptchaEnabled && (
+              <div className="ml-auto">
+                <TurnstileCaptcha
+                  siteKey={turnstileSiteKey}
+                  onVerify={(token) => {
+                    setCaptchaToken(token)
+                    clearFieldError('captcha')
+                    setSubmitError('')
+                  }}
+                  onExpire={() => {
+                    setCaptchaToken('')
+                  }}
+                  onError={() => {
+                    setCaptchaToken('')
+                  }}
+                />
+                <ValidationMessage message={fieldErrors.captcha} isValid={false} />
+              </div>
+            )}
+          </div>
 
           {/* 회원가입 버튼 */}
           <Button type="submit" isLoading={isLoading} loadingText="가입 중...">
@@ -302,7 +304,7 @@ function SignupPage() {
         </form>
 
         {/* 로그인 링크 */}
-        <div className="mt-6 text-center">
+        <div className="mt-3 text-center">
           <p className="text-sm text-gray-400">
             이미 계정이 있으신가요?{' '}
             <Link to="/login" className="text-sub-bg hover:text-main-bg font-medium">
