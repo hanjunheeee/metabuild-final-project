@@ -60,9 +60,6 @@ public class UserTitleEntity {
     @Column(name = "title_name", nullable = false, length = 50)
     private String titleName;
 
-    @Column(name = "title_icon", length = 10)
-    private String titleIcon;
-
     @Column(name = "achieved_at")
     private LocalDateTime achievedAt;
 

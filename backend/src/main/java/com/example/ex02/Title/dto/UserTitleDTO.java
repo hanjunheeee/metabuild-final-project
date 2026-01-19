@@ -16,7 +16,6 @@ public class UserTitleDTO {
     private String titleType;      // LIKE, FOLLOWER
     private String titleLevel;     // BRONZE, SILVER, GOLD
     private String titleName;      // 공감의 시작, 도서 큐레이터 등
-    private String titleIcon;      // 💭, 📚 등
     private LocalDateTime achievedAt;
 
     // 추가 정보 (프론트엔드 표시용)

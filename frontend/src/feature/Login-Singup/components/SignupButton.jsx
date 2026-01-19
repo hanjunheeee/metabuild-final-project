@@ -26,16 +26,16 @@ export function SecondaryButton({ onClick, disabled, children }) {
   )
 }
 
-// 인증 코드 발송 버튼 (mt-2 포함)
+// 인증 코드 발송 버튼
 export function SendCodeButton({ onClick, disabled, isSending, isVerified }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="mt-2 px-4 py-3 bg-main-bg text-white hover:opacity-90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+      className="px-3 py-2.5 bg-sub-bg text-white text-sm hover:opacity-90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
     >
-      {isSending ? '발송 중...' : isVerified ? '인증완료' : '인증 코드 발송'}
+      {isSending ? '발송 중...' : isVerified ? '✓ 인증완료' : '인증코드 발송'}
     </button>
   )
 }

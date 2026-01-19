@@ -34,7 +34,6 @@ public class UserTitleService {
     
     // 신규 회원 기본 칭호
     private static final String WELCOME_TITLE_NAME = "신간회원";
-    private static final String WELCOME_TITLE_ICON = "🌱";
     
     // 댓글 좋아요 기반 칭호
     private static final int LIKE_BRONZE_THRESHOLD = 100;
@@ -94,7 +93,6 @@ public class UserTitleService {
                 .titleType(TitleType.WELCOME)
                 .titleLevel(TitleLevel.NEWBIE)
                 .titleName(WELCOME_TITLE_NAME)
-                .titleIcon(WELCOME_TITLE_ICON)
                 .build();
 
         UserTitleEntity saved = userTitleRepository.save(title);
@@ -139,21 +137,21 @@ public class UserTitleService {
         // GOLD 달성 확인
         if (likeCount >= LIKE_GOLD_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.LIKE, TitleLevel.GOLD, 
-                    "소통의 달인", "✨", "모두가 인정하는 커뮤니티의 핵심", LIKE_GOLD_THRESHOLD);
+                    "소통의 달인", "모두가 인정하는 커뮤니티의 핵심", LIKE_GOLD_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
         
         // SILVER 달성 확인
         if (likeCount >= LIKE_SILVER_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.LIKE, TitleLevel.SILVER, 
-                    "공감 유발자", "💬", "댓글로 마음을 움직이는 사람", LIKE_SILVER_THRESHOLD);
+                    "공감 유발자", "댓글로 마음을 움직이는 사람", LIKE_SILVER_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
         
         // BRONZE 달성 확인
         if (likeCount >= LIKE_BRONZE_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.LIKE, TitleLevel.BRONZE, 
-                    "공감의 시작", "💭", "따뜻한 말로 공감을 이끌어내는 당신", LIKE_BRONZE_THRESHOLD);
+                    "공감의 시작", "따뜻한 말로 공감을 이끌어내는 당신", LIKE_BRONZE_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
 
@@ -172,21 +170,21 @@ public class UserTitleService {
         // GOLD 달성 확인
         if (followerCount >= FOLLOWER_GOLD_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.FOLLOWER, TitleLevel.GOLD, 
-                    "독서 인플루언서", "🌟", "독서 문화를 이끄는 영향력 있는 리더", FOLLOWER_GOLD_THRESHOLD);
+                    "독서 인플루언서", "독서 문화를 이끄는 영향력 있는 리더", FOLLOWER_GOLD_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
         
         // SILVER 달성 확인
         if (followerCount >= FOLLOWER_SILVER_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.FOLLOWER, TitleLevel.SILVER, 
-                    "도서 큐레이터", "📖", "많은 이들이 신뢰하는 책 안내자", FOLLOWER_SILVER_THRESHOLD);
+                    "도서 큐레이터", "많은 이들이 신뢰하는 책 안내자", FOLLOWER_SILVER_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
         
         // BRONZE 달성 확인
         if (followerCount >= FOLLOWER_BRONZE_THRESHOLD) {
             UserTitleDTO title = awardTitleIfNotExists(userId, TitleType.FOLLOWER, TitleLevel.BRONZE, 
-                    "책방 이웃", "📚", "함께 읽는 즐거움을 아는 독서 친구", FOLLOWER_BRONZE_THRESHOLD);
+                    "책방 이웃", "함께 읽는 즐거움을 아는 독서 친구", FOLLOWER_BRONZE_THRESHOLD);
             if (title != null) newTitles.add(title);
         }
 
@@ -212,7 +210,7 @@ public class UserTitleService {
      * 칭호가 없으면 부여
      */
     private UserTitleDTO awardTitleIfNotExists(Long userId, TitleType type, TitleLevel level, 
-                                                String name, String icon, String description, int requiredCount) {
+                                                String name, String description, int requiredCount) {
         // 이미 보유하고 있으면 null 반환
         if (userTitleRepository.existsByUser_UserIdAndTitleTypeAndTitleLevel(userId, type, level)) {
             return null;
@@ -226,7 +224,6 @@ public class UserTitleService {
                 .titleType(type)
                 .titleLevel(level)
                 .titleName(name)
-                .titleIcon(icon)
                 .build();
 
         UserTitleEntity saved = userTitleRepository.save(title);
@@ -248,7 +245,6 @@ public class UserTitleService {
                 .titleType(entity.getTitleType().name())
                 .titleLevel(entity.getTitleLevel().name())
                 .titleName(entity.getTitleName())
-                .titleIcon(entity.getTitleIcon())
                 .achievedAt(entity.getAchievedAt())
                 .build();
     }

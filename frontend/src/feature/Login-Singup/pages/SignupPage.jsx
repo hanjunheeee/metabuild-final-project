@@ -134,7 +134,7 @@ function SignupPage() {
         <form onSubmit={handleSignup} className="space-y-2">
           {/* 이메일 */}
           <div>
-            {/* 이메일 입력 + 중복확인 버튼 */}
+            {/* 이메일 입력 + 중복확인 + 인증코드 발송 버튼 */}
             <div className="flex gap-2">
               <TextInput
                 ref={emailCheck.inputRef}
@@ -150,18 +150,16 @@ function SignupPage() {
               <PrimaryButton onClick={emailCheck.check} disabled={emailCheck.isChecking}>
                 {emailCheck.isChecking ? '확인 중...' : '중복 확인'}
               </PrimaryButton>
+              <SendCodeButton
+                onClick={sendVerificationCode}
+                disabled={isSendingCode || !emailCheck.isChecked}
+                isSending={isSendingCode}
+                isVerified={isEmailVerified}
+              />
             </div>
             {/* 중복확인 메시지 */}
             <ValidationMessage message={emailCheck.message} isValid={emailCheck.isChecked} />
-
-            {/* 인증 코드 발송 버튼 */}
-            <SendCodeButton
-              onClick={sendVerificationCode}
-              disabled={isSendingCode || !emailCheck.isChecked}
-              isSending={isSendingCode}
-              isVerified={isEmailVerified}
-            />
-            {/* 이메일 유효성(회원가입) 메시지: 인증코드 발송 버튼 밑에 표시 */}
+            {/* 이메일 유효성(회원가입) 메시지 */}
             <ValidationMessage message={fieldErrors.email} isValid={false} />
 
             {/* 인증 코드 입력창 */}
