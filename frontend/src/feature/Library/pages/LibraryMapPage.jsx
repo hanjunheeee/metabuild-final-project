@@ -76,6 +76,45 @@ function LibraryMapPage() {
     return url
   }
 
+  const toMercator = (lat, lng) => {
+    const x = (lng * 20037508.34) / 180
+    const y = (Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180)) * (20037508.34 / 180)
+    return { x, y }
+  }
+
+  const openNaverDirections = (destLat, destLng, destName) => {
+    const { x, y } = toMercator(destLat, destLng)
+    const zoom = 10
+    const destPart = `${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI`
+
+    const openWithStart = (startLat, startLng) => {
+      const hasStart = typeof startLat === 'number' && typeof startLng === 'number'
+      const startPart = hasStart
+        ? (() => {
+            const start = toMercator(startLat, startLng)
+            return `${start.x},${start.y},${encodeURIComponent('내 위치')},,ADDRESS_POI`
+          })()
+        : '-'
+      const url = `https://map.naver.com/p/directions/${startPart}/${destPart}/-/transit?c=${zoom},${x},${y},0,dh`
+      window.open(url, '_blank', 'noopener')
+    }
+
+    if (!navigator.geolocation) {
+      openWithStart()
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        openWithStart(position.coords.latitude, position.coords.longitude)
+      },
+      () => {
+        openWithStart()
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    )
+  }
+
   const getGuName = (properties = {}) => {
     const candidates = [
       properties.name,
@@ -487,11 +526,7 @@ function LibraryMapPage() {
             const handleDirections = (directionsEvent) => {
               directionsEvent.preventDefault()
               if (Number.isNaN(destLat) || Number.isNaN(destLng)) return
-              const x = (destLng * 20037508.34) / 180
-              const y = (Math.log(Math.tan((90 + destLat) * Math.PI / 360)) / (Math.PI / 180)) * (20037508.34 / 180)
-              const zoom = 10
-              const url = `https://map.naver.com/p/directions/-/${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI/-/transit?c=${zoom},${x},${y},0,dh`
-              window.open(url, '_blank', 'noopener')
+              openNaverDirections(destLat, destLng, destName)
             }
 
             directionsButton.addEventListener('click', handleDirections)
@@ -640,11 +675,7 @@ function LibraryMapPage() {
           const handleDirections = (directionsEvent) => {
             directionsEvent.preventDefault()
             if (Number.isNaN(destLat) || Number.isNaN(destLng)) return
-            const x = (destLng * 20037508.34) / 180
-            const y = (Math.log(Math.tan((90 + destLat) * Math.PI / 360)) / (Math.PI / 180)) * (20037508.34 / 180)
-            const zoom = 10
-            const url = `https://map.naver.com/p/directions/-/${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI/-/transit?c=${zoom},${x},${y},0,dh`
-            window.open(url, '_blank', 'noopener')
+            openNaverDirections(destLat, destLng, destName)
           }
 
           directionsButton.addEventListener('click', handleDirections)
