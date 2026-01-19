@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // 교보/YES24 베스트셀러 스크래핑 서비스(캐시 포함)
 @Service
@@ -53,6 +55,7 @@ public class StoreBestsellerScrapeService {
     }
 
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
+    private final Map<String, String> yes24IsbnCache = new ConcurrentHashMap<>();
 
     // 교보 베스트셀러 TOP10 조회
     public List<BestsellerItemDTO> fetchKyoboTop10() {
@@ -178,8 +181,9 @@ public class StoreBestsellerScrapeService {
 
                 String link = attrOf(item.selectFirst("a.gd_name, .gd_name a, .goods_name a, .item_tit a"), "href");
                 link = normalizeUrl(link);
+                String isbn = extractYes24IsbnFromLink(link);
 
-                results.add(new BestsellerItemDTO(title, author, publisher, "", cover, link));
+                results.add(new BestsellerItemDTO(title, author, publisher, isbn, cover, link));
             }
             return results;
         } catch (Exception e) {
@@ -538,6 +542,66 @@ public class StoreBestsellerScrapeService {
             return "https:" + trimmed;
         }
         return trimmed;
+    }
+
+    private String extractYes24IsbnFromLink(String link) {
+        String goodsId = extractYes24GoodsId(link);
+        if (goodsId.isBlank()) {
+            return "";
+        }
+        String cached = yes24IsbnCache.get(goodsId);
+        if (cached != null) {
+            return cached;
+        }
+
+        String detailUrl = "https://www.yes24.com/Product/Goods/" + goodsId;
+        try {
+            Document doc = Jsoup.connect(detailUrl)
+                    .userAgent("Mozilla/5.0")
+                    .referrer("https://www.yes24.com")
+                    .timeout(7000)
+                    .get();
+
+            String isbn = attrOf(doc.selectFirst("meta[property=books:isbn]"), "content");
+            if (isbn.isBlank()) {
+                isbn = attrOf(doc.selectFirst("meta[name=isbn]"), "content");
+            }
+            if (isbn.isBlank()) {
+                isbn = attrOf(doc.selectFirst("meta[property=og:barcode]"), "content");
+            }
+            if (isbn.isBlank()) {
+                isbn = extractIsbnFromHtml(doc.html());
+            }
+
+            isbn = normalizeIsbn(isbn);
+            yes24IsbnCache.put(goodsId, isbn);
+            return isbn;
+        } catch (Exception e) {
+            logger.warn("YES24 detail fetch failed for goodsId={}: {}", goodsId, e.getMessage());
+            yes24IsbnCache.put(goodsId, "");
+            return "";
+        }
+    }
+
+    private String extractYes24GoodsId(String link) {
+        if (link == null || link.isBlank()) return "";
+        Matcher matcher = Pattern.compile("(\\d{5,})").matcher(link);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private String extractIsbnFromHtml(String html) {
+        if (html == null) return "";
+        Matcher matcher = Pattern.compile("ISBN\\s*[:=]\\s*(\\d{13})", Pattern.CASE_INSENSITIVE).matcher(html);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        matcher = Pattern.compile("\"isbn13\"\\s*[:=]\\s*\"(\\d{13})\"", Pattern.CASE_INSENSITIVE).matcher(html);
+        return matcher.find() ? matcher.group(1) : "";
+    }
+
+    private String normalizeIsbn(String isbn) {
+        if (isbn == null) return "";
+        return isbn.replaceAll("[^0-9Xx]", "");
     }
 
     // 교보 DOM 파싱 결과 추출
