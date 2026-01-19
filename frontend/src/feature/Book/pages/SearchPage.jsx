@@ -1,5 +1,5 @@
 ﻿import { useSearchParams, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useBooks from '../hooks/useBooks'
 import { fetchBookShops as fetchBookShopsApi, fetchBookSummary as fetchBookSummaryApi, fetchBooks } from '../api/bookApi'
 import { logSearch, logBookAction } from '../api/analyticsApi'
@@ -37,6 +37,12 @@ function SearchPage() {
     const textarea = document.createElement('textarea')
     textarea.innerHTML = value
     return textarea.value
+  }
+
+  const isIsbnKeyword = (value) => {
+    if (!value) return false
+    const normalized = value.replace(/[^0-9Xx]/g, '')
+    return /^(?:\d{10}|\d{13}|\d{9}[Xx])$/.test(normalized)
   }
 
   // 판매처 가격 조회(캐시 활용 + 토글)
@@ -221,11 +227,14 @@ function SearchPage() {
   const initialKeyword = params.get('keyword') || ''
   const [keyword, setKeyword] = useState(initialKeyword)
   const [visibleCount, setVisibleCount] = useState(10)
+  const lastInitialRef = useRef(initialKeyword)
 
   const { books, loading } = useBooks(initialKeyword)
 
   // 검색 결과의 첫 번째 책 제목 (ISBN 검색 시 변환용)
   const firstBookTitle = books.length > 0 ? books[0].title : null
+  const isIsbnQuery = isIsbnKeyword(initialKeyword)
+  const displayKeyword = isIsbnQuery && firstBookTitle ? firstBookTitle : initialKeyword
 
   // 검색 로그 전송 (검색 결과 로드 후)
   // 검색 결과 로딩 후 검색 로그 전송
@@ -237,18 +246,34 @@ function SearchPage() {
 
   // 검색어 변경 시 URL 갱신
   const handleSearch = () => {
-    if (!keyword.trim()) {
+    const trimmed = keyword.trim()
+    if (!trimmed) {
       showAlert('알림', '검색어를 입력해주세요', 'warning')
       return
     }
-    navigate(`/searchbook?keyword=${encodeURIComponent(keyword.trim())}`)
+    const shouldUseIsbn = isIsbnQuery && firstBookTitle && trimmed === firstBookTitle
+    const nextKeyword = shouldUseIsbn ? initialKeyword : trimmed
+    navigate(`/searchbook?keyword=${encodeURIComponent(nextKeyword)}`)
   }
 
   // URL 키워드 변경 시 입력/페이지 초기화
   useEffect(() => {
-    setKeyword(initialKeyword)
+    const initialChanged = lastInitialRef.current !== initialKeyword
+    if (initialChanged) {
+      lastInitialRef.current = initialKeyword
+      setVisibleCount(10)
+      if (isIsbnKeyword(initialKeyword) && firstBookTitle) {
+        setKeyword(firstBookTitle)
+      } else {
+        setKeyword(initialKeyword)
+      }
+      return
+    }
+    if (isIsbnKeyword(initialKeyword) && firstBookTitle && keyword === initialKeyword) {
+      setKeyword(firstBookTitle)
+    }
     setVisibleCount(10)
-  }, [initialKeyword])
+  }, [initialKeyword, firstBookTitle])
 
   useEffect(() => {
     if (!currentUser?.userId) {
@@ -346,7 +371,7 @@ function SearchPage() {
          검색결과
       =============================== */}
       <h2 className="text-2xl font-extrabold mb-10 text-sub-bg">
-        "{initialKeyword}"<span className="text-gray-500 text-base ml-2">검색결과</span>
+        "{displayKeyword}"<span className="text-gray-500 text-base ml-2">검색결과</span>
       </h2>
 
       {books.length === 0 ? (

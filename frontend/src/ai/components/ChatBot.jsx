@@ -107,7 +107,7 @@ const ChatBot = () => {
           <div style={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px' }}>🤖</span>
-              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>북봇 큐레이터</span>
+              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>북 큐레이터</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <button onClick={resetChat} style={styles.resetBtn}>🔄 리셋</button>
@@ -120,7 +120,7 @@ const ChatBot = () => {
               <div key={index} style={msg.role === 'user' ? styles.userRow : styles.aiRow}>
                 {msg.role === 'ai' && <div style={styles.aiIcon}>🤖</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '85%' }}>
-                  {msg.role === 'ai' && <span style={styles.aiName}>북봇 큐레이터</span>}
+                  {msg.role === 'ai' && <span style={styles.aiName}>북 큐레이터</span>}
                   <div
                     className="markdown-content"
                     style={msg.role === 'user' ? styles.userMsg : styles.aiMsg}
@@ -214,9 +214,9 @@ const styles = {
   userRow: { display: 'flex', justifyContent: 'flex-end' },
   aiRow: { display: 'flex', justifyContent: 'flex-start', gap: '10px' },
   aiIcon: { width: '32px', height: '32px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', border: '1px solid #ddd' },
-  aiName: { fontSize: '11px', color: '#888', marginBottom: '4px', marginLeft: '2px' },
-  userMsg: { backgroundColor: '#007bff', color: 'white', padding: '10px 14px', borderRadius: '15px', borderBottomRightRadius: '2px', fontSize: '14px' },
-  aiMsg: { backgroundColor: '#ffffff', color: '#333', padding: '12px 16px', borderRadius: '15px', borderBottomLeftRadius: '2px', border: '1px solid #e0e0e0', fontSize: '14px' },
+  aiName: { fontSize: '13px', color: '#888', marginBottom: '4px', marginLeft: '2px' },
+  userMsg: { backgroundColor: '#007bff', color: 'white', padding: '10px 14px', borderRadius: '15px', borderBottomRightRadius: '2px', fontSize: '16px' },
+  aiMsg: { backgroundColor: '#ffffff', color: '#333', padding: '12px 16px', borderRadius: '15px', borderBottomLeftRadius: '2px', border: '1px solid #e0e0e0', fontSize: '16px' },
   inputArea: { padding: '15px', display: 'flex', gap: '8px', borderTop: '1px solid #eee' },
   input: { flex: 1, border: '1px solid #ddd', borderRadius: '20px', padding: '10px 15px', outline: 'none', fontSize: '14px' },
   sendBtn: { backgroundColor: '#007bff', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
