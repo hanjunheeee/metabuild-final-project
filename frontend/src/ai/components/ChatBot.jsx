@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ const ChatBot = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const LOADING_MESSAGE = 'Loading...';
 
   const hiddenPaths = ['/login', '/signup', '/mypage', '/admin', '/admin/login'];
   const isHidden = hiddenPaths.some(path => location.pathname.startsWith(path));
@@ -14,7 +15,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem('chat_session');
     return saved ? JSON.parse(saved) : [
-      { role: 'ai', content: '안녕하세요! **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해 드릴까요?' }
+      { role: 'ai', content: '안녕하세요 **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해드릴까요?' }
     ];
   });
 
@@ -37,7 +38,7 @@ const ChatBot = () => {
       e.preventDefault();
       const href = target.getAttribute('href');
 
-      // 배포 환경 대응: localhost:3001 하드코딩 제거 및 현재 origin 인식
+      // 배포 환경 고려: localhost:3001 하드코딩 제거, 현재 origin 인식
       const currentOrigin = window.location.origin;
 
       if (href.startsWith('/') || href.startsWith(currentOrigin)) {
@@ -45,7 +46,7 @@ const ChatBot = () => {
         const path = href.replace(currentOrigin, '');
         navigate(path);
       } else {
-        // 외부 경로인 경우 새 탭 열기
+        // 외부 경로인 경우 새 창 열기
         window.open(href, '_blank');
       }
     }
@@ -54,13 +55,13 @@ const ChatBot = () => {
   const toggleChat = () => setIsOpen(!isOpen);
 
   const resetChat = async () => {
-    const initialMsg = [{ role: 'ai', content: '안녕하세요! **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해 드릴까요?' }];
+    const initialMsg = [{ role: 'ai', content: '안녕하세요 **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해드릴까요?' }];
     setMessages(initialMsg);
     sessionStorage.removeItem('chat_session');
     try {
       await fetch('http://localhost:7878/api/chat/reset', { method: 'POST' });
     } catch (e) {
-      console.log("서버 리셋 요청 실패");
+      console.log('서버 리셋 요청 실패');
     }
   };
 
@@ -69,13 +70,19 @@ const ChatBot = () => {
     const userText = input;
     setMessages(prev => [...prev, { role: 'user', content: userText }]);
     setInput('');
-    setMessages(prev => [...prev, { role: 'ai', content: '큐레이터가 책을 찾는 중입니다... 🔍' }]);
+    setMessages(prev => [...prev, { role: 'ai', content: LOADING_MESSAGE }]);
 
     try {
+      const history = [...messages]
+        .filter(msg => msg.content !== LOADING_MESSAGE)
+        .slice(-8)
+        .map(({ role, content }) => ({ role, content }));
+      history.push({ role: 'user', content: userText });
+
       const response = await fetch('http://localhost:7878/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: userText })
+        body: JSON.stringify({ prompt: userText, history })
       });
       const data = await response.text();
       setMessages(prev => {
@@ -91,14 +98,13 @@ const ChatBot = () => {
       });
     }
   };
-
   if (isHidden) return null;
 
   return (
     <div style={{ fontFamily: '"Pretendard", sans-serif' }}>
-      {/* 런처 버튼 - 🤖 로봇 아이콘 적용 */}
+      {/* 런처 버튼 - 로봇 아이콘 적용 */}
       <div style={styles.launcher} onClick={toggleChat}>
-        <span style={{ fontSize: '30px' }}>{isOpen ? '✕' : '🤖'}</span>
+        <span style={{ fontSize: '30px' }}>{isOpen ? 'X' : '🤖'}</span>
         {!isOpen && <div style={styles.bubble}>도서 추천 서비스</div>}
       </div>
 
@@ -107,11 +113,11 @@ const ChatBot = () => {
           <div style={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px' }}>🤖</span>
-              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>북 큐레이터</span>
+              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>북봇 큐레이터</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button onClick={resetChat} style={styles.resetBtn}>🔄 리셋</button>
-              <button onClick={toggleChat} style={styles.closeBtn}>✕</button>
+              <button onClick={resetChat} style={styles.resetBtn}>대화 리셋</button>
+              <button onClick={toggleChat} style={styles.closeBtn}>닫기</button>
             </div>
           </div>
 
@@ -120,7 +126,7 @@ const ChatBot = () => {
               <div key={index} style={msg.role === 'user' ? styles.userRow : styles.aiRow}>
                 {msg.role === 'ai' && <div style={styles.aiIcon}>🤖</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '85%' }}>
-                  {msg.role === 'ai' && <span style={styles.aiName}>북 큐레이터</span>}
+                  {msg.role === 'ai' && <span style={styles.aiName}>북봇 큐레이터</span>}
                   <div
                     className="markdown-content"
                     style={msg.role === 'user' ? styles.userMsg : styles.aiMsg}
@@ -137,7 +143,7 @@ const ChatBot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="질문을 입력하세요..."
+              placeholder="질문을 입력하세요.."
             />
             <button style={styles.sendBtn} onClick={sendMessage}>전송</button>
           </div>
@@ -145,7 +151,7 @@ const ChatBot = () => {
       )}
 
       <style>{`
-        /* 1. '이동하기' 버튼 스타일 (강조 및 유지) */
+        /* 1. '이동하기' 버튼 스타일 (강조 박스) */
         .markdown-content a {
           display: inline-block !important;
           color: #007bff !important;
@@ -166,8 +172,8 @@ const ChatBot = () => {
           color: white !important;
         }
 
-        /* 2. '책제목' 등 일반 링크는 버튼 스타일 제외 (텍스트처럼) */
-        /* href에 searchbook이 들어있지 않거나 '이동하기'라는 글자가 없는 링크 대상 */
+        /* 2. '책제목' 링크는 버튼 스타일 제외 (텍스트 강조) */
+        /* href에 searchbook이 포함되지 않는 '이동하기' 링크를 제외 처리 */
         .markdown-content a:not([href*="searchbook"]):not(:contains("이동하기")) {
           background: none !important;
           border: none !important;
@@ -177,17 +183,16 @@ const ChatBot = () => {
           pointer-events: none !important;
         }
 
-        /* 3. 도서 간 구분선 수정: 검은색 실선, 더 굵게 */
+        /* 3. 도서 카드 구분선 설정: 검은 구분선 */
           .markdown-content p:has(a),
           .markdown-content li:has(a) {
             margin-bottom: 30px !important;
             padding-bottom: 20px !important;
-            border-bottom: 3px solid #000000 !important; /* 검은색 실선 2px 적용 */
+            border-bottom: 3px solid #000000 !important; /* 검은 구분선 2px 적용 */
             list-style: none !important;
           }
 
-        /* 4. 답변의 맨 마지막 요소는 구분선 제거 */
-        /* 답변이 끝났는데 마지막에 선이 있으면 어색하므로 제거합니다. */
+        /* 4. 마지막 요소 구분선 제거 */
         .markdown-content p:last-child,
         .markdown-content li:last-child,
         .markdown-content p:has(a):last-child {
@@ -209,7 +214,7 @@ const styles = {
   container: { position: 'fixed', bottom: '110px', right: '30px', width: '500px', height: '600px', backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 9999, border: '1px solid #eee', overflow: 'hidden' },
   header: { backgroundColor: '#007bff', color: 'white', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   resetBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '11px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', marginRight: '10px' },
-  closeBtn: { background: 'none', border: 'none', color: 'white', fontSize: '18px', cursor: 'pointer' },
+  closeBtn: { background: 'none', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer' },
   window: { flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', backgroundColor: '#f9f9f9' },
   userRow: { display: 'flex', justifyContent: 'flex-end' },
   aiRow: { display: 'flex', justifyContent: 'flex-start', gap: '10px' },
