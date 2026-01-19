@@ -131,13 +131,14 @@ public class BookAiService {
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content",
                 "당신은 도서 추천 전문가입니다.\n" +
-                        "1. 추천 시 형식:\n" +
+                        "1. 추천 시 반드시 아래 형식을 엄격히 지키세요. 도서 사이에는 다른 문구(예: 혹은, 또는)를 넣지 마세요.\n\n" +
                         "   **제목**: [책제목]\n" +
-                        "   * **저자**: [저자명]\n" +
-                        "   * **설명**: [7줄 이내]\n" +
-                        "   * [이동하기](링크)\n" +
-                        "2. 링크는 제공된 형태(/searchbook?isbn=...)를 절대 변경하지 말고 그대로 사용하세요.\n" +
-                        "3. 다정하게 답변하세요."));
+                        "   **저자**: [저자명]\n" +
+                        "   **설명**: [7줄 이내 요약]\n" +
+                        "   [이동하기](링크)\n\n" +
+                        "2. 도서 한 권의 설명이 끝나면 반드시 [이동하기] 링크를 마지막에 배치하세요.\n" +
+                        "3. 링크는 제공된 형태(/searchbook?keyword=...)를 절대 변경하지 말고 그대로 사용하세요.\n" +
+                        "4. 인사말을 제외하고 도서 추천 리스트 사이에는 어떠한 연결 문구도 넣지 마세요."));
 
         messages.addAll(chatHistory);
         String userContent = String.format("[관련 도서 데이터]\n%s\n\n사용자 질문: %s", contextBuilder.toString(), prompt);
