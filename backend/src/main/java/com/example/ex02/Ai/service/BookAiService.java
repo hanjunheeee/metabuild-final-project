@@ -74,102 +74,71 @@ public class BookAiService {
     }
 
     public String askAi(String prompt) {
-        // 불필요한 조사 제거 및 핵심 키워드만 추출 (질문 정밀도 향상)
-        String cleanPrompt = prompt.replaceAll("(추천|해줘|있어|알려|작가|도서|책|의|한권|다시|다른)", " ").trim();
+        // 검색용 키워드 정제
+        String cleanPrompt = prompt.replaceAll("(추천|해줘|있어|알려|작가|도서|책|의|한권|다시|다른|장르|알려줘)", " ").trim();
         String[] keywords = cleanPrompt.split("\\s+");
 
+        // 제목, 저자, 줄거리를 모두 포함하여 검색 (장르 검색 대응)
         List<Map<String, String>> filteredBooks = bookData.stream()
                 .filter(b -> {
-                    // 키워드가 '저자' 혹은 '제목'에 직접 포함되어 있는지 우선 확인 (매칭 엄격화)
                     boolean matches = false;
                     for (String kw : keywords) {
                         if (kw.length() < 1) continue;
-                        if (b.get("author").contains(kw) || b.get("title").contains(kw)) {
+                        // 장르 검색('공포', '로맨스')을 위해 summary 검색 비중을 높임
+                        if (b.get("author").contains(kw) || b.get("title").contains(kw) || b.get("summary").contains(kw)) {
                             matches = true;
                             break;
                         }
                     }
 
-                    // "다른", "다시" 요청 시 중복 제거
+                    // 중복 제거 로직
                     if (prompt.contains("다른") || prompt.contains("다시") || prompt.contains("새로운")) {
                         return matches && !recommendedIsbns.contains(b.get("isbn"));
                     }
                     return matches;
                 })
-                .limit(5)
+                .limit(10) // AI가 선택할 수 있게 후보군을 늘림
                 .collect(Collectors.toList());
-
-        // 매칭되는 도서가 없을 경우에만 줄거리 검색까지 확장 (순차적 검색)
-        if (filteredBooks.isEmpty()) {
-            filteredBooks = bookData.stream()
-                    .filter(b -> {
-                        for (String kw : keywords) {
-                            if (kw.length() < 2) continue;
-                            if (b.get("summary").contains(kw)) return true;
-                        }
-                        return false;
-                    })
-                    .limit(5)
-                    .collect(Collectors.toList());
-        }
 
         return generateChatResponse(prompt, filteredBooks);
     }
 
-    private String searchExternalIsbns(String query) {
-        RestTemplate restTemplate = new RestTemplate();
-        Map<String, Object> request = new HashMap<>();
-        request.put("api_key", tavilyApiKey);
-        request.put("query", query + " 도서 추천 ISBN13");
-        request.put("search_depth", "advanced");
-
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(TAVILY_URL, request, Map.class);
-            List<Map<String, Object>> results = (List<Map<String, Object>>) response.getBody().get("results");
-            return results.stream().map(r -> (String) r.get("content")).collect(Collectors.joining(" "));
-        } catch (Exception e) { return ""; }
-    }
-
-    private List<String> extractIsbn13(String text) {
-        List<String> isbns = new ArrayList<>();
-        Matcher matcher = Pattern.compile("\\d{13}").matcher(text);
-        while (matcher.find()) { isbns.add(matcher.group()); }
-        return isbns;
-    }
-
     private String generateChatResponse(String prompt, List<Map<String, String>> filteredBooks) {
         StringBuilder contextBuilder = new StringBuilder();
+
         if (filteredBooks.isEmpty()) {
-            contextBuilder.append("데이터베이스에 해당 조건에 맞는 도서가 없습니다. 정중히 사과하고 다른 추천을 권유하세요.");
+            contextBuilder.append("제공된 데이터에 사용자의 요청(장르, 저자 등)과 일치하는 도서가 단 하나도 없습니다.");
         } else {
             for (Map<String, String> book : filteredBooks) {
                 String isbn = book.get("isbn");
                 String link = String.format("/searchbook?keyword=%s", isbn);
-                contextBuilder.append(String.format("{제목: %s, 저자: %s, 줄거리: %s, 링크: %s, ISBN: %s}\n",
-                        book.get("title"), book.get("author"), book.get("summary"), link, isbn));
+                contextBuilder.append(String.format("{제목: %s, 저자: %s, 줄거리: %s, 링크: %s}\n",
+                        book.get("title"), book.get("author"), book.get("summary"), link));
             }
         }
 
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content",
                 "당신은 도서 추천 전문가입니다.\n" +
-                        "1. **절대 규칙: 제공된 [관련 도서 데이터]에 명시된 도서만 추천하세요.** 데이터에 없는 책은 절대 언급하지 마세요.\n" +
-                        "2. 사용자의 질문(저자명, 제목 등)과 데이터가 일치하지 않으면 추천하지 말고 데이터가 없다고 답변하세요.\n" +
-                        "3. 추천 형식은 반드시 아래 형식을 엄격히 유지하세요.\n\n" +
+                        "1. **중요 규칙: 반드시 전달받은 [관련 도서 데이터] 목록에 있는 책만 추천하세요. 데이터에 없는 책을 지어내면 절대 안 됩니다.**\n" +
+                        "2. 만약 [관련 도서 데이터]가 비어있거나 질문과 상관없다면, 책을 추천하지 말고 \"찾으시는 장르나 작가의 도서가 데이터베이스에 없습니다.\"라고 정중히 답하세요.\n" +
+                        "3. 추천 형식은 아래를 엄격히 지키세요.\n\n" +
                         "   **제목**: [책제목]\n" +
                         "   **저자**: [저자명]\n" +
                         "   **설명**: [7줄 이내 요약]\n" +
                         "   [이동하기](링크)\n\n" +
-                        "4. 링크 주소는 절대 수정하지 말고 제공된 문자열 그대로(/searchbook?keyword=...) 사용하세요.\n" +
-                        "5. 인사말을 제외하고 도서 리스트 사이에는 연결 문구를 넣지 마세요."));
+                        "4. 링크 주소는 반드시 /searchbook?keyword=ISBN 형태여야 하며, 제공된 데이터를 절대 수정하지 마세요.\n" +
+                        "5. 한국어로만 답변하고, 인사말을 제외한 도서 리스트 사이에는 어떠한 연결 문구도 넣지 마세요."));
 
+        // 대화 이력 추가
         messages.addAll(chatHistory);
-        String userContent = String.format("[관련 도서 데이터]\n%s\n\n사용자 질문: %s\n질문과 일치하는 도서만 추천하고, 이전에 추천한 책은 피하세요.", contextBuilder.toString(), prompt);
+
+        String userContent = String.format("[관련 도서 데이터]\n%s\n\n사용자 질문: %s\n위 데이터 중에서 질문과 가장 일치하는 책을 골라 추천해줘. 데이터에 없으면 없다고 말해.", contextBuilder.toString(), prompt);
         messages.add(Map.of("role", "user", "content", userContent));
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "llama-3.1-8b-instant");
-        requestBody.put("temperature", 0.1); // 환각 방지를 위해 온도를 최소화하여 데이터 기반 답변 유도
+        requestBody.put("model", "llama-3.3-70b-versatile");
+        requestBody.put("temperature", 0.0); // 환각 방지를 위해 온도를 0으로 고정
         requestBody.put("messages", messages);
 
         try {
@@ -183,6 +152,7 @@ public class BookAiService {
             List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
             String aiAnswer = (String) ((Map<String, Object>) choices.get(0).get("message")).get("content");
 
+            // 추천된 ISBN 추적
             for (Map<String, String> book : filteredBooks) {
                 if (aiAnswer.contains(book.get("title"))) {
                     recommendedIsbns.add(book.get("isbn"));
