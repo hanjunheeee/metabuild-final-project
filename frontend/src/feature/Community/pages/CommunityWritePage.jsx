@@ -9,6 +9,7 @@ function CommunityWritePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const editId = searchParams.get('edit') // 수정 모드일 경우 게시글 ID
+  const defaultKind = searchParams.get('kind') || 'FREE' // 글쓰기 시 기본 게시판 종류
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -183,6 +184,7 @@ function CommunityWritePage() {
         <CommunityForm
           mode={isEditMode ? 'edit' : 'create'}
           initialData={initialData}
+          defaultKind={isEditMode ? undefined : defaultKind}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isSubmitting={isSubmitting}

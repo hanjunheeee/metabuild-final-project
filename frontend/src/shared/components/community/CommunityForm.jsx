@@ -24,13 +24,14 @@ const COMMUNITY_KINDS = [
 function CommunityForm({ 
   mode = 'create', 
   initialData = null, 
+  defaultKind = 'FREE',
   onSubmit, 
   onCancel,
   isSubmitting = false,
   hideKindSelector = false,
 }) {
   const [title, setTitle] = useState('')
-  const [communityKind, setCommunityKind] = useState('FREE')
+  const [communityKind, setCommunityKind] = useState(defaultKind)
   const [error, setError] = useState('')
   const errorRef = useRef(null)
 

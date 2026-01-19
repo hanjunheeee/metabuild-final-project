@@ -1,7 +1,8 @@
-﻿import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { fetchGuList, fetchLibraryData, checkLoan, searchBooks } from '../api/libraryApi'
 import { Spinner } from '@/shared/components/icons'
+import { ConfirmModal } from '@/shared/components/modal'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -31,6 +32,20 @@ function LibraryMapPage() {
   const [selectedBookTitle, setSelectedBookTitle] = useState('')
   const [resolvedIsbn, setResolvedIsbn] = useState('')
   const [loanMessage, setLoanMessage] = useState('')
+  
+  // 위치 확인 모달 상태
+  const [locationModal, setLocationModal] = useState({
+    isOpen: false,
+    destLat: 0,
+    destLng: 0,
+    destName: ''
+  })
+  
+  // 위치 로딩 상태
+  const [locationLoading, setLocationLoading] = useState(false)
+  
+  // 위치 허용 여부 저장 (null: 미선택, true: 허용, false: 거부)
+  const locationPermissionRef = useRef(null)
 
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
@@ -82,37 +97,80 @@ function LibraryMapPage() {
     return { x, y }
   }
 
-  const openNaverDirections = (destLat, destLng, destName) => {
+  // 실제 네이버 지도 열기 (위치 정보 포함/미포함)
+  const openNaverMap = useCallback((destLat, destLng, destName, startLat, startLng) => {
     const { x, y } = toMercator(destLat, destLng)
     const zoom = 10
     const destPart = `${x},${y},${encodeURIComponent(destName)},,ADDRESS_POI`
+    
+    const hasStart = typeof startLat === 'number' && typeof startLng === 'number'
+    const startPart = hasStart
+      ? (() => {
+          const start = toMercator(startLat, startLng)
+          return `${start.x},${start.y},${encodeURIComponent('내 위치')},,ADDRESS_POI`
+        })()
+      : '-'
+    const url = `https://map.naver.com/p/directions/${startPart}/${destPart}/-/transit?c=${zoom},${x},${y},0,dh`
+    window.open(url, '_blank', 'noopener')
+  }, [])
 
-    const openWithStart = (startLat, startLng) => {
-      const hasStart = typeof startLat === 'number' && typeof startLng === 'number'
-      const startPart = hasStart
-        ? (() => {
-            const start = toMercator(startLat, startLng)
-            return `${start.x},${start.y},${encodeURIComponent('내 위치')},,ADDRESS_POI`
-          })()
-        : '-'
-      const url = `https://map.naver.com/p/directions/${startPart}/${destPart}/-/transit?c=${zoom},${x},${y},0,dh`
-      window.open(url, '_blank', 'noopener')
-    }
-
+  // 위치를 사용해서 지도 열기
+  const openMapWithLocation = useCallback((destLat, destLng, destName) => {
     if (!navigator.geolocation) {
-      openWithStart()
+      openNaverMap(destLat, destLng, destName)
       return
     }
 
+    setLocationLoading(true)
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        openWithStart(position.coords.latitude, position.coords.longitude)
+        setLocationLoading(false)
+        openNaverMap(destLat, destLng, destName, position.coords.latitude, position.coords.longitude)
       },
       () => {
-        openWithStart()
+        setLocationLoading(false)
+        // 위치 거부 시에도 목적지만으로 열기
+        openNaverMap(destLat, destLng, destName)
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     )
+  }, [openNaverMap])
+
+  // 모달에서 "허용" 클릭 시
+  const requestLocationAndOpenMap = useCallback(() => {
+    locationPermissionRef.current = true // 선택 저장
+    const { destLat, destLng, destName } = locationModal
+    setLocationModal(prev => ({ ...prev, isOpen: false }))
+    openMapWithLocation(destLat, destLng, destName)
+  }, [locationModal, openMapWithLocation])
+
+  // 모달에서 "허용 안함" 클릭 시
+  const openMapWithoutLocation = useCallback(() => {
+    locationPermissionRef.current = false // 선택 저장
+    const { destLat, destLng, destName } = locationModal
+    setLocationModal(prev => ({ ...prev, isOpen: false }))
+    openNaverMap(destLat, destLng, destName)
+  }, [locationModal, openNaverMap])
+
+  // 길찾기 버튼 클릭 시
+  const openNaverDirections = (destLat, destLng, destName) => {
+    // 이미 선택한 적이 있으면 모달 없이 바로 실행
+    if (locationPermissionRef.current === true) {
+      openMapWithLocation(destLat, destLng, destName)
+      return
+    }
+    if (locationPermissionRef.current === false) {
+      openNaverMap(destLat, destLng, destName)
+      return
+    }
+    
+    // 처음인 경우 모달 표시
+    setLocationModal({
+      isOpen: true,
+      destLat,
+      destLng,
+      destName
+    })
   }
 
   const getGuName = (properties = {}) => {
@@ -487,8 +545,8 @@ function LibraryMapPage() {
 
         marker.bindPopup(popupContent, {
           className: 'custom-popup',
-          autoClose: false,
-          closeOnClick: false,
+          autoClose: true,
+          closeOnClick: true,
           offset: [0, -6]
         })
 
@@ -636,8 +694,8 @@ function LibraryMapPage() {
 
       marker.bindPopup(popupContent, {
         className: 'custom-popup',
-        autoClose: false,
-        closeOnClick: false,
+        autoClose: true,
+        closeOnClick: true,
         offset: [0, -6]
       })
 
@@ -1076,6 +1134,28 @@ function LibraryMapPage() {
         .gu-label .gu-count { font-size: 14px; line-height: 1.1; display: block; color: #1e40af; }
         .gu-label .gu-count.is-zero { color: #dc2626; }
       `}</style>
+
+      {/* 위치 허용 확인 모달 */}
+      <ConfirmModal
+        isOpen={locationModal.isOpen}
+        title="위치 정보 사용"
+        message={`현재 위치를 출발지로 설정하시겠습니까?\n\n허용하면 내 위치에서 도서관까지의\n길찾기가 제공됩니다.`}
+        type="info"
+        confirmText="허용"
+        cancelText="허용 안함"
+        onConfirm={requestLocationAndOpenMap}
+        onCancel={openMapWithoutLocation}
+      />
+
+      {/* 위치 로딩 오버레이 */}
+      {locationLoading && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[10000]">
+          <div className="bg-white px-6 py-4 shadow-lg flex items-center gap-3">
+            <Spinner className="w-5 h-5 text-sub-bg" />
+            <span className="text-gray-700 font-medium">위치 확인 중...</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

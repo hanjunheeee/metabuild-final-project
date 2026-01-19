@@ -361,9 +361,12 @@ function useCommunityListPage() {
     }
   }
 
-  // 글쓰기 페이지로 이동
+  // 글쓰기 페이지로 이동 (현재 필터 상태 전달)
   const handleWriteClick = () => {
-    navigate('/community/write')
+    // 자유/질문/리뷰 필터일 때만 해당 종류 전달, 그 외는 자유로 기본값
+    const validKinds = ['FREE', 'QUESTION', 'REVIEW']
+    const kind = validKinds.includes(kindFilter) ? kindFilter : 'FREE'
+    navigate(`/community/write?kind=${kind}`)
   }
 
   // 북마크 토글

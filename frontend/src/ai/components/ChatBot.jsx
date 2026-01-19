@@ -1,23 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { marked } from 'marked';
-import { useNavigate } from 'react-router-dom'; // 페이지 이동을 위함
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const ChatBot = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
 
-  // [수정] sessionStorage 사용하여 브라우저 탭 종료 전까지 대화 유지
+  const hiddenPaths = ['/login', '/signup', '/mypage', '/admin', '/admin/login'];
+  const isHidden = hiddenPaths.some(path => location.pathname.startsWith(path));
+
   const [messages, setMessages] = useState(() => {
     const saved = sessionStorage.getItem('chat_session');
     return saved ? JSON.parse(saved) : [
-      { role: 'ai', content: '안녕하세요! 빌릴수e서울 도서 큐레이터입니다. 어떤 책을 추천해 드릴까요?' }
+      { role: 'ai', content: '안녕하세요! **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해 드릴까요?' }
     ];
   });
 
   const chatWindowRef = useRef(null);
 
-  // 메시지 변경 시 세션 스토리지 저장 및 스크롤 조절
   useEffect(() => {
     sessionStorage.setItem('chat_session', JSON.stringify(messages));
     if (chatWindowRef.current) {
@@ -29,18 +31,21 @@ const ChatBot = () => {
     marked.setOptions({ breaks: true, gfm: true });
   }, []);
 
-  // [추가] 마크다운 내 링크 클릭 시 리액트 라우터로 처리하는 로직
   const handleContentClick = (e) => {
     const target = e.target;
     if (target.tagName === 'A') {
       e.preventDefault();
       const href = target.getAttribute('href');
 
-      if (href.startsWith('/')) {
-        // [수정] 단순 navigate 대신 window.location.href를 사용하여
-        // 검색 페이지가 파라미터를 읽고 새롭게 검색을 수행하도록 합니다.
-        window.location.href = href;
+      // 배포 환경 대응: localhost:3001 하드코딩 제거 및 현재 origin 인식
+      const currentOrigin = window.location.origin;
+
+      if (href.startsWith('/') || href.startsWith(currentOrigin)) {
+        // 내부 경로인 경우 (예: /book-detail/1)
+        const path = href.replace(currentOrigin, '');
+        navigate(path);
       } else {
+        // 외부 경로인 경우 새 탭 열기
         window.open(href, '_blank');
       }
     }
@@ -48,12 +53,10 @@ const ChatBot = () => {
 
   const toggleChat = () => setIsOpen(!isOpen);
 
-  // [수정] 초기화 버튼 클릭 시 동작 (멘트 변경 및 로컬/서버 내역 삭제)
   const resetChat = async () => {
-    const initialMsg = [{ role: 'ai', content: '안녕하세요! 빌릴수e서울 도서 큐레이터입니다. 어떤 책을 추천해 드릴까요?' }];
+    const initialMsg = [{ role: 'ai', content: '안녕하세요! **빌릴수e서울** 도서 큐레이터입니다.\n 어떤 책을 추천해 드릴까요?' }];
     setMessages(initialMsg);
     sessionStorage.removeItem('chat_session');
-
     try {
       await fetch('http://localhost:7878/api/chat/reset', { method: 'POST' });
     } catch (e) {
@@ -63,11 +66,10 @@ const ChatBot = () => {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
     const userText = input;
     setMessages(prev => [...prev, { role: 'user', content: userText }]);
     setInput('');
-    setMessages(prev => [...prev, { role: 'ai', content: '생각 중입니다...' }]);
+    setMessages(prev => [...prev, { role: 'ai', content: '큐레이터가 책을 찾는 중입니다... 🔍' }]);
 
     try {
       const response = await fetch('http://localhost:7878/api/chat', {
@@ -76,7 +78,6 @@ const ChatBot = () => {
         body: JSON.stringify({ prompt: userText })
       });
       const data = await response.text();
-
       setMessages(prev => {
         const newMsgs = [...prev];
         newMsgs.pop();
@@ -91,36 +92,41 @@ const ChatBot = () => {
     }
   };
 
+  if (isHidden) return null;
+
   return (
-    <div style={{ fontFamily: 'sans-serif' }}>
+    <div style={{ fontFamily: '"Pretendard", sans-serif' }}>
+      {/* 런처 버튼 - 🤖 로봇 아이콘 적용 */}
       <div style={styles.launcher} onClick={toggleChat}>
-        <span style={{ fontSize: '30px' }}>📚</span>
-        {!isOpen && <div style={styles.bubble}>도서 추천은 저에게 물어보세요!</div>}
+        <span style={{ fontSize: '30px' }}>{isOpen ? '✕' : '🤖'}</span>
+        {!isOpen && <div style={styles.bubble}>도서 추천 서비스</div>}
       </div>
 
       {isOpen && (
         <div style={styles.container}>
           <div style={styles.header}>
-            <span style={{ fontSize: '16px' }}>북봇 큐레이터</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>🤖</span>
+              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>북봇 큐레이터</span>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button onClick={resetChat} style={styles.resetBtn}>🔄 초기화</button>
+              <button onClick={resetChat} style={styles.resetBtn}>🔄 리셋</button>
               <button onClick={toggleChat} style={styles.closeBtn}>✕</button>
             </div>
           </div>
 
           <div style={styles.window} ref={chatWindowRef} onClick={handleContentClick}>
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                style={{
-                  ...styles.message,
-                  ...(msg.role === 'user' ? styles.userMsg : styles.aiMsg)
-                }}
-              >
-                <div
-                  className="markdown-content"
-                  dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }}
-                />
+              <div key={index} style={msg.role === 'user' ? styles.userRow : styles.aiRow}>
+                {msg.role === 'ai' && <div style={styles.aiIcon}>🤖</div>}
+                <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '85%' }}>
+                  {msg.role === 'ai' && <span style={styles.aiName}>북봇 큐레이터</span>}
+                  <div
+                    className="markdown-content"
+                    style={msg.role === 'user' ? styles.userMsg : styles.aiMsg}
+                    dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -130,31 +136,90 @@ const ChatBot = () => {
               style={styles.input}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="질문을 입력하세요..."
             />
-            <button style={styles.sendBtn} onClick={sendMessage}>보내기</button>
+            <button style={styles.sendBtn} onClick={sendMessage}>전송</button>
           </div>
         </div>
       )}
+
+      <style>{`
+        /* 1. '이동하기' 버튼 스타일 (강조 및 유지) */
+        .markdown-content a {
+          display: inline-block !important;
+          color: #007bff !important;
+          text-decoration: none !important;
+          font-weight: 700 !important;
+          background-color: #eef6ff !important;
+          padding: 6px 14px !important;
+          margin-top: 10px !important;
+          margin-bottom: 5px !important;
+          border-radius: 5px !important;
+          border: 1px solid #cce5ff !important;
+          cursor: pointer !important;
+          pointer-events: auto !important; /* 클릭 가능하도록 명시 */
+        }
+
+        .markdown-content a:hover {
+          background-color: #007bff !important;
+          color: white !important;
+        }
+
+        /* 2. '책제목' 등 일반 링크는 버튼 스타일 제외 (텍스트처럼) */
+        /* href에 searchbook이 들어있지 않거나 '이동하기'라는 글자가 없는 링크 대상 */
+        .markdown-content a:not([href*="searchbook"]):not(:contains("이동하기")) {
+          background: none !important;
+          border: none !important;
+          padding: 0 !important;
+          color: inherit !important;
+          font-weight: bold !important;
+          pointer-events: none !important;
+        }
+
+        /* 3. 도서 간 구분선 수정: 검은색 실선, 더 굵게 */
+          .markdown-content p:has(a),
+          .markdown-content li:has(a) {
+            margin-bottom: 30px !important;
+            padding-bottom: 20px !important;
+            border-bottom: 3px solid #000000 !important; /* 검은색 실선 2px 적용 */
+            list-style: none !important;
+          }
+
+        /* 4. 답변의 맨 마지막 요소는 구분선 제거 */
+        /* 답변이 끝났는데 마지막에 선이 있으면 어색하므로 제거합니다. */
+        .markdown-content p:last-child,
+        .markdown-content li:last-child,
+        .markdown-content p:has(a):last-child {
+          border-bottom: none !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
+        }
+
+        .markdown-content p { margin-bottom: 8px; line-height: 1.6; }
+        .markdown-content strong { color: #000; }
+      `}</style>
     </div>
   );
 };
 
 const styles = {
   launcher: { position: 'fixed', bottom: '30px', right: '30px', width: '65px', height: '65px', backgroundColor: '#007bff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', cursor: 'pointer', zIndex: 9999 },
-  bubble: { position: 'absolute', right: '80px', width: '160px', backgroundColor: '#333', color: 'white', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', textAlign: 'center' },
-  container: { position: 'fixed', bottom: '110px', right: '30px', width: '350px', height: '550px', backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 9999, border: '1px solid #eee', overflow: 'hidden' },
-  header: { backgroundColor: '#007bff', color: 'white', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' },
-  resetBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', marginRight: '10px' },
+  bubble: { position: 'absolute', right: '80px', width: '130px', backgroundColor: '#333', color: 'white', padding: '8px 12px', borderRadius: '10px', fontSize: '12px', textAlign: 'center' },
+  container: { position: 'fixed', bottom: '110px', right: '30px', width: '500px', height: '600px', backgroundColor: 'white', borderRadius: '15px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 9999, border: '1px solid #eee', overflow: 'hidden' },
+  header: { backgroundColor: '#007bff', color: 'white', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  resetBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', fontSize: '11px', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', marginRight: '10px' },
   closeBtn: { background: 'none', border: 'none', color: 'white', fontSize: '18px', cursor: 'pointer' },
-  window: { flex: 1, overflowY: 'auto', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f9f9f9' },
-  message: { padding: '10px 14px', borderRadius: '12px', fontSize: '14px', maxWidth: '85%', lineHeight: '1.6', wordBreak: 'break-word' },
-  userMsg: { backgroundColor: '#007bff', color: 'white', alignSelf: 'flex-end', borderBottomRightRadius: '2px' },
-  aiMsg: { backgroundColor: '#ffffff', color: '#333', alignSelf: 'flex-start', borderBottomLeftRadius: '2px', border: '1px solid #e0e0e0' },
-  inputArea: { padding: '15px 10px', display: 'flex', gap: '8px', borderTop: '1px solid #eee', backgroundColor: 'white' },
+  window: { flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', backgroundColor: '#f9f9f9' },
+  userRow: { display: 'flex', justifyContent: 'flex-end' },
+  aiRow: { display: 'flex', justifyContent: 'flex-start', gap: '10px' },
+  aiIcon: { width: '32px', height: '32px', backgroundColor: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', border: '1px solid #ddd' },
+  aiName: { fontSize: '11px', color: '#888', marginBottom: '4px', marginLeft: '2px' },
+  userMsg: { backgroundColor: '#007bff', color: 'white', padding: '10px 14px', borderRadius: '15px', borderBottomRightRadius: '2px', fontSize: '14px' },
+  aiMsg: { backgroundColor: '#ffffff', color: '#333', padding: '12px 16px', borderRadius: '15px', borderBottomLeftRadius: '2px', border: '1px solid #e0e0e0', fontSize: '14px' },
+  inputArea: { padding: '15px', display: 'flex', gap: '8px', borderTop: '1px solid #eee' },
   input: { flex: 1, border: '1px solid #ddd', borderRadius: '20px', padding: '10px 15px', outline: 'none', fontSize: '14px' },
-  sendBtn: { backgroundColor: '#007bff', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' },
+  sendBtn: { backgroundColor: '#007bff', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
 };
 
 export default ChatBot;

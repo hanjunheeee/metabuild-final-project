@@ -13,7 +13,11 @@ export {
   HiddenFileInput,
   InputLabel,
   ValidationMessage,
-  InfoMessage
+  InfoMessage,
+  EmailIcon,
+  LockIcon,
+  UserIcon,
+  KeyIcon
 } from './SignupInput'
 
 export { default as TurnstileCaptcha } from './TurnstileCaptcha'

@@ -210,36 +210,14 @@ function CommunityListPage() {
           )}
         </div>
 
-        {/* 공지글 */}
-        {!isUserFilterMode && kindFilter === 'ALL' && noticePosts.length > 0 && (
-          <div className="mb-4 space-y-2">
-            {noticePosts.map((post) => (
-              <CommunityPostList
-                key={post.communityId}
-                post={post}
-                onClick={handlePostClick}
-                formatDate={formatDate}
-                getPostTitle={getPostTitle}
-                badge={{ text: '공지', color: 'amber' }}
-                onAuthorClick={openAuthorPanel}
-                selectedAuthor={selectedAuthor}
-                selectedAuthorPostId={selectedAuthorPostId}
-                onCloseAuthorPanel={closeAuthorPanel}
-                onToggleAuthorFollow={handleAuthorFollowToggle}
-                authorFollowing={authorFollowing}
-                authorFollowLoading={authorFollowLoading}
-                currentUser={currentUser}
-                onViewAuthorPosts={handleAuthorClick}
-              />
-            ))}
-          </div>
-        )}
+        {/* 구분선 */}
+        <div className="border-t border-gray-300 mb-4" />
 
         {/* 주간 HOT */}
         {!isUserFilterMode && kindFilter === 'ALL' && !searchTerm.trim() && hotPosts.length > 0 && (
           <div className="mb-6">
-            <div className="flex flex-col items-center mb-3 border-t border-gray-300">
-              <h2 className="text-2xl font-extrabold text-sub-bg pt-3">주간 HOT</h2>
+            <div className="flex flex-col items-center mb-3">
+              <h2 className="text-2xl font-extrabold text-sub-bg">주간 HOT</h2>
               <span className="text-xs text-gray-400">최근 7일간 인기 게시글</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,8 +248,33 @@ function CommunityListPage() {
 
         {/* 전체 게시글 헤더 */}
         {!isUserFilterMode && kindFilter === 'ALL' && !searchTerm.trim() && hotPosts.length > 0 && filteredCommunities.length > 0 && (
-          <div className="flex items-center justify-center border-t border-gray-300 gap-2 mb-3 pt-4">
+          <div className="flex items-center justify-center gap-2 mb-3 pt-2">
             <h2 className="text-2xl font-extrabold text-sub-bg">전체 게시글</h2>
+          </div>
+        )}
+
+        {/* 공지글 */}
+        {!isUserFilterMode && kindFilter === 'ALL' && noticePosts.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {noticePosts.map((post) => (
+              <CommunityPostList
+                key={post.communityId}
+                post={post}
+                onClick={handlePostClick}
+                formatDate={formatDate}
+                getPostTitle={getPostTitle}
+                badge={{ text: '공지', color: 'amber' }}
+                onAuthorClick={openAuthorPanel}
+                selectedAuthor={selectedAuthor}
+                selectedAuthorPostId={selectedAuthorPostId}
+                onCloseAuthorPanel={closeAuthorPanel}
+                onToggleAuthorFollow={handleAuthorFollowToggle}
+                authorFollowing={authorFollowing}
+                authorFollowLoading={authorFollowLoading}
+                currentUser={currentUser}
+                onViewAuthorPosts={handleAuthorClick}
+              />
+            ))}
           </div>
         )}
 
