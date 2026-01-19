@@ -8,7 +8,7 @@
 
 - [ ] DBeaver 설치 완료
 - [ ] MySQL 설치 완료
-- [ ] MySQL에 `bookdb` 스키마 생성 완료
+- [ ] MySQL에 `borroweseoul` 스키마 생성 완료
 - [ ] Oracle DB 접속 가능 상태
 
 ---
@@ -23,7 +23,7 @@
    ```
    Host: localhost
    Port: 1521
-   Database (SID): orcl
+   Database (SID): XE
    Username: sqlid
    Password: sqlpw
    ```
@@ -37,7 +37,7 @@
    ```
    Host: localhost
    Port: 3306
-   Database: bookdb
+   Database: borroweseoul
    Username: bookuser
    Password: bookpass
    ```
@@ -55,12 +55,12 @@ cd backend
 ```
 
 - 실행 후 콘솔에서 테이블 생성 로그 확인
-- `bookdb`에 테이블들 생성되면 **Ctrl+C**로 종료
+- `borroweseoul`에 테이블들 생성되면 **Ctrl+C**로 종료
 
 ### 테이블 생성 확인
 
 DBeaver에서:
-1. MySQL 연결 → `bookdb` → **Tables** 새로고침
+1. MySQL 연결 → `borroweseoul` → **Tables** 새로고침
 2. 테이블 목록 확인 (users, book, community 등)
 
 ---
@@ -79,48 +79,49 @@ DBeaver에서:
 5    follow           팔로우 관계
 6    user_title       회원 칭호
 7    bookmark         즐겨찾기
-8    search_log       검색 로그
-9    community_great  게시글 좋아요
+8    book_search_log  검색 로그
+9    community_like   게시글 좋아요
 10   comment_like     댓글 좋아요
-... (나머지 테이블들)
+11   blocked_keyword  차단 키워드
 ```
 
 ---
 
-## 4. 데이터 이관 방법
+## 4. 데이터 이관 방법 (SQL Developer)
 
-### 방법 A: Export Data 기능 사용 (권장)
+### 방법: 익스포트 마법사로 INSERT 문 추출
 
 각 테이블마다 반복:
 
-1. **Oracle** 연결 → 스키마 → **Tables** 펼치기
-2. 이관할 테이블 **우클릭** → **데이터 내보내기 (Export Data)**
-3. **Transfer** 선택:
-   - Format: `Database`
-   - 다음 클릭
-4. **Target**:
-   - Target container: MySQL의 `bookdb` 선택
-   - Target: 같은 이름의 테이블 선택
-5. **Data load settings**:
-   - ✅ Truncate target table (기존 데이터 삭제)
-   - ✅ Disable batches (안전하게)
-6. **Proceed** → 완료 대기
-
-### 방법 B: SQL INSERT 문 추출 후 실행
-
-1. **Oracle** 테이블 우클릭 → **데이터 내보내기**
-2. Format: **SQL** 선택
-3. 설정:
-   - ✅ Include column names
-   - ✅ INSERT 문 형식
-4. 파일로 저장 (예: `users_data.sql`)
-5. 파일 열어서 Oracle 문법 → MySQL 문법 수정:
+1. **SQL Developer** → 테이블 우클릭 → **익스포트**
+2. **익스포트 마법사 - 단계 1/3 (소스/대상)** 설정:
+   ```
+   ☐ DDL 익스포트 (체크 해제 - 데이터만 필요)
+   ☑ 데이터 익스포트 (체크!)
+   
+   형식: insert
+   ☑ 스키마 표시
+   인코딩: UTF8
+   
+   파일: 저장할 경로 선택 (예: C:\export\users.sql)
+   ```
+3. **다음** 클릭
+4. **단계 2/3**: 내보낼 테이블 확인 → **다음**
+5. **단계 3/3**: 요약 확인 → **완료**
+6. 생성된 `.sql` 파일 열어서 Oracle 문법 → MySQL 문법 수정:
    ```
    SYSDATE        → NOW()
    SYSTIMESTAMP   → NOW()
    TO_DATE(...)   → STR_TO_DATE(...)
+   TO_TIMESTAMP(...)   → STR_TO_DATE(...)
    ```
-6. **MySQL Workbench**에서 SQL 파일 실행
+7. **MySQL Workbench**에서 SQL 파일 실행
+
+### 💡 팁: 한번에 여러 테이블 내보내기
+
+1. 여러 테이블 **Ctrl+클릭**으로 선택
+2. 우클릭 → **익스포트**
+3. **다른 이름으로 저장** → **단일 파일** 선택하면 하나의 SQL 파일로 생성
 
 ---
 
@@ -231,9 +232,10 @@ STR_TO_DATE('2025-01-01', '%Y-%m-%d')
 | 5 | follow | ___ | ___ | [ ] |
 | 6 | user_title | ___ | ___ | [ ] |
 | 7 | bookmark | ___ | ___ | [ ] |
-| 8 | search_log | ___ | ___ | [ ] |
-| 9 | community_great | ___ | ___ | [ ] |
+| 8 | book_search_log | ___ | ___ | [ ] |
+| 9 | community_like | ___ | ___ | [ ] |
 | 10 | comment_like | ___ | ___ | [ ] |
+| 11 | blocked_keyword | ___ | ___ | [ ] |
 
 ---
 
@@ -248,4 +250,3 @@ STR_TO_DATE('2025-01-01', '%Y-%m-%d')
 ---
 
 *마지막 업데이트: 2026-01-19*
-

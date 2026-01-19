@@ -131,15 +131,7 @@ public class BookService {
         book.setPublishedDate(dto.getPublishedDate());
         book.setSummary(dto.getSummary());
         book.setImageUrl(dto.getImageUrl());
-        if (dto.getAges() != null && !dto.getAges().isEmpty()) {
-            try {
-                book.setAges(BookEntity.AgeGroup.valueOf(dto.getAges()));
-            } catch (IllegalArgumentException e) {
-                book.setAges(null);
-            }
-        } else {
-            book.setAges(null);
-        }
+        book.setAges(dto.getAges());
     }
 
     // Entity -> DTO 변환
@@ -153,7 +145,7 @@ public class BookService {
         dto.setPublishedDate(book.getPublishedDate());
         dto.setSummary(book.getSummary());
         dto.setImageUrl(book.getImageUrl());
-        dto.setAges(book.getAges() != null ? book.getAges().name() : null);
+        dto.setAges(book.getAges());
         return dto;
     }
 

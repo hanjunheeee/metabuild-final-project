@@ -15,10 +15,6 @@ import java.time.LocalDate;
 // 도서 기본 엔티티
 public class BookEntity {
 
-    public enum AgeGroup {
-        아동, 청소년, 성인
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
@@ -40,13 +36,12 @@ public class BookEntity {
     private LocalDate publishedDate;
 
     @Lob
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 10)
-    private AgeGroup ages;
+    @Column(length = 20)
+    private String ages;
 }
