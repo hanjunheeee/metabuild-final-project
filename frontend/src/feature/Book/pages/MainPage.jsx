@@ -588,8 +588,12 @@ function MainPage() {
                   key={book.isbn13 || book.title || book.id}
                   className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
                   onClick={() => {
-                    const keywordValue = book.isbn13 || displayTitle || book.title || ''
-                    navigate(`/searchbook?keyword=${encodeURIComponent(keywordValue)}`)
+                    const isbnValue = (book.isbn13 || '').trim()
+                    if (!isbnValue) {
+                      showAlert('알림', 'ISBN 정보가 없는 도서입니다.', 'warning')
+                      return
+                    }
+                    navigate(`/searchbook?keyword=${encodeURIComponent(isbnValue)}`)
                   }}
                 >
                   <div
@@ -782,8 +786,12 @@ function MainPage() {
                   key={book.isbn13 || book.title || book.id}
                   className="relative flex flex-col items-center cursor-pointer overflow-visible hover:opacity-80 transition-opacity"
                   onClick={() => {
-                    const keywordValue = book.isbn13 || displayTitle || book.title || ''
-                    navigate(`/searchbook?keyword=${encodeURIComponent(keywordValue)}`)
+                    const isbnValue = (book.isbn13 || '').trim()
+                    if (!isbnValue) {
+                      showAlert('알림', 'ISBN 정보가 없는 도서입니다.', 'warning')
+                      return
+                    }
+                    navigate(`/searchbook?keyword=${encodeURIComponent(isbnValue)}`)
                   }}
                 >
                   <div

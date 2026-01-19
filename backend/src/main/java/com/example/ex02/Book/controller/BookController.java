@@ -1,4 +1,4 @@
-package com.example.ex02.Book.controller;
+﻿package com.example.ex02.Book.controller;
 
 import com.example.ex02.Book.dto.BookDTO;
 import com.example.ex02.Book.dto.BestsellerItemDTO;
@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// 도서 관련 API 엔드포인트
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
@@ -29,25 +28,25 @@ public class BookController {
     private final StoreBestsellerScrapeService storeBestsellerScrapeService;
     private final Data4LibraryLoanRankingService data4LibraryLoanRankingService;
 
-    // 도서 목록 조회(검색어 선택)
+    // ?꾩꽌 紐⑸줉 議고쉶(寃?됱뼱 ?좏깮)
     @GetMapping
     public ResponseEntity<List<BookDTO>> getAllBooks(@RequestParam(required = false) String query) {
         return ResponseEntity.ok(bookService.searchBooks(query));
     }
 
-    // 도서 상세 조회
+    // ?꾩꽌 ?곸꽭 議고쉶
     @GetMapping("/{id}")
     public ResponseEntity<BookDTO> getBookById(@PathVariable Long id) {
         return ResponseEntity.ok(bookService.getBookById(id));
     }
 
-    // AI 요약 조회
+    // AI ?붿빟 議고쉶
     @GetMapping("/{id}/summary")
     public ResponseEntity<BookSummaryResponse> getBookSummary(@PathVariable Long id) {
         return ResponseEntity.ok(bookSummaryService.getSummary(id));
     }
 
-    // 판매처 가격 조회
+    // ?먮ℓ泥?媛寃?議고쉶
     @GetMapping("/{id}/shops")
     public ResponseEntity<?> getBookShops(
             @PathVariable Long id,
@@ -56,28 +55,36 @@ public class BookController {
         return ResponseEntity.ok(bookPriceService.getPrices(id, title));
     }
 
-    // 알라딘 베스트셀러 TOP10
+    // ?뚮씪??踰좎뒪?몄???TOP10
     @GetMapping("/bestsellers/aladin")
     public ResponseEntity<?> getAladinBestsellers() {
-        return ResponseEntity.ok(aladinBestsellerService.fetchTop10());
+        List<BestsellerItemDTO> items = aladinBestsellerService.fetchTop10();
+        bookService.ensureBooksByIsbn(items);
+        return ResponseEntity.ok(items);
     }
 
-    // 교보 베스트셀러 TOP10(스크래핑)
+    // 援먮낫 踰좎뒪?몄???TOP10(?ㅽ겕?섑븨)
     @GetMapping("/bestsellers/kyobo")
     public ResponseEntity<?> getKyoboBestsellers() {
-        return ResponseEntity.ok(storeBestsellerScrapeService.fetchKyoboTop10());
+        List<BestsellerItemDTO> items = storeBestsellerScrapeService.fetchKyoboTop10();
+        bookService.ensureBooksByIsbn(items);
+        return ResponseEntity.ok(items);
     }
 
-    // YES24 베스트셀러 TOP10(스크래핑)
+    // YES24 踰좎뒪?몄???TOP10(?ㅽ겕?섑븨)
     @GetMapping("/bestsellers/yes24")
     public ResponseEntity<?> getYes24Bestsellers() {
-        return ResponseEntity.ok(storeBestsellerScrapeService.fetchYes24Top10());
+        List<BestsellerItemDTO> items = storeBestsellerScrapeService.fetchYes24Top10();
+        bookService.ensureBooksByIsbn(items);
+        return ResponseEntity.ok(items);
     }
 
-    // 서울 대출 랭킹 TOP10
+    // ?쒖슱 ?異???궧 TOP10
     @GetMapping("/loans/seoul")
     public ResponseEntity<List<BestsellerItemDTO>> getSeoulLoanTop10() {
-        return ResponseEntity.ok(data4LibraryLoanRankingService.fetchSeoulMonthlyTop10());
+        List<BestsellerItemDTO> items = data4LibraryLoanRankingService.fetchSeoulMonthlyTop10();
+        bookService.ensureBooksByIsbn(items);
+        return ResponseEntity.ok(items);
     }
     
     // ========================================
@@ -103,3 +110,7 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
 }
+
+
+
+

@@ -1,11 +1,13 @@
 package com.example.ex02.Book.service;
 
 import com.example.ex02.Book.dto.BookDTO;
+import com.example.ex02.Book.dto.BestsellerItemDTO;
 import com.example.ex02.Book.entity.BookEntity;
 import com.example.ex02.Book.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,12 +19,35 @@ import java.util.stream.Collectors;
 public class BookService {
 
     private final BookRepository bookRepository;
+    private final BookUpsertService bookUpsertService;
 
     // 도서 전체 조회
     public List<BookDTO> getAllBooks() {
         return bookRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void ensureBooksByIsbn(List<BestsellerItemDTO> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        for (BestsellerItemDTO item : items) {
+            if (item == null) continue;
+            String isbn = normalizeIsbn(item.getIsbn13());
+            if (isbn.isBlank()) continue;
+            if (bookRepository.existsByIsbnNormalized(isbn)) continue;
+
+            BookEntity book = new BookEntity();
+            book.setIsbn(isbn);
+            book.setTitle(item.getTitle());
+            book.setAuthor(item.getAuthor());
+            book.setPublisher(item.getPublisher());
+            book.setImageUrl(item.getCover());
+            bookUpsertService.saveIfAbsent(book);
+        }
     }
 
     // 제목/ISBN/저자/출판사 검색(복수 키워드 지원) - 최대 50개 제한
@@ -169,6 +194,11 @@ public class BookService {
         return value == null ? "" : value.replaceAll("\\s+", "");
     }
 
+    private String normalizeIsbn(String isbn) {
+        if (isbn == null) return "";
+        return isbn.replaceAll("[^0-9Xx]", "");
+    }
+
     private List<BookEntity> mergeCandidates(List<BookEntity> primary, List<BookEntity> secondary) {
         if (secondary == null || secondary.isEmpty()) {
             return primary;
@@ -187,4 +217,3 @@ public class BookService {
         return new java.util.ArrayList<>(merged.values());
     }
 }
-

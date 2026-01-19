@@ -26,5 +26,12 @@ public interface BookRepository extends JpaRepository<BookEntity, Long> {
            OR lower(function('replace', b.isbn, ' ', '')) LIKE lower(concat('%', :normalized, '%'))
     """)
     List<BookEntity> findByNormalizedKeyword(@Param("normalized") String normalized);
+
+    @Query("""
+        SELECT count(b) > 0 FROM BookEntity b
+        WHERE lower(function('replace', function('replace', b.isbn, '-', ''), ' ', '')) =
+              lower(function('replace', function('replace', :isbn, '-', ''), ' ', ''))
+    """)
+    boolean existsByIsbnNormalized(@Param("isbn") String isbn);
 }
 
