@@ -32,6 +32,8 @@ jobs:
         node-version: '20'
 
     - name: Build Frontend
+      env:
+        VITE_TURNSTILE_SITEKEY: ${{ secrets.VITE_TURNSTILE_SITEKEY }}
       run: |
         cd frontend
         npm ci

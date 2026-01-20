@@ -201,7 +201,7 @@ function UserManagePage() {
                   <td className="px-4 py-3 text-gray-500 text-center">{user.userId}</td>
                   <td className="px-4 py-3 text-gray-800">{user.email}</td>
                   <td className="px-4 py-3 font-medium text-gray-800 hover:text-main-bg">{user.nickname || '-'}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded ${
                       user.role === 'ADMIN' 
                         ? 'bg-red-100 text-red-700' 
@@ -213,7 +213,7 @@ function UserManagePage() {
                   <td className="px-4 py-3 text-gray-500 text-center whitespace-nowrap">
                     {formatDate(user.createdAt)}
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded ${
                       user.isActive === 'Y' 
                         ? 'bg-green-100 text-green-700' 

@@ -130,8 +130,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                maxLength={30}
-                placeholder="도서 이름 입력...(최대 30자)"
+                maxLength={200}
+                placeholder="도서 이름 입력...(최대 200자)"
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                 required
               />
@@ -147,8 +147,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                   name="author"
                   value={formData.author}
                   onChange={handleInputChange}
-                  maxLength={30}
-                  placeholder="저자 이름 입력...(최대 30자)"
+                  maxLength={500}
+                  placeholder="저자 이름 입력...(최대 500자)"
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                   required
                 />
@@ -162,8 +162,8 @@ function BookFormModal({ isOpen, book, onClose, onSubmit }) {
                   name="publisher"
                   value={formData.publisher}
                   onChange={handleInputChange}
-                  maxLength={30}
-                  placeholder="출판사 이름 입력...(최대 30자)"
+                  maxLength={100}
+                  placeholder="출판사 이름 입력...(최대 100자)"
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-main-bg"
                   required
                 />

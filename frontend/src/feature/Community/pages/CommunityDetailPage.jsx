@@ -2,6 +2,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike } from '../api/communityApi'
 import { Spinner } from '@/shared/components/icons'
+import { AlertModal, ConfirmModal } from '@/shared/components'
+import { useModals } from '@/shared/hooks'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { checkBookmark, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { CommentSection, BookInfoCard } from '../components'
@@ -37,6 +39,9 @@ function CommunityDetailPage() {
   const [authorTitles, setAuthorTitles] = useState([])
   
   const currentUser = getUserFromSession()
+  
+  // Alert/Confirm 모달 훅
+  const { alertModal, showAlert, closeAlert, confirmModal, showConfirm, closeConfirm } = useModals()
 
   useEffect(() => {
     const loadPost = async () => {
@@ -143,30 +148,36 @@ function CommunityDetailPage() {
   }
 
   // 삭제 핸들러
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!currentUser) {
-      alert('로그인이 필요합니다.')
+      showAlert('로그인 필요', '로그인이 필요합니다.', 'warning')
       return
     }
     
-    if (!confirm('정말 삭제하시겠습니까?')) return
-
-    try {
-      // 관리자가 삭제 시 userId를 null로 전달 (작성자 확인 생략)
-      const userIdParam = (currentUser.role === 'ADMIN' && post.userId !== currentUser.userId) 
-        ? null 
-        : currentUser.userId
-      const result = await deleteCommunity(post.communityId, userIdParam)
-      if (result.success) {
-        alert('게시글이 삭제되었습니다.')
-        navigate('/community')
-      } else {
-        alert(result.message || '삭제에 실패했습니다.')
-      }
-    } catch (err) {
-      console.error('삭제 실패:', err)
-      alert('삭제에 실패했습니다.')
-    }
+    showConfirm(
+      '게시글 삭제',
+      '정말 삭제하시겠습니까?',
+      async () => {
+        try {
+          // 관리자가 삭제 시 userId를 null로 전달 (작성자 확인 생략)
+          const userIdParam = (currentUser.role === 'ADMIN' && post.userId !== currentUser.userId) 
+            ? null 
+            : currentUser.userId
+          const result = await deleteCommunity(post.communityId, userIdParam)
+          if (result.success) {
+            showAlert('삭제 완료', '게시글이 삭제되었습니다.', 'success')
+            setTimeout(() => navigate('/community'), 1500)
+          } else {
+            showAlert('삭제 실패', result.message || '삭제에 실패했습니다.', 'error')
+          }
+        } catch (err) {
+          console.error('삭제 실패:', err)
+          showAlert('삭제 실패', '삭제에 실패했습니다.', 'error')
+        }
+        closeConfirm()
+      },
+      'danger'
+    )
   }
 
   // 수정 페이지로 이동 (replace로 히스토리에서 상세페이지 대체)
@@ -186,8 +197,7 @@ function CommunityDetailPage() {
   // 좋아요 핸들러
   const handleLike = async () => {
     if (!currentUser) {
-      alert('로그인이 필요합니다.')
-      navigate('/login')
+      showAlert('로그인 필요', '로그인이 필요합니다.', 'warning')
       return
     }
 
@@ -200,11 +210,11 @@ function CommunityDetailPage() {
         setLikeCount(result.likeCount)
         setLiked(result.liked)
       } else {
-        alert(result.message || '좋아요에 실패했습니다.')
+        showAlert('오류', result.message || '좋아요에 실패했습니다.', 'error')
       }
     } catch (err) {
       console.error('좋아요 실패:', err)
-      alert('좋아요에 실패했습니다.')
+      showAlert('오류', '좋아요에 실패했습니다.', 'error')
     } finally {
       setIsLiking(false)
     }
@@ -213,8 +223,7 @@ function CommunityDetailPage() {
   // 북마크 핸들러
   const handleBookmark = async () => {
     if (!currentUser) {
-      alert('로그인이 필요합니다.')
-      navigate('/login')
+      showAlert('로그인 필요', '로그인이 필요합니다.', 'warning')
       return
     }
 
@@ -228,6 +237,7 @@ function CommunityDetailPage() {
       }
     } catch (err) {
       console.error('북마크 실패:', err)
+      showAlert('오류', '북마크에 실패했습니다.', 'error')
     } finally {
       setIsBookmarking(false)
     }
@@ -482,6 +492,27 @@ function CommunityDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
+
+      {/* Confirm 모달 */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onCancel={closeConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        confirmText="확인"
+        cancelText="취소"
+        type={confirmModal.type}
+      />
     </div>
   )
 }
