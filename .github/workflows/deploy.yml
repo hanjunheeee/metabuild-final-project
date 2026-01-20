@@ -23,8 +23,7 @@ jobs:
     - name: Build Backend
       run: |
         cd backend
-        chmod +x mvnw
-        ./mvnw clean package -DskipTests
+        mvn clean package -DskipTests
 
     # ========== 프론트엔드 빌드 ==========
     - name: Set up Node.js
