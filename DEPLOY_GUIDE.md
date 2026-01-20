@@ -22,10 +22,10 @@
 
 | 항목 | 스펙 | 월 예상 비용 |
 |------|------|-------------|
-| Server (Micro) | 2vCPU, 4GB RAM | 약 3~4만원 |
-| 공인 IP | 1개 | 약 5,000원 |
+| Server (Micro) | 1vCPU, 1GB RAM | 약 1~2만원 |
+| 공인 IP | 1개 | 약 4,000원 |
 | 스토리지 | 50GB SSD | 포함 |
-| **총합** | | **약 3.5~4.5만원** |
+| **총합** | | **약 1.5~2.5만원** |
 
 > 💡 첫 가입 시 크레딧 제공되는 경우도 있음!
 
@@ -90,26 +90,39 @@
 - [ ] OS: **Ubuntu Server 24.04 LTS** (또는 22.04)
 - [ ] **[다음]** 클릭
 
-### 3-3. 서버 스펙 선택
+### 3-3. 서버 설정
+- [ ] VPC: `book-vpc` 선택
+- [ ] Subnet: `book-subnet` 선택
 - [ ] 서버 타입: **Micro**
-- [ ] 스펙: **2vCPU, 4GB RAM** (권장)
-  - 또는 **1vCPU, 2GB RAM** (최소, 더 저렴)
+- [ ] 스펙: **mi1-g3 (1vCPU, 1GB RAM)**
+  - 💡 메모리 부족 시 나중에 업그레이드 가능 (5분 소요)
+- [ ] 요금제: **월요금제** 선택
 - [ ] 서버 개수: 1
 - [ ] 서버 이름: `book-server`
+- [ ] Network Interface: **[+ 추가]** 버튼 클릭! ⚠️
+- [ ] 공인 IP: **"새로운 공인 IP 할당"** 선택! ⚠️
+- [ ] 물리 배치 그룹: 미사용
+- [ ] 반납 보호: 해제
+- [ ] Script 선택: 선택없음
 - [ ] **[다음]** 클릭
 
-### 3-4. 인증키 설정
+### 3-4. 스토리지 설정
+- [ ] 기본 설정 그대로 사용 (50GB)
+- [ ] **[다음]** 클릭
+
+### 3-5. 인증키 설정
 - [ ] **[새로운 인증키 생성]** 선택
 - [ ] 인증키 이름: `book-key`
 - [ ] **[인증키 생성 및 다운로드]** 클릭
 - [ ] ⚠️ **`.pem` 파일 안전하게 보관!** (재발급 불가)
+- [ ] **[다음]** 클릭
 
-### 3-5. ACG(방화벽) 설정
+### 3-6. 네트워크 접근 설정 (ACG)
 - [ ] **[새로운 ACG 생성]** 선택
 - [ ] ACG 이름: `book-acg`
 - [ ] **[다음]** 클릭
 
-### 3-6. 최종 확인 및 생성
+### 3-7. 최종 확인 및 생성
 - [ ] 설정 내용 확인
 - [ ] **[서버 생성]** 클릭
 - [ ] 상태가 **[운영중]**이 될 때까지 대기 (약 5~10분)
@@ -118,12 +131,10 @@
 
 ## 4. 서버 초기 설정
 
-### 4-1. 공인 IP 할당
-- [ ] **[Server]** → 생성한 서버 선택
-- [ ] 상단 **[공인 IP 관리]** 클릭
-- [ ] **[공인 IP 신청]** 클릭
-- [ ] 서버 선택 후 **[적용]**
-- [ ] 📝 공인 IP 메모: `_______________`
+### 4-1. 공인 IP 확인
+- [ ] 서버 생성 시 공인 IP 할당했으면 자동 부여됨
+- [ ] **[Server]** → 서버 목록에서 공인 IP 확인
+- [ ] 📝 공인 IP 메모: `223.130.135.204 (121824538)`
 
 ### 4-2. ACG 규칙 추가
 - [ ] **[ACG]** 메뉴 이동
@@ -144,14 +155,15 @@
 - [ ] **[Server]** → 서버 선택 → **[서버 관리 및 설정 변경]**
 - [ ] **[관리자 비밀번호 확인]** 클릭
 - [ ] 다운받은 `.pem` 파일 업로드
-- [ ] 📝 root 비밀번호 메모: `_______________`
+- [ ] 📝 root 비밀번호 메모: `N9-hgg7L-UmFr`
 
 ### 4-4. SSH 접속
 ```bash
 # Windows (PowerShell)
-ssh root@공인IP
+ssh root@223.130.135.204
 
 # Mac/Linux
+# window에서는 바로 서버 접속 가능
 chmod 400 book-key.pem
 ssh -i book-key.pem root@공인IP
 ```
@@ -172,6 +184,23 @@ java -version  # 확인
 apt install nginx -y
 systemctl enable nginx
 systemctl start nginx
+```
+
+### 4-8. Swap 메모리 추가 (1GB RAM 필수!)
+> ⚠️ 메모리가 1GB이므로 Swap 추가 필수!
+
+```bash
+# 2GB Swap 파일 생성
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
+# 재부팅 후에도 유지
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+# 확인
+free -h
 ```
 
 ---
@@ -209,10 +238,13 @@ EXIT;
 ## 6. 백엔드 배포
 
 ### 6-1. 로컬에서 빌드
-```bash
-cd backend
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행** - NCP 서버 아님!
+
+```powershell
+cd C:\Users\edu\Desktop\metabuild-final-project\backend
 ./mvnw clean package -DskipTests
-# 결과: target/Ex01-0.0.1-SNAPSHOT.jar (또는 비슷한 이름)
+# 결과: target/demo-0.0.1-SNAPSHOT.jar
 ```
 
 ### 6-2. application-prod.properties 생성
@@ -255,42 +287,57 @@ turnstile.verify-url=https://challenges.cloudflare.com/turnstile/v0/siteverify
 ```
 
 ### 6-3. 서버에 디렉토리 생성
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
 ```bash
-# 서버에서 실행
 mkdir -p /home/app/uploads
 ```
 
-### 6-4. 파일 전송 (로컬에서)
-```bash
+### 6-4. 파일 전송
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행** - NCP 서버 아님!
+
+```powershell
+# 프로젝트 폴더로 이동
+cd C:\Users\edu\Desktop\metabuild-final-project\backend
+
 # jar 파일 전송
-scp target/Ex01-0.0.1-SNAPSHOT.jar root@공인IP:/home/app/app.jar
+scp target/demo-0.0.1-SNAPSHOT.jar root@공인IP:/home/app/app.jar
 
 # 설정 파일 전송
 scp src/main/resources/application-prod.properties root@공인IP:/home/app/
 
-# CSV 데이터 파일 전송 (필요시)
-scp src/main/resources/*.csv root@공인IP:/home/app/
+# CSV 데이터 파일 전송
+scp src/main/resources/aladin_books_data_delete_html.csv root@공인IP:/home/app/
+scp "src/main/resources/서울시_도서관_코드포함.csv" root@공인IP:/home/app/
 ```
 
 ### 6-5. 환경변수 설정
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
 ```bash
-# 서버에서 실행
 nano /etc/environment
 ```
 
-추가:
+아래 내용 추가 (실제 API 키 값 입력):
 ```
-LLM_GEMINI_API_KEY="여기에_실제_키"
-GROQ_API_KEY="여기에_실제_키"
-TAVILY_API_KEY="여기에_실제_키"
-TURNSTILE_SECRET_KEY="여기에_실제_키"
+LLM_GEMINI_API_KEY="여기에_실제_GEMINI_API_KEY_입력"
+GROQ_API_KEY="여기에_실제_GROQ_API_KEY_입력"
+TAVILY_API_KEY="여기에_실제_TAVILY_API_KEY_입력"
+TURNSTILE_SECRET_KEY="여기에_실제_TURNSTILE_SECRET_KEY_입력"
 ```
 
+저장 후 적용:
 ```bash
 source /etc/environment
 ```
 
 ### 6-6. systemd 서비스 등록
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
 ```bash
 nano /etc/systemd/system/bookapp.service
 ```
@@ -303,7 +350,7 @@ After=network.target mysql.service
 [Service]
 User=root
 WorkingDirectory=/home/app
-ExecStart=/usr/bin/java -jar app.jar --spring.profiles.active=prod --spring.config.additional-location=file:/home/app/application-prod.properties
+ExecStart=/usr/bin/java -Xms256m -Xmx512m -jar app.jar --spring.profiles.active=prod --spring.config.additional-location=file:/home/app/application-prod.properties
 Restart=always
 RestartSec=10
 EnvironmentFile=/etc/environment
@@ -320,50 +367,69 @@ systemctl status bookapp
 ```
 
 ### 6-7. 백엔드 확인
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
 ```bash
 # 로그 확인
 journalctl -u bookapp -f
 
 # 또는
-curl http://localhost:8080/actuator/health
+curl http://localhost:7878/actuator/health
 ```
 
 ---
 
 ## 7. 프론트엔드 빌드 및 배포
 
-### 7-1. 환경변수 설정 (로컬)
-`frontend/.env.production` 파일 생성:
+### 7-1. 환경변수 설정
+
+> 💻 **로컬 PC에서 실행** - `frontend/.env.production` 파일 생성
+
 ```
-VITE_API_BASE_URL=https://도메인.com
-# 또는 도메인 없으면 일단
 VITE_API_BASE_URL=http://공인IP
 ```
+> 도메인 있으면 `https://도메인.com` 으로 변경
 
 ### 7-2. 빌드
-```bash
-cd frontend
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행**
+
+```powershell
+cd C:\Users\edu\Desktop\metabuild-final-project\frontend
 npm install
 npm run build
-# 결과: dist/ 폴더
+# 결과: dist/ 폴더 생성됨
 ```
 
 ### 7-3. 서버로 전송
-```bash
-# dist 폴더 압축
-tar -czvf dist.tar.gz dist/
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행**
+
+```powershell
+# frontend 폴더에서 실행
+cd C:\Users\edu\Desktop\metabuild-final-project\frontend
+
+# dist 폴더 압축 (PowerShell)
+Compress-Archive -Path dist\* -DestinationPath dist.zip -Force
 
 # 전송
-scp dist.tar.gz root@공인IP:/home/app/
+scp dist.zip root@223.130.135.204:/home/app/
+```
 
-# 서버에서 압축 해제
-ssh root@공인IP
+> 🖥️ **NCP 서버에서 실행** (SSH 접속)
+
+```bash
 cd /home/app
-tar -xzvf dist.tar.gz
-mv dist frontend
+apt install unzip -y
+unzip -o dist.zip -d frontend
+rm dist.zip
 ```
 
 ### 7-4. Nginx 설정
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
 ```bash
 nano /etc/nginx/sites-available/default
 ```
@@ -412,12 +478,61 @@ systemctl reload nginx
 
 ## 8. 도메인 및 HTTPS 설정
 
-### 8-1. 도메인 연결 (선택)
-- [ ] 가비아, 호스팅케이알 등에서 도메인 구매
-- [ ] DNS 설정에서 A 레코드 추가:
-  - 호스트: `@` 또는 `www`
-  - 값: `공인IP`
-  - TTL: 3600
+### 8-1. 도메인 연결 (선택사항 - 없어도 IP로 접속 가능)
+
+> ⚠️ 도메인 없으면 이 단계 건너뛰세요! `http://223.130.135.204` 로 접속 가능
+
+#### 도메인 구매처
+
+| 업체 | 사이트 | .com 가격 (1년) |
+|------|--------|----------------|
+| 가비아 | https://www.gabia.com | 약 1.5~2만원 |
+| 호스팅케이알 | https://www.hosting.kr | 약 1.5만원 |
+| 카페24 | https://domain.cafe24.com | 약 1.5만원 |
+
+#### 도메인 구매 후 DNS 설정 방법 (가비아 예시)
+
+1. **가비아 로그인** → **My가비아** → **도메인 관리**
+2. 구매한 도메인 선택 → **DNS 관리** 클릭
+3. **DNS 설정** 또는 **레코드 수정** 클릭
+4. **A 레코드 추가**:
+
+| 타입 | 호스트 | 값/위치 | TTL |
+|------|--------|---------|-----|
+| A | @ | 223.130.135.204 | 3600 |
+| A | www | 223.130.135.204 | 3600 |
+
+> `@` = 도메인 자체 (예: mybook.com)
+> `www` = www 붙은 주소 (예: www.mybook.com)
+
+5. **저장/확인** 클릭
+6. DNS 반영까지 **최대 24시간** 소요 (보통 10분~1시간)
+
+#### DNS 적용 확인
+
+```bash
+# 터미널에서 확인 (Windows PowerShell)
+nslookup 도메인.com
+
+# 결과에 223.130.135.204 가 나오면 성공!
+```
+
+#### 도메인 적용 후 추가 작업
+
+1. **Nginx 설정 수정** (NCP 서버에서):
+```bash
+nano /etc/nginx/sites-available/default
+```
+```nginx
+server_name mybook.com www.mybook.com;  # 도메인으로 변경
+```
+
+2. **프론트엔드 재빌드** (로컬 PC에서):
+`.env.production` 수정:
+```
+VITE_API_BASE_URL=https://mybook.com
+```
+다시 빌드 후 배포
 
 ### 8-2. SSL 인증서 발급 (Let's Encrypt)
 ```bash
@@ -451,6 +566,8 @@ certbot renew --dry-run
 ---
 
 ## 🛠 문제 해결
+
+> 🖥️ **아래 모든 명령어는 NCP 서버에서 실행** (SSH 접속 상태)
 
 ### 백엔드 로그 확인
 ```bash
@@ -522,24 +639,34 @@ TURNSTILE_SECRET_KEY: _______________
 ## 🔄 업데이트 배포 방법
 
 ### 백엔드 업데이트
-```bash
-# 로컬에서
-cd backend
-./mvnw clean package -DskipTests
-scp target/Ex01-0.0.1-SNAPSHOT.jar root@공인IP:/home/app/app.jar
 
-# 서버에서
+> 💻 **1단계: 로컬 PC (Windows PowerShell)에서 실행**
+
+```powershell
+cd C:\Users\edu\Desktop\metabuild-final-project\backend
+./mvnw clean package -DskipTests
+scp target/demo-0.0.1-SNAPSHOT.jar root@공인IP:/home/app/app.jar
+```
+
+> 🖥️ **2단계: NCP 서버에서 실행** (SSH 접속)
+
+```bash
 systemctl restart bookapp
 ```
 
 ### 프론트엔드 업데이트
-```bash
-# 로컬에서
-cd frontend
+
+> 💻 **1단계: 로컬 PC (Windows PowerShell)에서 실행**
+
+```powershell
+cd C:\Users\edu\Desktop\metabuild-final-project\frontend
 npm run build
 scp -r dist/* root@공인IP:/home/app/frontend/
+```
 
-# 서버에서
+> 🖥️ **2단계: NCP 서버에서 실행** (SSH 접속)
+
+```bash
 systemctl reload nginx
 ```
 

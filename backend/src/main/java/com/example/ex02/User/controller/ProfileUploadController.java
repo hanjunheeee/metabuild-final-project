@@ -131,8 +131,8 @@ public class ProfileUploadController {
             Path filePath = uploadPath.resolve(newFilename);
             Files.copy(file.getInputStream(), filePath);
 
-            // 접근 가능한 URL 반환
-            String imageUrl = "http://localhost:7878/uploads/community/" + newFilename;
+            // 접근 가능한 URL 반환 (상대경로 사용)
+            String imageUrl = "/uploads/community/" + newFilename;
 
             return ResponseEntity.ok(Map.of(
                 "success", true,

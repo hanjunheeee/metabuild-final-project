@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchHallOfFame } from '../api/communityApi'
 import { Spinner } from '@/shared/components/icons'
 
-const BASE_URL = 'http://localhost:7878'
+const BASE_URL = ''
 
 function CommunityRankPage() {
   const navigate = useNavigate()

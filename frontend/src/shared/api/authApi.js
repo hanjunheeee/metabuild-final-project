@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:7878'
+﻿const BASE_URL = ''
 
 // 스토리지 키
 const TOKEN_KEY = 'token'

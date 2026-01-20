@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { PasswordInput, Button } from '@/shared/components'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams()

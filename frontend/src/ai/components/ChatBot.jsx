@@ -59,7 +59,7 @@ const ChatBot = () => {
     setMessages(initialMsg);
     sessionStorage.removeItem('chat_session');
     try {
-      await fetch('http://localhost:7878/api/chat/reset', { method: 'POST' });
+      await fetch('/api/chat/reset', { method: 'POST' });
     } catch (e) {
       console.log('서버 리셋 요청 실패');
     }
@@ -79,7 +79,7 @@ const ChatBot = () => {
         .map(({ role, content }) => ({ role, content }));
       history.push({ role: 'user', content: userText });
 
-      const response = await fetch('http://localhost:7878/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userText, history })

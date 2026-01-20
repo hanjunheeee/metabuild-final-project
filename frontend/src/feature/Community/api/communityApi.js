@@ -1,6 +1,6 @@
-import { getAuthHeader } from '@/shared/api/authApi'
+﻿import { getAuthHeader } from '@/shared/api/authApi'
 
-const BASE_URL = 'http://localhost:7878'
+const BASE_URL = ''
 
 // 전체 커뮤니티 글 목록 조회
 // 커뮤니티 목록 조회

@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+﻿import { useState, useRef, useEffect, useCallback } from 'react'
 import { useDuplicateCheck } from './useDuplicateCheck'
 import { usePhotoUpload } from './usePhotoUpload'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 const SIGNUP_FORM_KEY = 'signupFormData'
 
 // sessionStorage 유틸

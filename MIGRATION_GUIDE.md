@@ -249,4 +249,131 @@ STR_TO_DATE('2025-01-01', '%Y-%m-%d')
 
 ---
 
-*마지막 업데이트: 2026-01-19*
+## 🚀 로컬 MySQL → NCP 서버 MySQL 데이터 이전
+
+> 로컬 개발 환경의 데이터를 운영 서버로 복사
+
+---
+
+### 📋 사전 준비
+
+- [ ] 로컬 MySQL에 데이터 있음
+- [ ] NCP 서버 MySQL 설치 및 DB 생성 완료
+- [ ] NCP 서버에 SSH 접속 가능
+
+---
+
+### 1단계: 로컬에서 데이터 덤프 (내보내기)
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행**
+
+#### MySQL bin 폴더 찾기
+```powershell
+# 보통 이 경로에 있음 (버전에 따라 다름)
+cd "C:\Program Files\MySQL\MySQL Server 8.0\bin"
+```
+
+#### 데이터 덤프
+```powershell
+# 전체 데이터베이스 덤프
+& "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysqldump.exe" -u bookuser -p --no-tablespaces borroweseoul > C:\Users\edu\Desktop\db_backup.sql
+```
+→ 비밀번호 입력 (bookpass)
+
+#### 덤프 파일 확인
+```powershell
+# 파일 크기 확인
+dir C:\Users\edu\Desktop\db_backup.sql
+```
+
+---
+
+### 2단계: 덤프 파일을 서버로 전송
+
+> 💻 **로컬 PC (Windows PowerShell)에서 실행**
+
+```powershell
+scp C:\Users\edu\Desktop\db_backup.sql root@223.130.135.204:/home/app/
+```
+
+---
+
+### 3단계: 서버에서 데이터 복원 (가져오기)
+
+> 🖥️ **NCP 서버에서 실행** (SSH 접속 상태)
+
+```bash
+# 외래키 체크 비활성화 후 복원
+mysql -u bookuser -p borroweseoul < /home/app/db_backup.sql
+```
+→ 비밀번호 입력 (bookpass)
+
+#### 외래키 오류 발생 시
+```bash
+mysql -u root -p
+```
+```sql
+SET FOREIGN_KEY_CHECKS = 0;
+SOURCE /home/app/db_backup.sql;
+SET FOREIGN_KEY_CHECKS = 1;
+EXIT;
+```
+
+---
+
+### 4단계: 데이터 확인
+
+> 🖥️ **NCP 서버에서 실행**
+
+```bash
+mysql -u bookuser -p -D borroweseoul -e "SELECT 'users' AS tbl, COUNT(*) AS cnt FROM users UNION ALL SELECT 'book', COUNT(*) FROM book UNION ALL SELECT 'community', COUNT(*) FROM community;"
+```
+
+→ 로컬과 같은 숫자가 나오면 성공! ✅
+
+---
+
+### 5단계: 백엔드 재시작
+
+```bash
+systemctl restart bookapp
+systemctl status bookapp
+```
+
+---
+
+### 🛠 문제 해결
+
+#### "Access denied" 오류
+```bash
+# root로 복원 시도
+mysql -u root -p borroweseoul < /home/app/db_backup.sql
+```
+
+#### 테이블 이미 존재 오류
+```bash
+# 기존 테이블 삭제 후 복원
+mysql -u root -p -D borroweseoul -e "SET FOREIGN_KEY_CHECKS=0; DROP TABLE IF EXISTS users, book, community, comments, follow, bookmark, user_title, book_search_log, community_like, comment_like, blocked_keyword; SET FOREIGN_KEY_CHECKS=1;"
+mysql -u bookuser -p borroweseoul < /home/app/db_backup.sql
+```
+
+#### 인코딩 문제
+```bash
+# UTF-8로 복원
+mysql -u bookuser -p --default-character-set=utf8mb4 borroweseoul < /home/app/db_backup.sql
+```
+
+---
+
+### 📋 체크리스트
+
+- [ ] 로컬에서 mysqldump 실행
+- [ ] scp로 서버에 전송
+- [ ] 서버에서 mysql 복원
+- [ ] 데이터 수 확인
+- [ ] 백엔드 재시작
+- [ ] 웹사이트에서 데이터 확인
+
+---
+
+*마지막 업데이트: 2026-01-20*

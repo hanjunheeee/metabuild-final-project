@@ -1,0 +1,47 @@
+# Build outputs
+dist/
+dist.zip
+build/
+target/
+*.jar
+*.war
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+frontend/.env.production
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+.npm/
+.eslintcache
+
+# Test
+coverage/
+
+# Temp
+tmp/
+temp/
+

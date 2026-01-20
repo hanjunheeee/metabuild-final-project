@@ -1,6 +1,6 @@
-import { getAuthHeader } from './authApi'
+﻿import { getAuthHeader } from './authApi'
 
-const API_BASE = 'http://localhost:7878/api/bookmarks'
+const API_BASE = '/api/bookmarks'
 
 /**
  * 북마크 토글 (추가/삭제)

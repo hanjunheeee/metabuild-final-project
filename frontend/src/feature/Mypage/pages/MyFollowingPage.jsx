@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchFollowingList, fetchFollowersList, toggleFollow } from '@/shared/api/followApi'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { Spinner } from '@/shared/components/icons'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 function MyFollowingPage() {
   const [activeTab, setActiveTab] = useState('following')

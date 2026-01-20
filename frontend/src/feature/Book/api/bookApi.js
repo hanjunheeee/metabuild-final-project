@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:7878'
+﻿const BASE_URL = ''
 
 // 도서 목록 조회(검색어 선택)
 export const fetchBooks = (query = '') => {

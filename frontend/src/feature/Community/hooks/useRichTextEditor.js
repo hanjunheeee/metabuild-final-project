@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useEffect } from 'react'
+﻿import { useRef, useCallback, useState, useEffect } from 'react'
 
 /**
  * 리치 텍스트 에디터 기능을 관리하는 커스텀 훅
@@ -260,7 +260,7 @@ function useRichTextEditor() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('http://localhost:7878/api/files/upload/community', {
+      const response = await fetch('/api/files/upload/community', {
         method: 'POST',
         body: formData,
       })

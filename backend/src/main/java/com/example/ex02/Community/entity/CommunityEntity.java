@@ -32,7 +32,7 @@ public class CommunityEntity {
 
     @Lob
     @Basic(fetch = FetchType.EAGER)
-    @Column(name = "content_json")
+    @Column(name = "content_json", columnDefinition = "LONGTEXT")
     private String contentJson;
 
     @Column(name = "thumbnail_url", length = 300)

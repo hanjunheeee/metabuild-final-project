@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 사용자 표시 정보 유틸
  * 관리자인 경우 공식 이름/아이콘 표시
  */
@@ -44,10 +44,10 @@ export const getDisplayNameWithBadge = (user) => {
 /**
  * 표시용 프로필 사진 URL 반환
  * @param {object} user - 사용자 객체 { role, userPhoto, userProfileImage, ... }
- * @param {string} baseUrl - 이미지 기본 URL (기본: http://localhost:7878/uploads/profile/)
+ * @param {string} baseUrl - 이미지 기본 URL (기본: /uploads/profile/)
  * @returns {string}
  */
-export const getDisplayPhoto = (user, baseUrl = 'http://localhost:7878/uploads/profile/') => {
+export const getDisplayPhoto = (user, baseUrl = '/uploads/profile/') => {
   if (isAdmin(user)) return ADMIN_DISPLAY.photo
   // userPhoto 또는 userProfileImage (댓글 DTO에서 사용)
   const photo = user?.userPhoto || user?.userProfileImage

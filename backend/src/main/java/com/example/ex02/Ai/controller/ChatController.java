@@ -1,4 +1,4 @@
-﻿package com.example.ex02.Ai.controller;
+package com.example.ex02.Ai.controller;
 
 import com.example.ex02.Ai.service.BookAiService;
 import org.springframework.web.bind.annotation.*;

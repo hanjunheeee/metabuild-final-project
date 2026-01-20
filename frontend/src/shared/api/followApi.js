@@ -1,6 +1,6 @@
-import { getAuthHeader } from './authApi'
+﻿import { getAuthHeader } from './authApi'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 /**
  * 팔로우/언팔로우 토글

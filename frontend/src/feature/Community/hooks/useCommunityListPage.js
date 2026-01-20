@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+﻿import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import useCommunityHelpers from './useCommunityHelpers'
 import { getUserFromSession } from '@/shared/api/authApi'
@@ -182,7 +182,7 @@ function useCommunityListPage() {
       await Promise.all(
         newUserIds.map(async (userId) => {
           try {
-            const res = await fetch(`http://localhost:7878/api/titles/user/${userId}/top`)
+            const res = await fetch(`/api/titles/user/${userId}/top`)
             const data = await res.json()
             titlesMap[userId] = data || []
           } catch (err) {

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/shared/components'
 import { TextInput, InputLabel, ValidationMessage } from '../components'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('')

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCommunities } from '@/feature/Community/api/communityApi'
 
-const BASE_URL = 'http://localhost:7878'
+const BASE_URL = ''
 
 function UserDetailPage() {
   const { userId } = useParams()

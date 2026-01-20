@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import useComments from './useComments'
 import { fetchBookmarkedBookIds, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { toggleCommentLike, fetchLikedCommentIds } from '../api/commentApi'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 /**
  * 댓글 섹션 전체 로직을 관리하는 훅

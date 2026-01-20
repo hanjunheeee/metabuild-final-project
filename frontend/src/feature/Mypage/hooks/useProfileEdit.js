@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { getUserFromSession, updateProfile, uploadProfilePhoto } from '@/shared/api/authApi'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 /**
  * 프로필 편집 관련 로직을 관리하는 커스텀 훅

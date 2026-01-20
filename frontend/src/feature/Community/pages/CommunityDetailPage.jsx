@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchCommunityById, deleteCommunity, likeCommunity, checkLike } from '../api/communityApi'
 import { Spinner } from '@/shared/components/icons'
@@ -76,7 +76,7 @@ function CommunityDetailPage() {
     const loadAuthorTitles = async () => {
       if (!post?.userId) return
       try {
-        const res = await fetch(`http://localhost:7878/api/titles/user/${post.userId}/top`)
+        const res = await fetch(`/api/titles/user/${post.userId}/top`)
         const data = await res.json()
         setAuthorTitles(data || [])
       } catch (err) {

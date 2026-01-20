@@ -1,4 +1,4 @@
-﻿package com.example.ex02.Ai.service;
+package com.example.ex02.Ai.service;
 
 import com.opencsv.CSVReader;
 import jakarta.annotation.PostConstruct;

@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
+﻿import { useState, useRef } from 'react'
 
 /**
  * 중복 확인 훅 (이메일, 닉네임 등)
- * @param {string} apiUrl - 중복 확인 API URL (예: 'http://localhost:7878/api/users/check-email')
+ * @param {string} apiUrl - 중복 확인 API URL (예: '/api/users/check-email')
  * @param {string} paramName - 쿼리 파라미터 이름 (예: 'email', 'nickname')
  * @param {Function} validate - 값 검증 함수 (에러 메시지 반환, 성공 시 null)
  */

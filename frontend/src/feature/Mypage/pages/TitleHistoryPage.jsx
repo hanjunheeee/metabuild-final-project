@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { getUserFromSession } from '@/shared/api/authApi'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 function TitleHistoryPage() {
   const user = getUserFromSession()

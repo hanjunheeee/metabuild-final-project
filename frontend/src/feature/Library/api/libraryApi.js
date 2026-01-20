@@ -1,4 +1,4 @@
-﻿const BASE_URL = 'http://localhost:7878'
+﻿const BASE_URL = ''
 
 export const fetchGuList = async () => {
   const response = await fetch(`${BASE_URL}/api/library/gu-list`)

@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react'
+﻿import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PasswordInput } from '@/shared/components'
 import { getUserFromSession, getAuthHeader } from '@/shared/api/authApi'
 
-const API_BASE_URL = 'http://localhost:7878'
+const API_BASE_URL = ''
 
 function ChangePasswordPage() {
   const navigate = useNavigate()

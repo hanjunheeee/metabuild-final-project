@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:7878'
+﻿const BASE_URL = ''
 
 /**
  * 검색 로그 저장
