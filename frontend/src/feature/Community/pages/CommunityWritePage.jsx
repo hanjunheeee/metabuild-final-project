@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CommunityForm } from '@/shared/components'
+import { CommunityForm, AlertModal } from '@/shared/components'
 import { Spinner } from '@/shared/components/icons'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { createCommunity, updateCommunity, fetchCommunityById, processImagesInContent } from '../api/communityApi'
@@ -14,6 +14,25 @@ function CommunityWritePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(false)
   const [initialData, setInitialData] = useState(null)
+  
+  // Alert 모달 상태
+  const [alertModal, setAlertModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onCloseCallback: null
+  })
+
+  const showAlert = (title, message, type = 'info', onCloseCallback = null) => {
+    setAlertModal({ isOpen: true, title, message, type, onCloseCallback })
+  }
+
+  const closeAlert = () => {
+    const callback = alertModal.onCloseCallback
+    setAlertModal(prev => ({ ...prev, isOpen: false, onCloseCallback: null }))
+    if (callback) callback()
+  }
   
   // PrivateRoute를 통과했으므로 사용자 정보는 반드시 존재
   const currentUser = getUserFromSession()
@@ -34,8 +53,7 @@ function CommunityWritePage() {
           const canEdit = isAuthor || (isAdmin && post.isNotice === 1)
           
           if (!canEdit) {
-            alert('본인이 작성한 게시글만 수정할 수 있습니다.')
-            navigate('/community')
+            showAlert('수정 권한 없음', '본인이 작성한 게시글만 수정할 수 있습니다.', 'warning', () => navigate('/community'))
             return
           }
 
@@ -66,8 +84,7 @@ function CommunityWritePage() {
           })
         } catch (err) {
           console.error('게시글 로딩 실패:', err)
-          alert('게시글을 불러올 수 없습니다.')
-          navigate('/community')
+          showAlert('로딩 실패', '게시글을 불러올 수 없습니다.', 'error', () => navigate('/community'))
         } finally {
           setLoading(false)
         }
@@ -110,10 +127,9 @@ function CommunityWritePage() {
         })
 
         if (result.success) {
-          alert('게시글이 수정되었습니다.')
-          navigate(`/community/${editId}`, { replace: true })
+          showAlert('수정 완료', '게시글이 수정되었습니다.', 'success', () => navigate(`/community/${editId}`, { replace: true }))
         } else {
-          alert(result.message || '수정에 실패했습니다.')
+          showAlert('수정 실패', result.message || '수정에 실패했습니다.', 'error')
         }
       } else {
         // 작성 모드
@@ -127,15 +143,14 @@ function CommunityWritePage() {
         })
 
         if (result.success) {
-          alert('게시글이 등록되었습니다.')
-          navigate('/community')
+          showAlert('등록 완료', '게시글이 등록되었습니다.', 'success', () => navigate('/community'))
         } else {
-          alert(result.message || '등록에 실패했습니다.')
+          showAlert('등록 실패', result.message || '등록에 실패했습니다.', 'error')
         }
       }
     } catch (error) {
       console.error('처리 실패:', error)
-      alert('처리에 실패했습니다. 다시 시도해주세요.')
+      showAlert('오류', '처리에 실패했습니다. 다시 시도해주세요.', 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -168,29 +183,40 @@ function CommunityWritePage() {
   }
 
   return (
-    <div className="flex-1 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-sub-bg mb-2">
-            {isEditMode ? '글 수정' : '글쓰기'}
-          </h1>
-          <p className="text-gray-400 text-sm">
-            {isEditMode ? '게시글을 수정하세요.' : '책에 대한 생각을 공유해보세요.'}
-          </p>
-        </div>
+    <>
+      <div className="flex-1 py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          {/* 헤더 */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-extrabold text-sub-bg mb-2">
+              {isEditMode ? '글 수정' : '글쓰기'}
+            </h1>
+            <p className="text-gray-400 text-sm">
+              {isEditMode ? '게시글을 수정하세요.' : '책에 대한 생각을 공유해보세요.'}
+            </p>
+          </div>
 
-        {/* 폼 */}
-        <CommunityForm
-          mode={isEditMode ? 'edit' : 'create'}
-          initialData={initialData}
-          defaultKind={isEditMode ? undefined : defaultKind}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isSubmitting={isSubmitting}
-        />
+          {/* 폼 */}
+          <CommunityForm
+            mode={isEditMode ? 'edit' : 'create'}
+            initialData={initialData}
+            defaultKind={isEditMode ? undefined : defaultKind}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       </div>
-    </div>
+
+      {/* Alert 모달 */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={closeAlert}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
+    </>
   )
 }
 
