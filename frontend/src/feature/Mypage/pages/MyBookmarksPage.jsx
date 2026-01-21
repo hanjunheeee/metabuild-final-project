@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getUserFromSession } from '@/shared/api/authApi'
 import { fetchBookmarksByUser, toggleBookmark } from '@/shared/api/bookmarkApi'
 import { Spinner } from '@/shared/components/icons'
@@ -10,6 +11,16 @@ function MyBookmarksPage() {
   const [searchTerm, setSearchTerm] = useState('')
   
   const currentUser = getUserFromSession()
+  const navigate = useNavigate()
+
+  // 책 카드 클릭 시 검색 결과 페이지로 이동
+  const handleBookClick = (bookmark) => {
+    // ISBN이 있으면 ISBN으로, 없으면 제목으로 검색
+    const searchKeyword = bookmark.bookIsbn || bookmark.bookTitle
+    if (searchKeyword) {
+      navigate(`/searchbook?keyword=${encodeURIComponent(searchKeyword)}`)
+    }
+  }
 
   // 북마크 목록 로드
   useEffect(() => {
@@ -141,8 +152,11 @@ function MyBookmarksPage() {
                 index !== filteredBookmarks.length - 1 ? 'border-b border-gray-100' : ''
               }`}
             >
-              {/* 책 표지 */}
-              <div className="w-16 h-22 bg-gray-100 flex items-center justify-center flex-shrink-0 rounded overflow-hidden border border-gray-200">
+              {/* 책 표지 (클릭 가능) */}
+              <div 
+                onClick={() => handleBookClick(bookmark)}
+                className="w-16 h-22 bg-gray-100 flex items-center justify-center flex-shrink-0 rounded overflow-hidden border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+              >
                 {bookmark.bookImageUrl ? (
                   <img 
                     src={bookmark.bookImageUrl} 
@@ -157,9 +171,12 @@ function MyBookmarksPage() {
                 )}
               </div>
 
-              {/* 책 정보 */}
+              {/* 책 정보 (클릭 가능) */}
               <div className="flex-1 min-w-0 flex items-center justify-between">
-                <div className="min-w-0">
+                <div 
+                  onClick={() => handleBookClick(bookmark)}
+                  className="min-w-0 cursor-pointer flex-1"
+                >
                   <h3 className="text-sm font-medium text-gray-800 truncate group-hover:text-main-bg transition-colors">
                     {bookmark.bookTitle || '제목 없음'}
                   </h3>
