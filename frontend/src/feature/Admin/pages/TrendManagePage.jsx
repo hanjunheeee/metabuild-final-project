@@ -58,7 +58,7 @@ function TrendManagePage() {
       setBlockedKeywords(blockedData)
     } catch (error) {
       console.error('Failed to load data:', error)
-      alert('데이터를 불러오는데 실패했습니다.')
+      showAlert('오류', '데이터를 불러오는데 실패했습니다.', 'error')
     } finally {
       setLoading(false)
     }
@@ -152,13 +152,13 @@ function TrendManagePage() {
         ])
         setTrends(prev => prev.filter(t => t.keyword !== keyword))
         setNewBlockKeyword('')
-        alert(`"${keyword}" 키워드가 차단 목록에 추가되었습니다.`)
+        showAlert('차단 완료', `"${keyword}" 키워드가 차단 목록에 추가되었습니다.`, 'success')
       } else {
-        alert(result.message || '키워드 추가에 실패했습니다.')
+        showAlert('차단 실패', result.message || '키워드 추가에 실패했습니다.', 'error')
       }
     } catch (error) {
       console.error('Failed to add blocked keyword:', error)
-      alert('키워드 추가에 실패했습니다.')
+      showAlert('차단 실패', '키워드 추가에 실패했습니다.', 'error')
     }
   }
 
