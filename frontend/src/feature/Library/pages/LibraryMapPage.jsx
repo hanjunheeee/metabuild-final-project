@@ -132,7 +132,7 @@ function LibraryMapPage() {
         // 위치 거부 시에도 목적지만으로 열기
         openNaverMap(destLat, destLng, destName)
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
   }, [openNaverMap])
 
