@@ -318,7 +318,6 @@ function useCommunityListPage() {
   // 페이지 변경
   const handlePageChange = (page) => {
     setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // 게시글 상세 페이지로 이동
