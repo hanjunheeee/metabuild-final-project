@@ -89,7 +89,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          systemctl restart bookapp
+          systemctl start bookapp
           systemctl reload nginx
           echo "배포 완료!"
 
