@@ -18,6 +18,18 @@ public interface BookRepository extends JpaRepository<BookEntity, Long> {
             String publisher
     );
 
+    // DB 레벨에서 LIMIT 50 적용 (성능 최적화)
+    @Query(value = """
+        SELECT * FROM book b
+        WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(b.author) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(b.publisher) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR b.isbn LIKE CONCAT('%', :keyword, '%')
+        ORDER BY b.book_id DESC
+        LIMIT 50
+    """, nativeQuery = true)
+    List<BookEntity> findByKeywordLimited(@Param("keyword") String keyword);
+
     @Query("""
         SELECT b FROM BookEntity b
         WHERE lower(function('replace', b.title, ' ', '')) LIKE lower(concat('%', :normalized, '%'))

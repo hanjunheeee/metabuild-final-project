@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,9 +49,7 @@ public class BookService {
         }
     }
 
-    // 제목/ISBN/저자/출판사 검색(복수 키워드 지원) - 최대 50개 제한
-    private static final int MAX_SEARCH_RESULTS = 50;
-
+    // 제목/ISBN/저자/출판사 검색 - DB 레벨에서 LIMIT 50 적용 (성능 최적화)
     public List<BookDTO> searchBooks(String query) {
         String trimmed = query == null ? "" : query.trim();
         
@@ -61,28 +58,10 @@ public class BookService {
             return List.of();
         }
 
-        List<String> tokens = Arrays.stream(trimmed.split("\\s+"))
-                .map(String::trim)
-                .filter(token -> !token.isEmpty())
-                .map(String::toLowerCase)
-                .collect(Collectors.toList());
-        if (tokens.isEmpty()) {
-            return List.of();
-        }
-
-        String firstToken = tokens.get(0);
-        String normalized = trimmed.replaceAll("\\s+", "");
-
-        List<BookEntity> initial = bookRepository
-                .findByTitleContainingIgnoreCaseOrIsbnContainingOrAuthorContainingIgnoreCaseOrPublisherContainingIgnoreCase(
-                        firstToken, firstToken, firstToken, firstToken);
-        List<BookEntity> normalizedMatches = normalized.isEmpty()
-                ? java.util.Collections.emptyList()
-                : bookRepository.findByNormalizedKeyword(normalized.toLowerCase());
-
-        return mergeCandidates(initial, normalizedMatches).stream()
-                .filter(book -> matchesAllTokens(book, tokens))
-                .limit(MAX_SEARCH_RESULTS)  // 최대 50개 제한
+        // DB에서 LIMIT 50 적용된 쿼리 사용 (성능 대폭 개선)
+        List<BookEntity> results = bookRepository.findByKeywordLimited(trimmed);
+        
+        return results.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -149,63 +128,8 @@ public class BookService {
         return dto;
     }
 
-    private boolean matchesAllTokens(BookEntity book, List<String> tokens) {
-        String title = safeLower(book.getTitle());
-        String author = safeLower(book.getAuthor());
-        String isbn = safeLower(book.getIsbn());
-        String publisher = safeLower(book.getPublisher());
-        String titleNoSpace = removeSpaces(title);
-        String authorNoSpace = removeSpaces(author);
-        String isbnNoSpace = removeSpaces(isbn);
-        String publisherNoSpace = removeSpaces(publisher);
-
-        for (String token : tokens) {
-            if (token.isEmpty()) continue;
-            String tokenNoSpace = removeSpaces(token);
-            boolean matches = title.contains(token)
-                    || author.contains(token)
-                    || isbn.contains(token)
-                    || publisher.contains(token)
-                    || (!tokenNoSpace.isEmpty()
-                        && (titleNoSpace.contains(tokenNoSpace)
-                            || authorNoSpace.contains(tokenNoSpace)
-                            || isbnNoSpace.contains(tokenNoSpace)
-                            || publisherNoSpace.contains(tokenNoSpace)));
-            if (!matches) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String safeLower(String value) {
-        return value == null ? "" : value.toLowerCase();
-    }
-
-    private String removeSpaces(String value) {
-        return value == null ? "" : value.replaceAll("\\s+", "");
-    }
-
     private String normalizeIsbn(String isbn) {
         if (isbn == null) return "";
         return isbn.replaceAll("[^0-9Xx]", "");
-    }
-
-    private List<BookEntity> mergeCandidates(List<BookEntity> primary, List<BookEntity> secondary) {
-        if (secondary == null || secondary.isEmpty()) {
-            return primary;
-        }
-        java.util.LinkedHashMap<Long, BookEntity> merged = new java.util.LinkedHashMap<>();
-        for (BookEntity book : primary) {
-            if (book.getBookId() != null) {
-                merged.put(book.getBookId(), book);
-            }
-        }
-        for (BookEntity book : secondary) {
-            if (book.getBookId() != null) {
-                merged.putIfAbsent(book.getBookId(), book);
-            }
-        }
-        return new java.util.ArrayList<>(merged.values());
     }
 }
